@@ -1,0 +1,436 @@
+/* ===================================================
+   TEMOIGNAGES PAGE
+   =================================================== */
+
+.temoignages-page {
+  min-height: 100vh;
+}
+
+/* HERO */
+.temoignages-hero {
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  overflow: hidden;
+  padding: 140px 0 80px;
+}
+
+.temoignages-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.1) 0%, transparent 40%);
+}
+
+.temoignages-hero-overlay {
+  display: none;
+}
+
+.temoignages-hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: white;
+}
+
+.temoignages-hero-tag {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #d4af37;
+  padding: 0.4rem 1.2rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.2rem;
+}
+
+.temoignages-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.temoignages-hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  opacity: 0.8;
+  max-width: 600px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
+.temoignages-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  max-width: 500px;
+  margin: 0 auto;
+  backdrop-filter: blur(10px);
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #d4af37;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 50px;
+  background: rgba(255,255,255,0.2);
+  margin: 0 1rem;
+}
+
+/* FILTRES */
+.temoignages-filtres-section {
+  padding: 2rem 0;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 80px;
+  z-index: 10;
+}
+
+.temoignages-filtres {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.filtre-btn {
+  padding: 0.6rem 1.4rem;
+  border-radius: 50px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #555;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filtre-btn:hover {
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+.filtre-btn.actif {
+  background: #d4af37;
+  border-color: #d4af37;
+  color: white;
+}
+
+/* GRILLE */
+.temoignages-grille-section {
+  padding: 5rem 0;
+  background: white;
+}
+
+.temoignages-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2rem;
+}
+
+.temoignage-card {
+  background: white;
+  border-radius: 1.2rem;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.temoignage-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.temoignage-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.temoignage-etoiles {
+  display: flex;
+  gap: 2px;
+}
+
+.etoile {
+  font-size: 1.1rem;
+  color: #e0e0e0;
+}
+
+.etoile.active {
+  color: #d4af37;
+}
+
+.temoignage-evenement {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 50px;
+}
+
+.temoignage-message {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #444;
+  font-style: italic;
+  flex: 1;
+  margin: 0;
+  border-left: 3px solid #d4af37;
+  padding-left: 1rem;
+}
+
+.temoignage-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.temoignage-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a1a2e, #d4af37);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.temoignage-auteur-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.temoignage-auteur-info strong {
+  font-size: 0.95rem;
+  color: #1a1a2e;
+}
+
+.temoignage-auteur-info span {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.temoignage-date {
+  display: block;
+  font-size: 0.75rem !important;
+  color: #bbb !important;
+}
+
+/* LOADING */
+.temoignages-loading {
+  text-align: center;
+  padding: 4rem;
+  color: #888;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.temoignages-vide {
+  text-align: center;
+  padding: 4rem;
+  color: #888;
+  font-size: 1.1rem;
+}
+
+/* CTA LAISSER UN AVIS */
+.temoignages-cta {
+  padding: 5rem 0;
+  background: linear-gradient(135deg, #f8f5e4 0%, #fdf8e8 100%);
+  border-top: 1px solid #e8d999;
+  border-bottom: 1px solid #e8d999;
+}
+
+.temoignages-cta-content {
+  text-align: center;
+}
+
+.temoignages-cta-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.temoignages-cta h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin-bottom: 0.75rem;
+}
+
+.temoignages-cta p {
+  color: #666;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-gold {
+  display: inline-block;
+  background: #d4af37;
+  color: #1a1a2e;
+  padding: 0.9rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+}
+
+.btn-gold:hover {
+  background: #c9a227;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212,175,55,0.4);
+  color: #1a1a2e;
+}
+
+/* CTA DEVIS */
+.temoignages-devis-cta {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  text-align: center;
+  color: white;
+}
+
+.temoignages-devis-cta h2 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.temoignages-devis-cta p {
+  font-size: 1.1rem;
+  opacity: 0.8;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-primary-gold {
+  display: inline-block;
+  background: #d4af37;
+  color: #1a1a2e;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(212,175,55,0.4);
+}
+
+.btn-primary-gold:hover {
+  background: #c9a227;
+  transform: translateY(-3px);
+  color: #1a1a2e;
+}
+
+.btn-outline-gold {
+  display: inline-block;
+  background: transparent;
+  color: #d4af37;
+  border: 2px solid #d4af37;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+  background: rgba(212,175,55,0.1);
+  transform: translateY(-3px);
+  color: #d4af37;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .temoignages-hero {
+    padding: 120px 0 60px;
+  }
+
+  .temoignages-stats {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .temoignages-grille {
+    grid-template-columns: 1fr;
+  }
+
+  .temoignages-filtres-section {
+    top: 70px;
+  }
+}

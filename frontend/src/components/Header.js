@@ -114,6 +114,7 @@ function Header() {
             <Link to="/prestations" className="nav-link" onClick={fermerMenu}>Prestations</Link>
             <Link to="/prestataires" className="nav-link" onClick={fermerMenu}>Prestataires</Link>
             <Link to="/a-propos" className="nav-link" onClick={fermerMenu}>À propos</Link>
+            <Link to="/temoignages" className="nav-link" onClick={fermerMenu}>Témoignages</Link>
             <Link to="/devis" className="nav-link btn-devis" onClick={fermerMenu}>
               <Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />
               Créons votre devis

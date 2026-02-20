@@ -15,6 +15,7 @@ import ContactPage from './pages/ContactPage';
 import PrestatairesPage from './pages/PrestatairesPage';
 import PrestataireProfilPage from './pages/PrestataireProfilPage';
 import AProposPage from './pages/AProposPage';
+import TemoignagesPage from './pages/TemoignagesPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import GestionUtilisateurs from './pages/GestionUtilisateurs';
@@ -57,6 +58,7 @@ function App() {
                     <Route path="/devis/:devisId/confirmation" element={<DevisConfirmation />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/a-propos" element={<AProposPage />} />
+                    <Route path="/temoignages" element={<TemoignagesPage />} />
                     
                     {/* Routes prestataires publiques */}
                     <Route path="/prestataires" element={<PrestatairesPage />} />

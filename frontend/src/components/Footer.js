@@ -34,8 +34,9 @@ function Footer() {
             <ul className="footer-links">
               <li><Link to="/">🏠 Accueil</Link></li>
               <li><Link to="/prestations">🎭 Nos Prestations</Link></li>
+              <li><Link to="/temoignages">💬 Témoignages</Link></li>
               <li><Link to="/devis">✨ Créons votre devis</Link></li>
-              <li><Link to="/contact">💬 Contact</Link></li>
+              <li><Link to="/contact">📞 Contact</Link></li>
             </ul>
           </div>
 
