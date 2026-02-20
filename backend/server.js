@@ -66,10 +66,14 @@ const connectDB = async () => {
 
 // Health check
 app.get('/api/health', (req, res) => {
+  const mongoState = mongoose.connection.readyState;
+  const states = { 0: 'déconnecté', 1: 'connecté', 2: 'connexion...', 3: 'déconnexion...' };
   res.json({ 
     message: '✅ Backend ELIJAH\'GOD fonctionnel',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
+    mongodb: states[mongoState] || 'inconnu',
+    mongoState
   });
 });
 
