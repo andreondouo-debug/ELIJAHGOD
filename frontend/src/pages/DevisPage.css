@@ -1,0 +1,778 @@
+/* 🎯 PAGE DEVIS - Design moderne avec workflow horizontal */
+
+.devis-page {
+  min-height: 100vh;
+  padding: 180px 0 4rem; /* Ajusté pour header + ticker */
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.devis-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.devis-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #d4af37 0%, #f4e5b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.devis-subtitle {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  color: #666;
+  font-weight: 300;
+}
+
+/* 🔄 WORKFLOW HORIZONTAL AVEC FLÈCHES */
+
+.workflow-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  max-width: 1200px;
+  flex-wrap: wrap;
+}
+
+.workflow-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  background: #f8f9fa;
+  border: 3px solid #e9ecef;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 150px;
+  cursor: pointer;
+}
+
+.workflow-step:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.workflow-step.active {
+  background: linear-gradient(135deg, var(--step-color, #3498db), rgba(255, 255, 255, 0.2));
+  border-color: var(--step-color, #3498db);
+  box-shadow: 0 12px 35px rgba(52, 152, 219, 0.3);
+  transform: scale(1.1);
+}
+
+.workflow-step.completed {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  border-color: #27ae60;
+  color: white;
+}
+
+.step-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.step-numero {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 35px;
+  height: 35px;
+  background: var(--step-color, #3498db);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.workflow-step.completed .step-numero {
+  background: #27ae60;
+}
+
+.workflow-step.active .step-numero {
+  animation: pulse 2s infinite;
+}
+
+.step-titre {
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+  color: #333;
+}
+
+.workflow-step.active .step-titre,
+.workflow-step.completed .step-titre {
+  color: white;
+}
+
+.workflow-arrow {
+  font-size: 2.5rem;
+  color: #e9ecef;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.workflow-arrow.completed {
+  color: #27ae60;
+  animation: arrowSlide 0.6s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes arrowSlide {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 📋 CONTENU DES ÉTAPES */
+
+.etape-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.etape-card {
+  background: white;
+  border-radius: 2rem;
+  padding: 3rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.etape-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.etape-description {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+/* 🎨 GRILLES ET INPUTS */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.form-group small {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.input-modern {
+  padding: 1rem 1.25rem;
+  border: 2px solid #e9ecef;
+  border-radius: 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.input-modern:focus {
+  outline: none;
+  border-color: #d4af37;
+  background: white;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 🎯 OPTIONS CLIQUABLES */
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.option-card {
+  padding: 2rem 1.5rem;
+  border: 3px solid #e9ecef;
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  background: white;
+}
+
+.option-card:hover {
+  transform: translateY(-5px);
+  border-color: #d4af37;
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+}
+
+.option-card.selected {
+  background: linear-gradient(135deg, #d4af37 0%, #f4e5b8 100%);
+  border-color: #d4af37;
+  color: #1a1a2e;  /* texte sombre : lisible sur le dégradé or/crème clair */
+  transform: scale(1.05);
+  box-shadow: 0 12px 35px rgba(212, 175, 55, 0.3);
+}
+
+.option-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.option-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.option-desc {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* 🎧 PRESTATIONS */
+
+.prestations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.prestation-card {
+  position: relative;
+  padding: 2rem;
+  border: 3px solid #e9ecef;
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+}
+
+.prestation-card:hover {
+  transform: translateY(-5px);
+  border-color: #d4af37;
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+}
+
+/* 📦 ARTICLES SUPPLÉMENTAIRES */
+
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.article-card {
+  position: relative;
+  padding: 1.5rem;
+  border: 3px solid #e9ecef;
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  text-align: center;
+}
+
+.article-card:hover {
+  transform: translateY(-5px);
+  border-color: #f39c12;
+  box-shadow: 0 8px 25px rgba(243, 156, 18, 0.2);
+}
+
+.article-card.selected {
+  background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+  border-color: #f39c12;
+  color: white;
+  box-shadow: 0 12px 35px rgba(243, 156, 18, 0.3);
+}
+
+.article-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.article-nom {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.article-desc {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.article-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: white;
+  color: #f39c12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.etape-note {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 1rem;
+  border-left: 4px solid #f39c12;
+}
+
+.prestation-card.selected {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  border-color: #27ae60;
+  color: white;
+  box-shadow: 0 12px 35px rgba(39, 174, 96, 0.3);
+}
+
+.prestation-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.prestation-nom {
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.prestation-desc {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.prestation-check {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: white;
+  color: #27ae60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Structure carte prestation avec bouton */
+.prestation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.prestation-content {
+  flex: 1;
+  cursor: pointer;
+}
+
+.btn-voir-details {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-voir-details:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-voir-details:active {
+  transform: translateY(0);
+}
+
+.prestation-card.selected .btn-voir-details {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+.prestation-card.selected .btn-voir-details:hover {
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+/* 💰 BUDGET */
+
+.budget-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.budget-option {
+  padding: 1.5rem;
+  border: 3px solid #e9ecef;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.budget-option:hover {
+  border-color: #d4af37;
+  transform: translateY(-3px);
+}
+
+.budget-option.selected {
+  background: linear-gradient(135deg, #d4af37 0%, #f4e5b8 100%);
+  border-color: #d4af37;
+  color: #1a1a2e;  /* texte sombre : lisible sur le dégradé or/crème clair */
+  transform: scale(1.05);
+}
+
+.budget-icon {
+  font-size: 2rem;
+}
+
+.budget-label {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ✅ RÉCAPITULATIF */
+
+.recapitulatif {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  margin-top: 2rem;
+}
+
+.recapitulatif h3 {
+  margin-bottom: 1.5rem;
+  color: #1a1a2e;
+  font-size: 1.5rem;
+}
+
+.recap-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 1rem;
+  color: #333;
+}
+
+.recap-item:last-child {
+  border-bottom: none;
+}
+
+.recap-item strong {
+  color: #d4af37;
+  margin-right: 0.5rem;
+}
+
+/* 🎯 NAVIGATION */
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.btn-secondary {
+  background: #e9ecef;
+  color: #333;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  font-size: 1.2rem;
+  padding: 1.25rem 3rem;
+}
+
+/* 🎉 SUCCESS MESSAGE */
+
+.success-message {
+  text-align: center;
+  padding: 4rem 2rem;
+  animation: fadeInScale 0.6s ease-out;
+}
+
+.success-icon {
+  font-size: 6rem;
+  animation: bounce 1s ease infinite;
+}
+
+.success-message h2 {
+  font-size: 2.5rem;
+  color: #27ae60;
+  margin: 1rem 0;
+}
+
+.success-message p {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0.5rem 0;
+}
+
+.loader-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.loader-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d4af37;
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.loader-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loader-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ⚠️ ALERTE */
+
+.alert {
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;
+  margin: 1rem 0;
+  font-weight: 600;
+}
+
+.alert-danger {
+  background: #ffe5e5;
+  color: #c0392b;
+  border: 2px solid #e74c3c;
+}
+
+/* 🎬 ANIMATIONS */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* 📱 RESPONSIVE */
+
+@media (max-width: 768px) {
+  .devis-page {
+    padding: 150px 1rem 2rem;
+  }
+
+  .workflow-container {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .workflow-arrow {
+    transform: rotate(90deg);
+    font-size: 2rem;
+  }
+
+  .workflow-step {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .etape-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .options-grid,
+  .prestations-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .devis-title {
+    font-size: 1.8rem;
+  }
+
+  .etape-title {
+    font-size: 1.5rem;
+  }
+
+  .workflow-step {
+    min-width: 120px;
+    padding: 1rem;
+  }
+
+  .step-icon {
+    font-size: 2rem;
+  }
+}

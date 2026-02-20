@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: elijahgod-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false   # À saisir manuellement dans le dashboard Render
+      - key: JWT_SECRET
+        sync: false   # À saisir manuellement dans le dashboard Render
+      - key: FRONTEND_URL
+        sync: false   # URL Vercel ex: https://elijahgod.vercel.app
+      - key: EMAIL_SERVICE
+        sync: false   # brevo, gmail, ou ethereal
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ADRESSE_ENTREPRISE
+        value: Paris, France
+      - key: TARIF_KILOMETRIQUE
+        value: "0.50"
+      - key: KM_GRATUITS
+        value: "30"

@@ -1,0 +1,250 @@
+/* ======================
+   CONNECTION STATUS DEBUG
+   ====================== */
+
+.connection-status {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  z-index: 10000;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.status-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-badge.connected {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Sections admin/client/prestataire */
+.status-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.status-section {
+  padding: 12px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.status-section.active {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+.status-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #555;
+}
+
+.status-section.active h4 {
+  color: #2e7d32;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user-info p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.user-info p strong {
+  color: #333;
+  margin-right: 5px;
+}
+
+.user-info p.not-connected {
+  color: #999;
+  font-style: italic;
+}
+
+.user-info p.warning {
+  color: #ff9800;
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 6px;
+  background: #fff3e0;
+  border-radius: 4px;
+}
+
+.user-info small {
+  font-size: 11px;
+  color: #888;
+  display: block;
+  margin-top: 2px;
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.token-preview {
+  display: block;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 3px;
+  word-break: break-all;
+}
+
+/* Actions rapides */
+.status-actions {
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.status-actions h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-buttons button {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear {
+  background: #f44336;
+  color: white;
+}
+
+.btn-clear:hover {
+  background: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.btn-refresh {
+  background: #2196f3;
+  color: white;
+}
+
+.btn-refresh:hover {
+  background: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.btn-debug {
+  background: #ff9800;
+  color: white;
+}
+
+.btn-debug:hover {
+  background: #f57c00;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+/* Footer */
+.status-footer {
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.status-footer small {
+  color: #999;
+  font-size: 11px;
+}
+
+/* Scrollbar */
+.connection-status::-webkit-scrollbar {
+  width: 6px;
+}
+
+.connection-status::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.connection-status::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.connection-status::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .connection-status {
+    width: 90vw;
+    right: 5vw;
+    bottom: 10px;
+    max-height: 70vh;
+  }
+
+  .action-buttons button {
+    min-width: 80px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}

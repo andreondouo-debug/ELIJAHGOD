@@ -1,0 +1,274 @@
+const Devis = require('../models/Devis');
+const Prestation = require('../models/Prestation');
+const Reservation = require('../models/Reservation');
+
+/**
+ * 📋 CONTROLLER DEVIS
+ * Gestion des demandes de devis clients
+ */
+
+// @desc    Créer un nouveau devis
+// @route   POST /api/devis
+// @access  Public
+exports.createDevis = async (req, res) => {
+  try {
+    const { client, evenement, prestations, commentaire, besoinsSpecifiques } = req.body;
+    
+    // Valider que les prestations existent
+    const prestationIds = prestations.map(p => p.prestation);
+    const prestationsDb = await Prestation.find({ _id: { $in: prestationIds } });
+    
+    if (prestationsDb.length !== prestationIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'Certaines prestations n\'existent pas'
+      });
+    }
+    
+    // Calculer les prix
+    const prestationsAvecPrix = prestations.map(p => {
+      const prestationDb = prestationsDb.find(pd => pd._id.toString() === p.prestation);
+      const prixUnitaire = prestationDb.calculerPrix(p.options);
+      const prixTotal = prixUnitaire * (p.quantite || 1);
+      
+      return {
+        ...p,
+        prixUnitaire,
+        prixTotal
+      };
+    });
+    
+    // Créer le devis
+    const devis = new Devis({
+      client,
+      evenement,
+      prestations: prestationsAvecPrix,
+      commentaire,
+      besoinsSpecifiques
+    });
+    
+    // Calculer le montant total
+    devis.calculerMontantTotal();
+    
+    await devis.save();
+    
+    // Créer une réservation en attente
+    await Reservation.create({
+      devis: devis._id,
+      date: evenement.date,
+      heureDebut: evenement.heureDebut,
+      heureFin: evenement.heureFin,
+      client: {
+        nom: client.nom,
+        prenom: client.prenom,
+        email: client.email,
+        telephone: client.telephone
+      },
+      typeEvenement: evenement.type,
+      lieu: evenement.lieu,
+      statut: 'demandee'
+    });
+    
+    // TODO: Envoyer email de confirmation au client
+    // TODO: Envoyer email de notification à l'admin
+    
+    res.status(201).json({
+      success: true,
+      message: '✅ Demande de devis envoyée avec succès !',
+      data: devis
+    });
+  } catch (error) {
+    console.error('❌ Erreur createDevis:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Erreur lors de la création du devis',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Obtenir tous les devis (Admin)
+// @route   GET /api/devis
+// @access  Private/Admin
+exports.getAllDevis = async (req, res) => {
+  try {
+    const { statut, dateDebut, dateFin } = req.query;
+    
+    let filtre = {};
+    if (statut) filtre.statut = statut;
+    if (dateDebut || dateFin) {
+      filtre['evenement.date'] = {};
+      if (dateDebut) filtre['evenement.date'].$gte = new Date(dateDebut);
+      if (dateFin) filtre['evenement.date'].$lte = new Date(dateFin);
+    }
+    
+    const devis = await Devis.find(filtre)
+      .populate('prestations.prestation')
+      .sort('-createdAt');
+    
+    res.json({
+      success: true,
+      count: devis.length,
+      data: devis
+    });
+  } catch (error) {
+    console.error('❌ Erreur getAllDevis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des devis'
+    });
+  }
+};
+
+// @desc    Obtenir un devis par ID
+// @route   GET /api/devis/:id
+// @access  Public (avec numéro de devis) ou Admin
+exports.getDevisById = async (req, res) => {
+  try {
+    const devis = await Devis.findById(req.params.id)
+      .populate('prestations.prestation');
+    
+    if (!devis) {
+      return res.status(404).json({
+        success: false,
+        message: 'Devis non trouvé'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: devis
+    });
+  } catch (error) {
+    console.error('❌ Erreur getDevisById:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération du devis'
+    });
+  }
+};
+
+// @desc    Obtenir un devis par numéro
+// @route   GET /api/devis/numero/:numero
+// @access  Public
+exports.getDevisByNumero = async (req, res) => {
+  try {
+    const devis = await Devis.findOne({ numeroDevis: req.params.numero })
+      .populate('prestations.prestation');
+    
+    if (!devis) {
+      return res.status(404).json({
+        success: false,
+        message: 'Devis non trouvé'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: devis
+    });
+  } catch (error) {
+    console.error('❌ Erreur getDevisByNumero:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération du devis'
+    });
+  }
+};
+
+// @desc    Mettre à jour le statut d'un devis (Admin)
+// @route   PUT /api/devis/:id/statut
+// @access  Private/Admin
+exports.updateStatutDevis = async (req, res) => {
+  try {
+    const { statut, message, montantAjuste } = req.body;
+    
+    const devis = await Devis.findById(req.params.id);
+    
+    if (!devis) {
+      return res.status(404).json({
+        success: false,
+        message: 'Devis non trouvé'
+      });
+    }
+    
+    devis.statut = statut;
+    
+    if (montantAjuste !== undefined) {
+      devis.montantAjuste = montantAjuste;
+    }
+    
+    if (message) {
+      devis.reponseAdmin = {
+        message,
+        date: new Date(),
+        modifications: req.body.modifications
+      };
+    }
+    
+    if (statut === 'accepte') {
+      devis.dateAcceptation = new Date();
+      
+      // Valider la réservation
+      await Reservation.findOneAndUpdate(
+        { devis: devis._id },
+        { statut: 'validee', validePar: req.body.adminNom, 'validePar.date': new Date() }
+      );
+    } else if (statut === 'refuse') {
+      devis.dateRefus = new Date();
+      
+      // Annuler la réservation
+      await Reservation.findOneAndUpdate(
+        { devis: devis._id },
+        { statut: 'annulee' }
+      );
+    }
+    
+    await devis.save();
+    
+    // TODO: Envoyer email au client
+    
+    res.json({
+      success: true,
+      message: '✅ Devis mis à jour',
+      data: devis
+    });
+  } catch (error) {
+    console.error('❌ Erreur updateStatutDevis:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Erreur lors de la mise à jour du devis',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Supprimer un devis (Admin)
+// @route   DELETE /api/devis/:id
+// @access  Private/Admin
+exports.deleteDevis = async (req, res) => {
+  try {
+    const devis = await Devis.findByIdAndDelete(req.params.id);
+    
+    if (!devis) {
+      return res.status(404).json({
+        success: false,
+        message: 'Devis non trouvé'
+      });
+    }
+    
+    // Supprimer aussi la réservation associée
+    await Reservation.findOneAndDelete({ devis: devis._id });
+    
+    res.json({
+      success: true,
+      message: '✅ Devis supprimé'
+    });
+  } catch (error) {
+    console.error('❌ Erreur deleteDevis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la suppression'
+    });
+  }
+};

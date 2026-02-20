@@ -1,0 +1,31 @@
+.not-found-page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.not-found-content {
+  max-width: 600px;
+}
+
+.error-code {
+  font-size: 8rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+.not-found-content h2 {
+  font-size: 2rem;
+  color: var(--color-text-dark);
+  margin: var(--spacing-md) 0;
+}
+
+.not-found-content p {
+  font-size: var(--font-size-lg);
+  color: #666;
+  margin-bottom: var(--spacing-xl);
+}

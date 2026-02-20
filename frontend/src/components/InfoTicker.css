@@ -1,0 +1,58 @@
+/* 📰 Bande d'infos défilantes */
+.info-ticker {
+  position: fixed;
+  top: 130px; /* En dessous du header (qui fait ~130px avec le logo agrandi) */
+  left: 0;
+  right: 0;
+  z-index: 900; /* Juste en dessous du header (z-index: 1000) */
+  overflow: hidden;
+  padding: var(--spacing-sm) 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+}
+
+.ticker-content {
+  display: flex;
+  white-space: nowrap;
+  animation: scroll-left 30s linear infinite;
+}
+
+.ticker-text {
+  display: inline-block;
+  padding-right: 100vw; /* Espacement entre les répétitions */
+}
+
+/* Animation de défilement horizontal */
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Pause au survol (optionnel) */
+.info-ticker:hover .ticker-content {
+  animation-play-state: paused;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .info-ticker {
+    top: 110px; /* Ajuster selon la hauteur du header mobile */
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs) 0;
+  }
+  
+  .ticker-content {
+    animation-duration: 25s; /* Un peu plus rapide sur mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .info-ticker {
+    top: 90px;
+  }
+}

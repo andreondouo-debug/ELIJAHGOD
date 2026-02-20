@@ -1,0 +1,21 @@
+const express = require('express');
+const router = express.Router();
+const devisController = require('../controllers/devisController');
+
+/**
+ * 📋 ROUTES DEVIS
+ * Routes publiques pour créer et consulter des devis
+ * Routes admin pour gérer les devis
+ */
+
+// Routes publiques
+router.post('/', devisController.createDevis);
+router.get('/numero/:numero', devisController.getDevisByNumero);
+
+// Routes admin (TODO: ajouter middleware auth)
+router.get('/', devisController.getAllDevis);
+router.get('/:id', devisController.getDevisById);
+router.put('/:id/statut', devisController.updateStatutDevis);
+router.delete('/:id', devisController.deleteDevis);
+
+module.exports = router;

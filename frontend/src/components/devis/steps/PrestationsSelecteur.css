@@ -1,0 +1,235 @@
+.category-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9ff;
+  border-radius: 12px;
+}
+
+.category-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-btn:hover {
+  border-color: #667eea;
+}
+
+.category-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.prestations-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.prestations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.prestation-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.prestation-card:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.prestation-card.selected {
+  border-color: #667eea;
+  background: linear-gradient(to bottom, #f0f4ff 0%, white 100%);
+}
+
+.prestation-header {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.prestation-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #1a1a1a;
+}
+
+.prestation-category {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.prestation-description {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.prestation-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.prestation-checkbox {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #e0e0e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.prestation-card.selected .prestation-checkbox {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.prestation-options {
+  padding: 16px 20px;
+  background: #f8f9ff;
+  border-top: 1px solid #e0e8ff;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-control label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.quantity-control input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  text-align: center;
+}
+
+.empty-selection {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.empty-selection p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.empty-selection small {
+  font-size: 13px;
+}
+
+.selection-summary {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #d0e0ff;
+}
+
+.selection-summary h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #667eea;
+}
+
+.selected-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selected-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.item-price {
+  font-weight: 700;
+  color: #667eea;
+}
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .prestations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prestation-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .prestation-checkbox {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+}

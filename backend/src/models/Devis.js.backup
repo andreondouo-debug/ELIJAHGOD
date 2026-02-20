@@ -1,0 +1,196 @@
+const mongoose = require('mongoose');
+
+/**
+ * 📋 MODÈLE DEVIS - VERSION WORKFLOW INTERACTIF
+ * Représente une demande de devis construite de manière guidée
+ * avec workflow complet jusqu'au contrat signé
+ */
+const devisSchema = new mongoose.Schema({
+  // Référence au client (compte créé automatiquement)
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Client',
+    required: [true, 'Le client est requis']
+  },
+
+  // Informations client (copie pour historique)
+  client: {
+    nom: {
+      type: String,
+      required: [true, 'Le nom est requis'],
+      trim: true
+    },
+    prenom: {
+      type: String,
+      required: [true, 'Le prénom est requis'],
+      trim: true
+    },
+    email: {
+      type: String,
+      required: [true, "L'email est requis"],
+      lowercase: true,
+      trim: true
+    },
+    telephone: {
+      type: String,
+      required: [true, 'Le téléphone est requis']
+    },
+    adresse: String,
+    entreprise: String
+  },
+  
+  // Détails de l'événement
+  evenement: {
+    type: {
+      type: String,
+      required: true,
+      enum: ['Mariage', 'Anniversaire', 'Soirée d\'entreprise', 'Bar Mitzvah', 'Festival', 'Concert', 'Autre'],
+      default: 'Autre'
+    },
+    date: {
+      type: Date,
+      required: [true, 'La date de l\'événement est requise']
+    },
+    heureDebut: {
+      type: String,
+      required: true
+    },
+    heureFin: {
+      type: String,
+      required: true
+    },
+    lieu: {
+      type: String,
+      required: [true, 'Le lieu est requis'],
+      trim: true
+    },
+    nbInvites: {
+      type: Number,
+      min: [1, 'Au moins 1 invité requis']
+    }
+  },
+  
+  // Prestations sélectionnées
+  prestations: [{
+    prestation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Prestation',
+      required: true
+    },
+    quantite: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
+    duree: {
+      type: Number, // en heures
+      default: 4
+    },
+    options: {
+      weekend: { type: Boolean, default: false },
+      nuit: { type: Boolean, default: false }
+    },
+    prixUnitaire: {
+      type: Number,
+      required: true
+    },
+    prixTotal: {
+      type: Number,
+      required: true
+    },
+    commentaire: {
+      type: String,
+      maxlength: 500
+    }
+  }],
+  
+  // Commentaires et demandes spéciales
+  commentaire: {
+    type: String,
+    maxlength: 2000
+  },
+  
+  besoinsSpecifiques: {
+    type: String,
+    maxlength: 2000
+  },
+  
+  // Montants
+  montantTotal: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  
+  montantAjuste: {
+    type: Number // Si l'admin ajuste le prix
+  },
+  
+  // Statut du devis
+  statut: {
+    type: String,
+    enum: ['en_attente', 'en_cours', 'accepte', 'refuse', 'expire'],
+    default: 'en_attente'
+  },
+  
+  // Réponse de l'admin
+  reponseAdmin: {
+    message: String,
+    date: Date,
+    modifications: String
+  },
+  
+  // Validation et dates
+  dateValidite: {
+    type: Date,
+    default: function() {
+      // Valide 30 jours par défaut
+      const date = new Date();
+      date.setDate(date.getDate() + 30);
+      return date;
+    }
+  },
+  
+  dateAcceptation: Date,
+  dateRefus: Date,
+  
+  // Référence unique
+  numeroDevis: {
+    type: String,
+    unique: true
+  }
+  
+}, {
+  timestamps: true
+});
+
+// Générer un numéro de devis unique avant la sauvegarde
+devisSchema.pre('save', async function(next) {
+  if (!this.numeroDevis) {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const count = await mongoose.model('Devis').countDocuments();
+    this.numeroDevis = `EG-${year}${month}-${String(count + 1).padStart(4, '0')}`;
+  }
+  next();
+});
+
+// Méthode pour calculer le montant total
+devisSchema.methods.calculerMontantTotal = function() {
+  this.montantTotal = this.prestations.reduce((total, p) => total + p.prixTotal, 0);
+  return this.montantTotal;
+};
+
+// Méthode pour vérifier si le devis est expiré
+devisSchema.methods.estExpire = function() {
+  return new Date() > this.dateValidite && this.statut === 'en_attente';
+};
+
+// Index
+devisSchema.index({ 'client.email': 1 });
+devisSchema.index({ numeroDevis: 1 });
+devisSchema.index({ statut: 1, createdAt: -1 });
+devisSchema.index({ 'evenement.date': 1 });
+
+module.exports = mongoose.model('Devis', devisSchema);
