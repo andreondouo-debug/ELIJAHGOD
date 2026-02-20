@@ -50,18 +50,13 @@ app.use(express.urlencoded({ extended: true }));
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ MongoDB connecté avec succès');
   } catch (error) {
     console.error('❌ Erreur de connexion MongoDB:', error.message);
-    process.exit(1);
+    // Ne pas quitter - le serveur reste actif pour que Render détecte le port
   }
 };
-
-connectDB();
 
 // ========================================
 // ROUTES
@@ -119,6 +114,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Serveur ELIJAH'GOD démarré sur le port ${PORT}`);
   console.log(`📡 URL: http://localhost:${PORT}`);
   console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+  // Connexion MongoDB après ouverture du port
+  connectDB();
 });
 
 module.exports = app;
