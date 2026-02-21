@@ -14,6 +14,8 @@ const PORT = process.env.PORT || 5001;
 // CORS Configuration
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
+  'https://elijahgod.fr',
+  'https://www.elijahgod.fr',
   'https://elijahgod-6nhp.vercel.app',
   'https://elijahgod.vercel.app',
   'http://localhost:3000',
