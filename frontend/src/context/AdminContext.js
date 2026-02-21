@@ -1,9 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const AdminContext = createContext();
-
-import { API_URL } from '../config';
 
 export const AdminProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);

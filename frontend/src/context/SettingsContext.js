@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 /**
  * ⚙️ SETTINGS CONTEXT
@@ -8,8 +9,6 @@ import axios from 'axios';
  */
 
 export const SettingsContext = createContext();
-
-import { API_URL } from '../config';
 
 export const SettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState(null);

@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 /**
  * 🔐 PRESTATAIRE CONTEXT
@@ -7,8 +8,6 @@ import axios from 'axios';
  */
 
 export const PrestataireContext = createContext();
-
-import { API_URL } from '../config';
 
 export function PrestataireProvider({ children }) {
   const [prestataire, setPrestataire] = useState(null);

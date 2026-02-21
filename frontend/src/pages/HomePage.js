@@ -1,13 +1,12 @@
 import React, { useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { SettingsContext } from '../context/SettingsContext';
+import { API_URL } from '../config';
 import './HomePage.css';
 
 // Image de fond contextuelle par défaut (musique / événements)
 // Photo festive : mariage avec groupe de musique en live (Pexels)
 const IMAGE_HERO_DEFAUT = 'https://images.pexels.com/photos/1405528/pexels-photo-1405528.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop';
-
-import { API_URL } from '../config';
 
 function HomePage() {
   const { settings } = useContext(SettingsContext);

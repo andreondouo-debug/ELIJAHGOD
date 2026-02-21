@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 /**
  * 🔐 CLIENT CONTEXT
@@ -7,8 +8,6 @@ import axios from 'axios';
  */
 
 export const ClientContext = createContext();
-
-import { API_URL } from '../config';
 
 export function ClientProvider({ children }) {
   const [client, setClient] = useState(null);
