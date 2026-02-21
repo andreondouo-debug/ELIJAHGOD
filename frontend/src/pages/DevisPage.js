@@ -333,10 +333,10 @@ function DevisPage() {
             '--animation-delay': `${heroConfig?.animation?.delay || 0}ms`,
           }}
         >
-          <h1 className="devis-title" style={{ color: heroConfig?.couleurs?.texte || undefined }}>
+          <h1 className="devis-title">
             {heroConfig?.titre || '✨ Créons votre devis ensemble'}
           </h1>
-          <p className="devis-subtitle" style={{ color: heroConfig?.couleurs?.texte || undefined }}>
+          <p className="devis-subtitle">
             {heroConfig?.sousTitre || 'Un processus simple et rapide en 4 étapes'}
           </p>
         </div>
