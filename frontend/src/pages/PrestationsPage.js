@@ -10,6 +10,7 @@ import PrestationDetailModal from '../components/PrestationDetailModal';
 import './PrestationsPage.css';
 
 import { API_URL } from '../config';
+import { getCache, setCache } from '../utils/cache';
 
 /**
  * 🎨 Map des icônes par catégorie de prestation
@@ -33,10 +34,13 @@ const getCategoryIcon = (category, size = 20) => {
 };
 
 function PrestationsPage() {
-  const [prestations, setPrestations] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const CACHE_KEY = 'elijahgod_prestations';
+  const cached = getCache(CACHE_KEY);
+
+  const [prestations, setPrestations] = useState(cached?.prestations || []);
+  const [categories, setCategories] = useState(cached?.categories || []);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
 
   const { settings } = useContext(SettingsContext);
@@ -87,18 +91,22 @@ function PrestationsPage() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      // Si cache dispo, rafraîchissement silencieux (pas de spinner)
+      if (!getCache(CACHE_KEY)) setLoading(true);
       const [prestationsRes, categoriesRes] = await Promise.all([
         axios.get(`${API_URL}/api/prestations`),
         axios.get(`${API_URL}/api/prestations/categories`)
       ]);
       
-      setPrestations(prestationsRes.data.data);
-      setCategories(categoriesRes.data.data);
+      const newPrestations = prestationsRes.data.data;
+      const newCategories = categoriesRes.data.data;
+      setPrestations(newPrestations);
+      setCategories(newCategories);
+      setCache(CACHE_KEY, { prestations: newPrestations, categories: newCategories });
       setError(null);
     } catch (err) {
       console.error('❌ Erreur chargement:', err);
-      setError('Impossible de charger les prestations');
+      if (!cached) setError('Impossible de charger les prestations');
     } finally {
       setLoading(false);
     }

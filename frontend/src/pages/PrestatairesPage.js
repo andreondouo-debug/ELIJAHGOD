@@ -5,12 +5,16 @@ import { SettingsContext } from '../context/SettingsContext';
 import './PrestatairesPage.css';
 
 import { API_URL } from '../config';
+import { getCache, setCache } from '../utils/cache';
 
 function PrestatairesPage() {
-  const [prestataires, setPrestataires] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const CACHE_KEY = 'elijahgod_prestataires';
+  const cached = getCache(CACHE_KEY);
+
+  const [prestataires, setPrestataires] = useState(cached?.prestataires || []);
+  const [categories, setCategories] = useState(cached?.categories || []);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     verified: false,
@@ -65,7 +69,9 @@ function PrestatairesPage() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      const isDefaultQuery = selectedCategory === 'all' && !filters.verified && filters.noteMin === 0;
+      // Si cache dispo et requête par défaut, rafraîchissement silencieux
+      if (!getCache(CACHE_KEY) || !isDefaultQuery) setLoading(true);
       
       // Charger les catégories
       const categoriesRes = await axios.get(`${API_URL}/api/prestataires/categories`);
@@ -73,23 +79,22 @@ function PrestatairesPage() {
 
       // Charger les prestataires
       const params = {};
-      if (selectedCategory !== 'all') {
-        params.categorie = selectedCategory;
-      }
-      if (filters.verified) {
-        params.verified = 'true';
-      }
-      if (filters.noteMin > 0) {
-        params.noteMin = filters.noteMin;
-      }
+      if (selectedCategory !== 'all') params.categorie = selectedCategory;
+      if (filters.verified) params.verified = 'true';
+      if (filters.noteMin > 0) params.noteMin = filters.noteMin;
 
       const prestataireRes = await axios.get(`${API_URL}/api/prestataires`, { params });
-      setPrestataires(prestataireRes.data.data);
+      const newPrestataires = prestataireRes.data.data;
+      setPrestataires(newPrestataires);
       
+      // Mettre en cache uniquement la requête par défaut
+      if (isDefaultQuery) {
+        setCache(CACHE_KEY, { prestataires: newPrestataires, categories: categoriesRes.data.data });
+      }
       setError(null);
     } catch (err) {
       console.error('❌ Erreur chargement:', err);
-      setError('Impossible de charger les prestataires');
+      if (!cached) setError('Impossible de charger les prestataires');
     } finally {
       setLoading(false);
     }
