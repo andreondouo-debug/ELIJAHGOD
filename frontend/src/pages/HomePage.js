@@ -267,7 +267,7 @@ function HomePage() {
         // Sections par défaut si aucune configuration
         <>
           {/* Mission Section */}
-          <section className="section mission-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+          <section className="section mission-section hp-section-enter">
             <div className="container">
               <h2 className="section-title">Bienvenue chez <span className="brand-name-gold-shadow">ELIJAH'GOD</span></h2>
               <div className="section-divider"></div>
@@ -283,8 +283,8 @@ function HomePage() {
             </div>
           </section>
 
-      {/* Team Section */}
-      <section className="section team-section section-animated" data-animation="slide-in-left" style={{ '--animation-duration': '800ms', '--animation-delay': '100ms', '--animation-easing': 'ease-out' }}>
+          {/* Team Section */}
+          <section className="section team-section hp-section-enter">
         <div className="container">
           <h2 className="section-title">Notre Équipe de Prestataires</h2>
           <div className="section-divider"></div>
@@ -330,7 +330,7 @@ function HomePage() {
       </section>
 
           {/* Values Section */}
-          <section className="section values-section section-animated" data-animation="slide-in-right" style={{ '--animation-duration': '800ms', '--animation-delay': '200ms', '--animation-easing': 'ease-out' }}>
+          <section className="section values-section hp-section-enter">
             <div className="container">
               <h2 className="section-title">Chez <span className="brand-name-gold-shadow">ELIJAH'GOD</span>, nous cherchons à offrir plus qu'un service</h2>
               <div className="section-divider"></div>
@@ -357,7 +357,7 @@ function HomePage() {
           </section>
 
           {/* Final CTA Section */}
-          <section className="section final-cta-section section-animated" data-animation="zoom-in" style={{ '--animation-duration': '800ms', '--animation-delay': '300ms', '--animation-easing': 'ease-out' }}>
+          <section className="section final-cta-section hp-section-enter">
             <div className="container">
               <div className="final-cta-content">
                 <h2 className="final-cta-title">Avec <span className="brand-name-gold-shadow">ELIJAH'GOD</span>,</h2>
@@ -391,7 +391,7 @@ function HomePage() {
           { numero: 3, icone: '🤝', titre: 'Vous accompagner du début à la fin', description: 'Dans la bienveillance et la sérénité, à chaque étape de votre projet' }
         ];
         return (
-          <section className="section role-section section-animated" data-animation="slide-in-up" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+          <section className="section role-section hp-section-enter">
             <div className="container">
               <h2 className="section-title">{role.titre || 'Mon rôle est simple'}</h2>
               <div className="section-divider"></div>
@@ -414,7 +414,7 @@ function HomePage() {
       {settings?.homepage?.verse?.actif !== false && (() => {
         const verse = settings?.homepage?.verse || {};
         return (
-          <section className="section verse-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '1000ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+          <section className="section verse-section hp-section-enter">
             <div className="container">
               <div className="verse-card scale-in">
                 <div className="verse-quote">
@@ -433,7 +433,7 @@ function HomePage() {
       {settings?.homepage?.inclusivity?.actif !== false && (() => {
         const incl = settings?.homepage?.inclusivity || {};
         return (
-          <section className="section inclusivity-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+          <section className="section inclusivity-section hp-section-enter">
             <div className="container">
               <div className="inclusivity-content">
                 <p className="inclusivity-text">

@@ -430,7 +430,6 @@ button:active, a:active {
 
 /* Stagger animation pour les listes */
 .stagger-item {
-  opacity: 0;
   animation: fadeInUp 0.6s ease forwards;
 }
 
@@ -473,10 +472,9 @@ button:active, a:active {
    ContactPage, DevisPage, etc.
    =================================================== */
 
+/* section-animated : ne cache plus le contenu — les sections sont toujours visibles */
 .section-animated {
-  opacity: 0;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
+  opacity: 1;
 }
 
 /* Fade In */
@@ -484,9 +482,13 @@ button:active, a:active {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+/* Fade In - sections toujours visibles, animation optionnelle */
+@keyframes sectionFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .animate-fade-in {
-  opacity: 0;
-  animation: sectionFadeIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionFadeIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 /* Slide In Left */

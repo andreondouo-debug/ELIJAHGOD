@@ -833,10 +833,15 @@
    ANIMATIONS PROFESSIONNELLES D'APPARITION
    ======================================== */
 
+/* hp-section-enter : sections toujours visibles (remplace section-animated) */
+.hp-section-enter {
+  opacity: 1;
+}
+
 /* section-animated : marqueur seulement, ne cache plus le contenu
    Les animations sont un bonus visuel — le contenu reste toujours visible */
 .section-animated {
-  /* opacity intentionnellement non définie : sections toujours visibles */
+  opacity: 1;
 }
 
 /* Classe appliquée quand la section est visible */
