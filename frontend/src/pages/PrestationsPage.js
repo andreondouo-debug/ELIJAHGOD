@@ -9,7 +9,7 @@ import { SettingsContext } from '../context/SettingsContext';
 import PrestationDetailModal from '../components/PrestationDetailModal';
 import './PrestationsPage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 /**
  * 🎨 Map des icônes par catégorie de prestation

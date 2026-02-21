@@ -7,7 +7,7 @@ import './HomePage.css';
 // Photo festive : mariage avec groupe de musique en live (Pexels)
 const IMAGE_HERO_DEFAUT = 'https://images.pexels.com/photos/1405528/pexels-photo-1405528.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 function HomePage() {
   const { settings } = useContext(SettingsContext);

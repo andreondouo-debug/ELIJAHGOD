@@ -8,7 +8,7 @@ import axios from 'axios';
 
 export const PrestataireContext = createContext();
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 export function PrestataireProvider({ children }) {
   const [prestataire, setPrestataire] = useState(null);

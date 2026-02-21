@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import './StatistiquesAdmin.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 const MOIS_NOMS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 

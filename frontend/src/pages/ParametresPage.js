@@ -9,7 +9,7 @@ import { SettingsContext } from '../context/SettingsContext';
 import axios from 'axios';
 import './AdminDashboard.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 /**
  * ⚙️ PAGE PARAMÈTRES - Gestion des paramètres du site (Admin uniquement)

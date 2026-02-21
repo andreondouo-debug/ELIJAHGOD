@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './GestionPrestationsAdmin.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 /**
  * 🎛️ INTERFACE ADMIN - GESTION PRESTATIONS AVANCÉE

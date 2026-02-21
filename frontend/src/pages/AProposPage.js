@@ -7,7 +7,7 @@ import {
 import { SettingsContext } from '../context/SettingsContext';
 import './AProposPage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 function AProposPage() {
   const { settings } = useContext(SettingsContext);

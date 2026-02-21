@@ -4,7 +4,7 @@ import axios from 'axios';
 import AdminContext from '../context/AdminContext';
 import './MesDevisPage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 /**
  * 📝 GESTION DEVIS - Page admin pour valider et gérer tous les devis

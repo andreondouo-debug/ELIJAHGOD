@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ClientContext } from '../context/ClientContext';
 import './MesDevisPage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL } from '../config';
 
 /**
  * 📋 PAGE SUIVI DES DEVIS CLIENT
