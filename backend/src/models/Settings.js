@@ -25,7 +25,7 @@ const settingsSchema = new mongoose.Schema({
     },
     banniere: {
       type: String,
-      default: "/images/banniere.jpg"
+      default: "https://images.pexels.com/photos/1540406/pexels-photo-1540406.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop"
     }
   },
   

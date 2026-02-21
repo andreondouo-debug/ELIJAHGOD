@@ -220,13 +220,17 @@ function HomePage() {
         style={{
           backgroundImage: (() => {
             const banniere = settings?.entreprise?.banniere;
-            const imgUrl = banniere
-              ? (banniere.startsWith('http')
-                  ? banniere                          // URL externe (Pexels, Cloudinary…)
-                  : banniere.startsWith('/images/')   // fichier dans public/ de Vercel
-                    ? banniere
-                    : `${API_URL}${banniere}`)        // upload sur le backend (/uploads/…)
-              : IMAGE_HERO_DEFAUT;
+            // Ignorer les chemins locaux cassés (.jpg qui n'existe pas)
+            const banniereBrisee = !banniere ||
+              banniere === '/images/banniere.jpg' ||
+              banniere === '/images/banniere.svg';
+            const imgUrl = banniereBrisee
+              ? IMAGE_HERO_DEFAUT
+              : banniere.startsWith('http')
+                ? banniere                          // URL externe (Pexels, Cloudinary…)
+                : banniere.startsWith('/images/')   // fichier dans public/ de Vercel
+                  ? banniere
+                  : `${API_URL}${banniere}`;        // upload sur le backend (/uploads/…)
             const overlay = carousel.couleurs?.overlay || 'rgba(0, 0, 0, 0.42)';
             return `linear-gradient(${overlay}, ${overlay}), url(${imgUrl})`;
           })(),

@@ -56,6 +56,26 @@ const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ MongoDB connecté avec succès');
+
+    // Migration : s'assurer que la bannière pointe vers une vraie image
+    try {
+      const Settings = require('./src/models/Settings');
+      const settings = await Settings.findOne();
+      const banniereCassee =
+        !settings?.entreprise?.banniere ||
+        settings.entreprise.banniere === '/images/banniere.jpg' ||
+        settings.entreprise.banniere === '/images/banniere.svg';
+      if (settings && banniereCassee) {
+        const pexelsUrl = 'https://images.pexels.com/photos/1540406/pexels-photo-1540406.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop';
+        settings.entreprise.banniere = pexelsUrl;
+        settings.markModified('entreprise');
+        await settings.save();
+        console.log('🖼️  Migration bannière → Pexels URL');
+      }
+    } catch (migErr) {
+      console.warn('⚠️  Migration bannière ignorée:', migErr.message);
+    }
+
   } catch (error) {
     console.error('❌ Erreur de connexion MongoDB:', error.message);
     // Ne pas quitter - le serveur reste actif pour que Render détecte le port
