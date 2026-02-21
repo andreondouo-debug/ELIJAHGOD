@@ -4,12 +4,11 @@ import { SettingsContext } from '../context/SettingsContext';
 import { API_URL } from '../config';
 import './HomePage.css';
 
-// Image de fond contextuelle par défaut (musique / événements)
-// Photo festive : mariage avec groupe de musique en live (Pexels)
-const IMAGE_HERO_DEFAUT = 'https://images.pexels.com/photos/1405528/pexels-photo-1405528.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop';
+// Image de fond par défaut = même que la bannière en DB (évite le flash)
+const IMAGE_HERO_DEFAUT = 'https://images.pexels.com/photos/1540406/pexels-photo-1540406.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop';
 
 function HomePage() {
-  const { settings } = useContext(SettingsContext);
+  const { settings, loading: settingsLoading } = useContext(SettingsContext);
   
   // Récupérer les paramètres du carousel et des sections
   const carousel = settings?.carousel || {
@@ -218,6 +217,8 @@ function HomePage() {
         className={`hero hero-${carousel.disposition} hero-align-${carousel.alignement}`}
         style={{
           backgroundImage: (() => {
+            // Pendant le chargement : pas d'image pour éviter le flash
+            if (settingsLoading) return 'none';
             const banniere = settings?.entreprise?.banniere;
             // Ignorer les chemins locaux cassés (.jpg qui n'existe pas)
             const banniereBrisee = !banniere ||
@@ -237,7 +238,8 @@ function HomePage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          color: carousel.couleurs?.texte || '#ffffff'
+          color: carousel.couleurs?.texte || '#ffffff',
+          transition: 'background-image 0.3s ease'
         }}
       >
         <div className={`container hero-content hero-content-${carousel.disposition}`} style={{ color: carousel.couleurs?.texte || '#ffffff' }}>
