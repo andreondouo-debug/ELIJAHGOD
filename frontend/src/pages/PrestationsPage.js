@@ -65,18 +65,21 @@ function PrestationsPage() {
     return () => { clearTimeout(timer); observer.disconnect(); };
   }, [sectionsConfig, selectedCategory]);
 
-  // Animation du hero au montage
+  // Animation du hero — déclenché après la fin du loading (quand le hero est dans le DOM)
   useEffect(() => {
+    if (loading) return;
     const timer = setTimeout(() => {
       document.querySelectorAll('.section-animated[data-animation]').forEach(el => {
         const animType = el.dataset.animation;
         if (animType && animType !== 'none') {
           el.classList.add(`animate-${animType}`);
+        } else {
+          el.style.opacity = '1';
         }
       });
     }, 50);
     return () => clearTimeout(timer);
-  }, [heroConfig]);
+  }, [loading, heroConfig]);
 
   useEffect(() => {
     loadData();
