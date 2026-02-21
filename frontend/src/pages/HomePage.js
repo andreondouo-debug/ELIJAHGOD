@@ -221,7 +221,11 @@ function HomePage() {
           backgroundImage: (() => {
             const banniere = settings?.entreprise?.banniere;
             const imgUrl = banniere
-              ? (banniere.startsWith('http') ? banniere : `${API_URL}${banniere}`)
+              ? (banniere.startsWith('http')
+                  ? banniere                          // URL externe (Pexels, Cloudinary…)
+                  : banniere.startsWith('/images/')   // fichier dans public/ de Vercel
+                    ? banniere
+                    : `${API_URL}${banniere}`)        // upload sur le backend (/uploads/…)
               : IMAGE_HERO_DEFAUT;
             const overlay = carousel.couleurs?.overlay || 'rgba(0, 0, 0, 0.42)';
             return `linear-gradient(${overlay}, ${overlay}), url(${imgUrl})`;
