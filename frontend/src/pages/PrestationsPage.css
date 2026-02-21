@@ -108,7 +108,8 @@
 .prest-section-animated {
   opacity: 0;
 }
-.prest-section-animated.prest-visible {
+.prest-section-animated.prest-visible,
+.prest-visible {
   opacity: 1;
   transition: opacity 0.4s ease;
 }

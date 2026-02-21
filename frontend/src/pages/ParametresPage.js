@@ -114,10 +114,15 @@ function ParametresPage() {
           type: 'values',
           titre: "Chez ELIJAH'GOD, nous cherchons à offrir plus qu'un service",
           sousTitre: "Nous apportons une expérience.",
-          contenu: '',
+          contenu: "Nous servons avec cœur, intégrité, et avec la conviction que chaque événement peut devenir un moment qui élève et rassemble.",
           disposition: 'grille',
           ordre: 3,
           actif: true,
+          valeurs: [
+            { icone: '❤️', titre: 'Cœur', description: 'Chaque événement est traité avec passion et dévouement' },
+            { icone: '✨', titre: 'Intégrité', description: 'Transparence et honnêteté dans chacune de nos actions' },
+            { icone: '🌟', titre: 'Excellence', description: 'Un service de qualité professionnelle à chaque prestation' }
+          ],
           couleurs: {
             texte: '#1a1a1a',
             arrierePlan: '#ffffff',
@@ -151,7 +156,28 @@ function ParametresPage() {
             easing: 'ease-out'
           }
         }
-      ]
+      ],
+      // Section "Mon rôle" (fixe, toujours affichée)
+      role: {
+        actif: true,
+        titre: 'Mon rôle est simple',
+        cartes: [
+          { numero: 1, icone: '👥', titre: 'Assembler ces talents', description: 'Je sélectionne les meilleurs prestataires adaptés à votre événement' },
+          { numero: 2, icone: '📦', titre: 'Construire un forfait tout compris', description: 'Je crée une solution clé en main parfaitement adaptée à vos besoins' },
+          { numero: 3, icone: '🤝', titre: 'Vous accompagner du début à la fin', description: 'Dans la bienveillance et la sérénité, à chaque étape de votre projet' }
+        ]
+      },
+      // Section verset biblique
+      verse: {
+        actif: true,
+        texte: 'Que tout ce que vous faites soit fait avec amour.',
+        reference: '— 1 Corinthiens 16:14'
+      },
+      // Section inclusivité
+      inclusivity: {
+        actif: true,
+        texte: "Que vous soyez chrétien ou non, vous trouverez ici une équipe à l'écoute, qui respecte pleinement votre vision et met tout en œuvre pour faire de votre événement un moment inoubliable."
+      }
     },
     // Configuration des autres pages
     pages: {
@@ -285,7 +311,24 @@ function ParametresPage() {
         contact: settings.contact || formData.contact,
         reseauxSociaux: settings.reseauxSociaux || formData.reseauxSociaux,
         carousel: settings.carousel || formData.carousel,
-        homepage: settings.homepage || formData.homepage,
+        homepage: settings.homepage
+          ? {
+              // Deep merge: conserver les defaults si settings ne les a pas
+              ...formData.homepage,
+              ...settings.homepage,
+              // Sections: merger les valeurs[] manquantes
+              sections: (settings.homepage.sections || formData.homepage.sections).map(s => {
+                const def = formData.homepage.sections.find(d => d.id === s.id);
+                return def ? { ...def, ...s, valeurs: s.valeurs || def.valeurs } : s;
+              }),
+              role: settings.homepage.role
+                ? { ...formData.homepage.role, ...settings.homepage.role,
+                    cartes: settings.homepage.role.cartes || formData.homepage.role.cartes }
+                : formData.homepage.role,
+              verse: { ...formData.homepage.verse, ...(settings.homepage.verse || {}) },
+              inclusivity: { ...formData.homepage.inclusivity, ...(settings.homepage.inclusivity || {}) }
+            }
+          : formData.homepage,
         pages: settings.pages || formData.pages,
         messages: settings.messages || formData.messages,
         site: settings.site || formData.site,
@@ -1028,6 +1071,49 @@ function ParametresPage() {
                           />
                         </div>
 
+                        {/* Éditeur des cartes de valeurs (Cœur / Intégrité / Excellence) */}
+                        {section.type === 'values' && (
+                          <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: '#fffbea', borderRadius: '1rem', border: '2px dashed #d4af37' }}>
+                            <h5 style={{ marginBottom: '1.2rem', color: '#d4af37' }}>⭐ Cartes de Valeurs</h5>
+                            {(section.valeurs || []).map((valeur, vi) => (
+                              <div key={vi} style={{ background: 'white', border: '1px solid #eee', borderRadius: '0.8rem', padding: '1.2rem', marginBottom: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+                                  <span style={{ fontWeight: '700', color: '#d4af37', fontSize: '1.1rem' }}>Carte {vi + 1}</span>
+                                </div>
+                                <div className="form-row" style={{ gridTemplateColumns: '80px 1fr 2fr' }}>
+                                  <div className="form-group">
+                                    <label>Icône</label>
+                                    <input type="text" value={valeur.icone || ''} onChange={(e) => {
+                                      const sections = [...formData.homepage.sections];
+                                      sections[index].valeurs = [...(sections[index].valeurs || [])];
+                                      sections[index].valeurs[vi] = { ...sections[index].valeurs[vi], icone: e.target.value };
+                                      setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, sections } }));
+                                    }} placeholder="❤️" style={{ fontSize: '1.4rem', textAlign: 'center' }} />
+                                  </div>
+                                  <div className="form-group">
+                                    <label>Titre</label>
+                                    <input type="text" value={valeur.titre || ''} onChange={(e) => {
+                                      const sections = [...formData.homepage.sections];
+                                      sections[index].valeurs = [...(sections[index].valeurs || [])];
+                                      sections[index].valeurs[vi] = { ...sections[index].valeurs[vi], titre: e.target.value };
+                                      setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, sections } }));
+                                    }} placeholder="Cœur" />
+                                  </div>
+                                  <div className="form-group">
+                                    <label>Description</label>
+                                    <input type="text" value={valeur.description || ''} onChange={(e) => {
+                                      const sections = [...formData.homepage.sections];
+                                      sections[index].valeurs = [...(sections[index].valeurs || [])];
+                                      sections[index].valeurs[vi] = { ...sections[index].valeurs[vi], description: e.target.value };
+                                      setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, sections } }));
+                                    }} placeholder="Description de la valeur" />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="form-group">
                           <label>🎨 Disposition</label>
                           <select
@@ -1310,6 +1396,103 @@ function ParametresPage() {
                     Aucune section configurée
                   </div>
                 )}
+              </div>
+
+              {/* ====== SECTION RÔLE (fixe) ====== */}
+              <div style={{ marginTop: '3rem', padding: '2rem', background: '#f9f9f9', borderRadius: '1rem', border: '2px solid #e0e0e0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: 0, color: '#1a1a2e' }}>🎯 Section "Mon Rôle" <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 'normal' }}>(toujours affichée)</span></h3>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formData.homepage?.role?.actif !== false}
+                      onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, role: { ...prev.homepage.role, actif: e.target.checked } } }))}
+                      style={{ width: '20px', height: '20px' }} />
+                    <span style={{ fontWeight: '600' }}>{formData.homepage?.role?.actif !== false ? '✅ Visible' : '❌ Masquée'}</span>
+                  </label>
+                </div>
+                <div className="form-group">
+                  <label>Titre de la section</label>
+                  <input type="text" value={formData.homepage?.role?.titre || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, role: { ...prev.homepage.role, titre: e.target.value } } }))}
+                    placeholder="Mon rôle est simple" />
+                </div>
+                <h5 style={{ marginTop: '1.5rem', marginBottom: '1rem', color: '#d4af37' }}>Cartes des 3 rôles</h5>
+                {(formData.homepage?.role?.cartes || []).map((carte, ci) => (
+                  <div key={ci} style={{ background: 'white', border: '1px solid #eee', borderRadius: '0.8rem', padding: '1.2rem', marginBottom: '1rem' }}>
+                    <div style={{ fontWeight: '700', color: '#d4af37', marginBottom: '0.8rem' }}>Étape {carte.numero}</div>
+                    <div className="form-row" style={{ gridTemplateColumns: '80px 1fr' }}>
+                      <div className="form-group">
+                        <label>Icône</label>
+                        <input type="text" value={carte.icone || ''} onChange={(e) => {
+                          const cartes = [...(formData.homepage.role.cartes || [])];
+                          cartes[ci] = { ...cartes[ci], icone: e.target.value };
+                          setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, role: { ...prev.homepage.role, cartes } } }));
+                        }} placeholder="👥" style={{ fontSize: '1.4rem', textAlign: 'center' }} />
+                      </div>
+                      <div className="form-group">
+                        <label>Titre</label>
+                        <input type="text" value={carte.titre || ''} onChange={(e) => {
+                          const cartes = [...(formData.homepage.role.cartes || [])];
+                          cartes[ci] = { ...cartes[ci], titre: e.target.value };
+                          setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, role: { ...prev.homepage.role, cartes } } }));
+                        }} placeholder="Titre de l'étape" />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Description</label>
+                      <input type="text" value={carte.description || ''} onChange={(e) => {
+                        const cartes = [...(formData.homepage.role.cartes || [])];
+                        cartes[ci] = { ...cartes[ci], description: e.target.value };
+                        setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, role: { ...prev.homepage.role, cartes } } }));
+                      }} placeholder="Description" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ====== SECTION VERSET ====== */}
+              <div style={{ marginTop: '2rem', padding: '2rem', background: '#080810', borderRadius: '1rem', border: '2px solid #d4af37' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: 0, color: '#d4af37' }}>✝️ Verset Biblique</h3>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formData.homepage?.verse?.actif !== false}
+                      onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, verse: { ...prev.homepage.verse, actif: e.target.checked } } }))}
+                      style={{ width: '20px', height: '20px' }} />
+                    <span style={{ fontWeight: '600', color: 'white' }}>{formData.homepage?.verse?.actif !== false ? '✅ Visible' : '❌ Masqué'}</span>
+                  </label>
+                </div>
+                <div className="form-group">
+                  <label style={{ color: '#d4af37' }}>Texte du verset</label>
+                  <textarea value={formData.homepage?.verse?.texte || ''} rows="2"
+                    onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, verse: { ...prev.homepage.verse, texte: e.target.value } } }))}
+                    placeholder="Que tout ce que vous faites soit fait avec amour."
+                    style={{ background: '#111', color: 'white', border: '1px solid #d4af37' }} />
+                </div>
+                <div className="form-group">
+                  <label style={{ color: '#d4af37' }}>Référence</label>
+                  <input type="text" value={formData.homepage?.verse?.reference || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, verse: { ...prev.homepage.verse, reference: e.target.value } } }))}
+                    placeholder="— 1 Corinthiens 16:14"
+                    style={{ background: '#111', color: 'white', border: '1px solid #d4af37' }} />
+                </div>
+              </div>
+
+              {/* ====== SECTION INCLUSIVITÉ ====== */}
+              <div style={{ marginTop: '2rem', padding: '2rem', background: '#f0f4ff', borderRadius: '1rem', border: '1px solid #c5d3f5' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: 0, color: '#1a1a2e' }}>🤝 Message d'Inclusivité</h3>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formData.homepage?.inclusivity?.actif !== false}
+                      onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, inclusivity: { ...prev.homepage.inclusivity, actif: e.target.checked } } }))}
+                      style={{ width: '20px', height: '20px' }} />
+                    <span style={{ fontWeight: '600' }}>{formData.homepage?.inclusivity?.actif !== false ? '✅ Visible' : '❌ Masqué'}</span>
+                  </label>
+                </div>
+                <div className="form-group">
+                  <label>Texte</label>
+                  <textarea value={formData.homepage?.inclusivity?.texte || ''} rows="3"
+                    onChange={(e) => setFormData(prev => ({ ...prev, homepage: { ...prev.homepage, inclusivity: { ...prev.homepage.inclusivity, texte: e.target.value } } }))}
+                    placeholder="Que vous soyez chrétien ou non..." />
+                </div>
               </div>
             </div>
           )}

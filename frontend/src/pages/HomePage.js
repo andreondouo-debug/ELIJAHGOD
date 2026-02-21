@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SettingsContext } from '../context/SettingsContext';
 import { API_URL } from '../config';
@@ -9,7 +9,19 @@ const IMAGE_HERO_DEFAUT = 'https://images.pexels.com/photos/1540406/pexels-photo
 
 function HomePage() {
   const { settings, loading: settingsLoading } = useContext(SettingsContext);
-  
+
+  // Sections visibles — jamais effacé au re-render, évite les flashs
+  const [visibleSectionIds, setVisibleSectionIds] = useState(() => new Set());
+
+  const markVisible = (id) => {
+    setVisibleSectionIds(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
   // Récupérer les paramètres du carousel et des sections
   const carousel = settings?.carousel || {
     titre: "ELIJAH'GOD",
@@ -23,60 +35,48 @@ function HomePage() {
   const sections = settings?.homepage?.sections || [];
   const activeSections = sections.filter(s => s.actif).sort((a, b) => a.ordre - b.ordre);
   
-  // Animation au scroll avec Intersection Observer
+  // Animation au scroll — via React state pour survivre aux re-renders
   useEffect(() => {
-    const triggerAnimation = (el) => {
-      const animationType = el.getAttribute('data-animation');
-      if (animationType && animationType !== 'none') {
-        el.classList.add(`animate-${animationType}`);
-      } else {
-        el.classList.add('animate-fade-in');
-      }
-    };
-
-    const observerOptions = {
-      threshold: 0.12,
-      rootMargin: '0px 0px -80px 0px'
-    };
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          triggerAnimation(entry.target);
+          const id = entry.target.dataset.sectionId;
+          if (id) markVisible(id);
           observer.unobserve(entry.target);
         }
       });
-    }, observerOptions);
+    }, { threshold: 0.12, rootMargin: '0px 0px -80px 0px' });
 
-    // Observer toutes les sections animées
-    const sections = document.querySelectorAll('.section-animated');
-    sections.forEach(el => observer.observe(el));
-
-    // Déclencher immédiatement les sections déjà visibles dans le viewport
-    setTimeout(() => {
-      document.querySelectorAll('.section-animated').forEach(el => {
+    const timer = setTimeout(() => {
+      document.querySelectorAll('[data-section-id]').forEach(el => {
+        const id = el.dataset.sectionId;
+        if (!id) return;
         const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight && !el.classList.contains('animate-fade-in') &&
-            !el.classList.contains('animate-slide-in-left') &&
-            !el.classList.contains('animate-slide-in-right') &&
-            !el.classList.contains('animate-slide-in-up') &&
-            !el.classList.contains('animate-slide-in-down') &&
-            !el.classList.contains('animate-zoom-in') &&
-            !el.classList.contains('animate-flip-in')) {
-          triggerAnimation(el);
+        if (rect.top < window.innerHeight) {
+          markVisible(id);
+        } else {
+          observer.observe(el);
         }
       });
-    }, 100);
+    }, 50);
 
-    return () => observer.disconnect();
-  }, [activeSections]); // Re-run quand les sections changent
+    return () => { clearTimeout(timer); observer.disconnect(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSections]);
 
   // Fonction pour rendre une section selon son type
   const renderSection = (section) => {
     // Configuration de l'animation
     const animation = section.animation || { type: 'fade-in', delay: 0, duration: 800, easing: 'ease-out' };
-    const animationClass = animation.type !== 'none' ? 'section-animated' : '';
-    
+
+    // Classe d'animation gérée par React state (résistante aux re-renders)
+    const isVisible = visibleSectionIds.has(section.id);
+    const animationClass = animation.type === 'none'
+      ? ''
+      : isVisible
+        ? `animate-${animation.type}`
+        : 'section-animated';
+
     const className = `section ${section.type}-section section-${section.disposition} ${animationClass}`;
     
     const sectionStyle = {
@@ -94,7 +94,7 @@ function HomePage() {
     switch (section.type) {
       case 'mission':
         return (
-          <section key={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
             <div className="container">
               <h2 className="section-title" style={titleStyle}>
                 {section.titre.includes("ELIJAH'GOD") ? (
@@ -116,7 +116,7 @@ function HomePage() {
 
       case 'team':
         return (
-          <section key={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
             <div className="container">
               <h2 className="section-title" style={titleStyle}>{section.titre}</h2>
               <div className="section-divider"></div>
@@ -142,7 +142,7 @@ function HomePage() {
 
       case 'values':
         return (
-          <section key={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
             <div className="container">
               <h2 className="section-title" style={titleStyle}>
                 {section.titre.includes("ELIJAH'GOD") ? (
@@ -156,21 +156,17 @@ function HomePage() {
               <div className="values-content">
                 {section.contenu && <p className="values-text">{section.contenu}</p>}
                 <div className="values-grid">
-                  <div className="value-item stagger-item hover-lift">
-                    <div className="value-icon">❤️</div>
-                    <h3>Cœur</h3>
-                    <p>Chaque événement est traité avec passion et dévouement</p>
-                  </div>
-                  <div className="value-item stagger-item hover-lift">
-                    <div className="value-icon">✨</div>
-                    <h3>Intégrité</h3>
-                    <p>Transparence et honnêteté dans chacune de nos actions</p>
-                  </div>
-                  <div className="value-item stagger-item hover-lift">
-                    <div className="value-icon">🌟</div>
-                    <h3>Excellence</h3>
-                    <p>Un service de qualité professionnelle à chaque prestation</p>
-                  </div>
+                  {(section.valeurs || [
+                    { icone: '❤️', titre: 'Cœur', description: 'Chaque événement est traité avec passion et dévouement' },
+                    { icone: '✨', titre: 'Intégrité', description: 'Transparence et honnêteté dans chacune de nos actions' },
+                    { icone: '🌟', titre: 'Excellence', description: 'Un service de qualité professionnelle à chaque prestation' }
+                  ]).map((v, i) => (
+                    <div key={i} className="value-item stagger-item hover-lift">
+                      <div className="value-icon">{v.icone}</div>
+                      <h3>{v.titre}</h3>
+                      <p>{v.description}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -179,7 +175,7 @@ function HomePage() {
 
       case 'cta':
         return (
-          <section key={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
             <div className="container">
               <div className="final-cta-content">
                 <h2 className="final-cta-title" style={titleStyle}>
@@ -340,21 +336,17 @@ function HomePage() {
                   peut devenir un moment qui élève et rassemble.
                 </p>
                 <div className="values-grid">
-                  <div className="value-item stagger-item hover-lift">
-                    <div className="value-icon">❤️</div>
-                    <h3>Cœur</h3>
-                    <p>Chaque événement est traité avec passion et dévouement</p>
-                  </div>
-                  <div className="value-item stagger-item hover-lift">
-                    <div className="value-icon">✨</div>
-                    <h3>Intégrité</h3>
-                    <p>Transparence et honnêteté dans chacune de nos actions</p>
-                  </div>
-                  <div className="value-item stagger-item hover-lift">
-                    <div className="value-icon">🌟</div>
-                    <h3>Excellence</h3>
-                    <p>Un service de qualité professionnelle à chaque prestation</p>
-                  </div>
+                  {(settings?.homepage?.sections?.find(s => s.id === 'values')?.valeurs || [
+                    { icone: '❤️', titre: 'Cœur', description: 'Chaque événement est traité avec passion et dévouement' },
+                    { icone: '✨', titre: 'Intégrité', description: 'Transparence et honnêteté dans chacune de nos actions' },
+                    { icone: '🌟', titre: 'Excellence', description: 'Un service de qualité professionnelle à chaque prestation' }
+                  ]).map((v, i) => (
+                    <div key={i} className="value-item stagger-item hover-lift">
+                      <div className="value-icon">{v.icone}</div>
+                      <h3>{v.titre}</h3>
+                      <p>{v.description}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -387,61 +379,67 @@ function HomePage() {
 
       {/* Sections fixes (toujours affichées) */}
       {/* Role Section */}
-      <section className="section role-section section-animated" data-animation="slide-in-up" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
-        <div className="container">
-          <h2 className="section-title">Mon rôle est simple</h2>
-          <div className="section-divider"></div>
-          <div className="role-grid">
-            <div className="role-card stagger-item hover-lift">
-              <div className="role-number">1</div>
-              <div className="role-icon">👥</div>
-              <h3>Assembler ces talents</h3>
-              <p>Je sélectionne les meilleurs prestataires adaptés à votre événement</p>
+      {settings?.homepage?.role?.actif !== false && (() => {
+        const role = settings?.homepage?.role || {};
+        const cartes = role.cartes || [
+          { numero: 1, icone: '👥', titre: 'Assembler ces talents', description: 'Je sélectionne les meilleurs prestataires adaptés à votre événement' },
+          { numero: 2, icone: '📦', titre: 'Construire un forfait tout compris', description: 'Je crée une solution clé en main parfaitement adaptée à vos besoins' },
+          { numero: 3, icone: '🤝', titre: 'Vous accompagner du début à la fin', description: 'Dans la bienveillance et la sérénité, à chaque étape de votre projet' }
+        ];
+        return (
+          <section className="section role-section section-animated" data-animation="slide-in-up" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+            <div className="container">
+              <h2 className="section-title">{role.titre || 'Mon rôle est simple'}</h2>
+              <div className="section-divider"></div>
+              <div className="role-grid">
+                {cartes.map((c, i) => (
+                  <div key={i} className="role-card stagger-item hover-lift">
+                    <div className="role-number">{c.numero || i + 1}</div>
+                    <div className="role-icon">{c.icone}</div>
+                    <h3>{c.titre}</h3>
+                    <p>{c.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="role-card stagger-item hover-lift">
-              <div className="role-number">2</div>
-              <div className="role-icon">📦</div>
-              <h3>Construire un forfait tout compris</h3>
-              <p>Je crée une solution clé en main parfaitement adaptée à vos besoins</p>
-            </div>
-            <div className="role-card stagger-item hover-lift">
-              <div className="role-number">3</div>
-              <div className="role-icon">🤝</div>
-              <h3>Vous accompagner du début à la fin</h3>
-              <p>Dans la bienveillance et la sérénité, à chaque étape de votre projet</p>
-            </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        );
+      })()}
 
       {/* Bible Verse Section */}
-      <section className="section verse-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '1000ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
-        <div className="container">
-          <div className="verse-card scale-in">
-            <div className="verse-quote">
-              <span className="quote-mark">"</span>
-              <p className="verse-text">
-                Que tout ce que vous faites soit fait avec amour.
-              </p>
-              <span className="quote-mark">"</span>
+      {settings?.homepage?.verse?.actif !== false && (() => {
+        const verse = settings?.homepage?.verse || {};
+        return (
+          <section className="section verse-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '1000ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+            <div className="container">
+              <div className="verse-card scale-in">
+                <div className="verse-quote">
+                  <span className="quote-mark">“</span>
+                  <p className="verse-text">{verse.texte || 'Que tout ce que vous faites soit fait avec amour.'}</p>
+                  <span className="quote-mark">“</span>
+                </div>
+                <p className="verse-reference">{verse.reference || '— 1 Corinthiens 16:14'}</p>
+              </div>
             </div>
-            <p className="verse-reference">— 1 Corinthiens 16:14</p>
-          </div>
-        </div>
-      </section>
+          </section>
+        );
+      })()}
 
       {/* Inclusivity Section */}
-      <section className="section inclusivity-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
-        <div className="container">
-          <div className="inclusivity-content">
-            <p className="inclusivity-text">
-              Que vous soyez chrétien ou non, vous trouverez ici une équipe à l'écoute, 
-              qui respecte pleinement votre vision et met tout en œuvre pour faire de votre événement 
-              un moment inoubliable.
-            </p>
-          </div>
-        </div>
-      </section>
+      {settings?.homepage?.inclusivity?.actif !== false && (() => {
+        const incl = settings?.homepage?.inclusivity || {};
+        return (
+          <section className="section inclusivity-section section-animated" data-animation="fade-in" style={{ '--animation-duration': '800ms', '--animation-delay': '0ms', '--animation-easing': 'ease-out' }}>
+            <div className="container">
+              <div className="inclusivity-content">
+                <p className="inclusivity-text">
+                  {incl.texte || "Que vous soyez chrétien ou non, vous trouverez ici une équipe à l’écoute, qui respecte pleinement votre vision et met tout en œuvre pour faire de votre événement un moment inoubliable."}
+                </p>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
     </div>
   );
 }

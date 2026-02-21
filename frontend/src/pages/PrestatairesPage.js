@@ -16,6 +16,17 @@ function PrestatairesPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
+  // Éléments visibles — jamais effacés au re-render
+  const [visibleEls, setVisibleEls] = useState(() => new Set());
+  const [heroVisible, setHeroVisible] = useState(false);
+
+  const markElVisible = (key) => {
+    setVisibleEls(prev => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev); next.add(key); return next;
+    });
+  };
+
   const [filters, setFilters] = useState({
     verified: false,
     noteMin: 0
@@ -25,41 +36,33 @@ function PrestatairesPage() {
   const heroConfig = settings?.pages?.prestataires?.hero;
   const sectionsConfig = settings?.pages?.prestataires?.sections;
 
-  // IntersectionObserver pour animer les sections au scroll
+  // Observer sections — React state pour survivre aux re-renders
   useEffect(() => {
-    const animEl = (el) => {
-      const animType = el.dataset.animation;
-      if (animType && animType !== 'none') {
-        el.classList.add(`animate-${animType}`);
-      } else {
-        el.classList.add('prest-visible');
-      }
-    };
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => { if (entry.isIntersecting) { animEl(entry.target); observer.unobserve(entry.target); } });
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const key = entry.target.dataset.animKey;
+          if (key) markElVisible(key);
+          observer.unobserve(entry.target);
+        }
+      });
     }, { threshold: 0.1, rootMargin: '-40px' });
     const timer = setTimeout(() => {
-      document.querySelectorAll('.prest-section-animated').forEach(el => {
-        if (el.getBoundingClientRect().top < window.innerHeight) { animEl(el); }
+      document.querySelectorAll('[data-anim-key]').forEach(el => {
+        const key = el.dataset.animKey;
+        if (!key || visibleEls.has(key)) return;
+        if (el.getBoundingClientRect().top < window.innerHeight) { markElVisible(key); }
         else { observer.observe(el); }
       });
     }, 100);
     return () => { clearTimeout(timer); observer.disconnect(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionsConfig, selectedCategory]);
 
-  // Animation du hero — déclenché après la fin du loading (quand le hero est dans le DOM)
+  // Animation du hero via React state
   useEffect(() => {
     if (loading) return;
-    const timer = setTimeout(() => {
-      document.querySelectorAll('.section-animated[data-animation]').forEach(el => {
-        const animType = el.dataset.animation;
-        if (animType && animType !== 'none') {
-          el.classList.add(`animate-${animType}`);
-        } else {
-          el.style.opacity = '1';
-        }
-      });
-    }, 50);
+    const timer = setTimeout(() => setHeroVisible(true), 50);
     return () => clearTimeout(timer);
   }, [loading, heroConfig]);
 
@@ -127,7 +130,7 @@ function PrestatairesPage() {
     <div className="prestataires-page">
       {/* Hero */}
       <section
-        className={`prestataires-hero${heroConfig?.animation?.type && heroConfig.animation.type !== 'none' ? ' section-animated' : ''}`}
+        className={`prestataires-hero${heroConfig?.animation?.type && heroConfig.animation.type !== 'none' ? (heroVisible ? ` animate-${heroConfig.animation.type}` : ' section-animated') : ''}`}
         data-animation={heroConfig?.animation?.type || 'none'}
         style={{
           backgroundColor: heroConfig?.couleurs?.arrierePlan || undefined,
@@ -148,7 +151,8 @@ function PrestatairesPage() {
       <div className="container">
         {/* Filtres */}
         <div
-          className="filters-section prest-section-animated"
+          className={`filters-section${visibleEls.has('filters') ? ' prest-visible' : ' prest-section-animated'}`}
+          data-anim-key="filters"
           data-animation={sectionsConfig?.filtres?.animation?.type || 'slide-in-up'}
           style={{
             '--animation-duration': `${sectionsConfig?.filtres?.animation?.duration || 700}ms`,
@@ -210,7 +214,8 @@ function PrestatairesPage() {
           </div>
         ) : (
           <div
-            className="prestataires-grid prest-section-animated"
+            className={`prestataires-grid${visibleEls.has('grid') ? ' prest-visible' : ' prest-section-animated'}`}
+            data-anim-key="grid"
             data-animation={sectionsConfig?.grille?.animation?.type || 'zoom-in'}
             style={{
               '--animation-duration': `${sectionsConfig?.grille?.animation?.duration || 600}ms`,
@@ -295,7 +300,8 @@ function PrestatairesPage() {
 
         {/* CTA Inscription Prestataire */}
         <div
-          className="prestataire-cta prest-section-animated"
+          className={`prestataire-cta${visibleEls.has('cta') ? ' prest-visible' : ' prest-section-animated'}`}
+          data-anim-key="cta"
           data-animation={sectionsConfig?.cta?.animation?.type || 'fade-in'}
           style={{
             '--animation-duration': `${sectionsConfig?.cta?.animation?.duration || 800}ms`,
