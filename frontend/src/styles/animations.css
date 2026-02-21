@@ -482,11 +482,6 @@ button:active, a:active {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-/* Fade In - sections toujours visibles, animation optionnelle */
-@keyframes sectionFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 .animate-fade-in {
   animation: sectionFadeIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
@@ -497,9 +492,7 @@ button:active, a:active {
   to { opacity: 1; transform: translateX(0); }
 }
 .animate-slide-in-left {
-  opacity: 0;
-  transform: translateX(-80px);
-  animation: sectionSlideInLeft var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionSlideInLeft var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 /* Slide In Right */
@@ -508,9 +501,7 @@ button:active, a:active {
   to { opacity: 1; transform: translateX(0); }
 }
 .animate-slide-in-right {
-  opacity: 0;
-  transform: translateX(80px);
-  animation: sectionSlideInRight var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionSlideInRight var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 /* Slide In Up */
@@ -519,9 +510,7 @@ button:active, a:active {
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-in-up {
-  opacity: 0;
-  transform: translateY(60px);
-  animation: sectionSlideInUp var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionSlideInUp var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 /* Slide In Down */
@@ -530,9 +519,7 @@ button:active, a:active {
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-in-down {
-  opacity: 0;
-  transform: translateY(-60px);
-  animation: sectionSlideInDown var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionSlideInDown var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 /* Zoom In */
@@ -541,9 +528,7 @@ button:active, a:active {
   to { opacity: 1; transform: scale(1); }
 }
 .animate-zoom-in {
-  opacity: 0;
-  transform: scale(0.85);
-  animation: sectionZoomIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionZoomIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 /* Flip In */
@@ -552,9 +537,7 @@ button:active, a:active {
   to { opacity: 1; transform: perspective(400px) rotateY(0deg); }
 }
 .animate-flip-in {
-  opacity: 0;
-  transform: perspective(400px) rotateY(90deg);
-  animation: sectionFlipIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) forwards;
+  animation: sectionFlipIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
 }
 
 @media (max-width: 768px) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { SettingsContext } from '../context/SettingsContext';
 import { API_URL } from '../config';
@@ -9,18 +9,6 @@ const IMAGE_HERO_DEFAUT = 'https://images.pexels.com/photos/1540406/pexels-photo
 
 function HomePage() {
   const { settings, loading: settingsLoading } = useContext(SettingsContext);
-
-  // Sections visibles — jamais effacé au re-render, évite les flashs
-  const [visibleSectionIds, setVisibleSectionIds] = useState(() => new Set());
-
-  const markVisible = (id) => {
-    setVisibleSectionIds(prev => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  };
 
   // Récupérer les paramètres du carousel et des sections
   const carousel = settings?.carousel || {
@@ -33,72 +21,30 @@ function HomePage() {
   };
 
   const sections = settings?.homepage?.sections || [];
-  const activeSections = sections.filter(s => s.actif).sort((a, b) => a.ordre - b.ordre);
-  
-  // Animation au scroll — via React state pour survivre aux re-renders
-  // Sections déjà visibles : pas d'animation (évite opacity 0→1)
-  // Sections hors viewport : animation au scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const id = entry.target.dataset.sectionId;
-          if (id) markVisible(id);
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -80px 0px' });
+  const activeSections = sections.filter(s => s.actif !== false).sort((a, b) => a.ordre - b.ordre);
 
-    const timer = setTimeout(() => {
-      document.querySelectorAll('[data-section-id]').forEach(el => {
-        const id = el.dataset.sectionId;
-        if (!id) return;
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight) {
-          // Déjà visible → marquer sans animation (pas de classe animate-*)
-          markVisible('__immediate__' + id);
-        } else {
-          observer.observe(el);
-        }
-      });
-    }, 50);
-
-    return () => { clearTimeout(timer); observer.disconnect(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSections]);
-
-  // Fonction pour rendre une section selon son type
+  // Rendu d'une section — l'animation vient directement des paramètres admin,
+  // appliquée via une classe CSS + variables CSS. Aucun observer JS nécessaire.
   const renderSection = (section) => {
-    // Configuration de l'animation
-    const animation = section.animation || { type: 'fade-in', delay: 0, duration: 800, easing: 'ease-out' };
+    const anim = section.animation || { type: 'fade-in', delay: 0, duration: 800, easing: 'ease-out' };
+    const animClass = anim.type && anim.type !== 'none' ? `animate-${anim.type}` : 'hp-section-enter';
+    const className = `section ${section.type}-section ${animClass}`;
 
-    // Classe d'animation gérée par React state (résistante aux re-renders)
-    const isImmediate = visibleSectionIds.has('__immediate__' + section.id); // déjà visible au load
-    const isScrolled = visibleSectionIds.has(section.id);                    // scrollé dans le viewport
-    const animationClass = animation.type === 'none' || isImmediate
-      ? ''                              // visible immédiatement, pas d'animation
-      : isScrolled
-        ? `animate-${animation.type}`   // scrollé dans le viewport → animation
-        : 'section-animated';           // hors viewport (marqueur sans opacity:0)
-
-    const className = `section ${section.type}-section section-${section.disposition} ${animationClass}`;
-    
     const sectionStyle = {
-      backgroundColor: section.couleurs?.arrierePlan || '#ffffff',
-      color: section.couleurs?.texte || '#1a1a1a',
-      // Variables CSS pour l'animation
-      '--animation-duration': `${animation.duration}ms`,
-      '--animation-delay': `${animation.delay}ms`,
-      '--animation-easing': animation.easing
+      backgroundColor: section.couleurs?.arrierePlan || undefined,
+      color: section.couleurs?.texte || undefined,
+      '--animation-duration': `${anim.duration || 800}ms`,
+      '--animation-delay': `${anim.delay || 0}ms`,
+      '--animation-easing': anim.easing || 'ease-out',
     };
     const titleStyle = {
-      color: section.couleurs?.titre || section.couleurs?.texte || '#1a1a1a'
+      color: section.couleurs?.titre || section.couleurs?.texte || undefined
     };
     
     switch (section.type) {
       case 'mission':
         return (
-          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} className={className} style={sectionStyle}>
             <div className="container">
               <h2 className="section-title" style={titleStyle}>
                 {section.titre.includes("ELIJAH'GOD") ? (
@@ -120,7 +66,7 @@ function HomePage() {
 
       case 'team':
         return (
-          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} className={className} style={sectionStyle}>
             <div className="container">
               <h2 className="section-title" style={titleStyle}>{section.titre}</h2>
               <div className="section-divider"></div>
@@ -146,7 +92,7 @@ function HomePage() {
 
       case 'values':
         return (
-          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} className={className} style={sectionStyle}>
             <div className="container">
               <h2 className="section-title" style={titleStyle}>
                 {section.titre.includes("ELIJAH'GOD") ? (
@@ -179,7 +125,7 @@ function HomePage() {
 
       case 'cta':
         return (
-          <section key={section.id} data-section-id={section.id} className={className} style={sectionStyle} data-animation={animation.type}>
+          <section key={section.id} className={className} style={sectionStyle}>
             <div className="container">
               <div className="final-cta-content">
                 <h2 className="final-cta-title" style={titleStyle}>
