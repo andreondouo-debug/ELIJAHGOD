@@ -430,7 +430,7 @@ button:active, a:active {
 
 /* Stagger animation pour les listes */
 .stagger-item {
-  animation: fadeInUp 0.6s ease forwards;
+  animation: fadeInUp 0.6s ease both;
 }
 
 .stagger-item:nth-child(1) { animation-delay: 0.1s; }

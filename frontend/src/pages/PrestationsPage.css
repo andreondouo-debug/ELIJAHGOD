@@ -104,14 +104,19 @@
   overflow: visible; /* indispensable pour le badge absolu hors carte */
 }
 
-/* === Animations de section — contenu toujours visible === */
-.prest-section-animated {
-  opacity: 1;
+/* === Animations de section — keyframes CSS automatiques, pas besoin de JS === */
+@keyframes prest-appear {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
+.prest-section-animated {
+  animation: prest-appear var(--animation-duration, 600ms) ease var(--animation-delay, 0ms) both;
+}
+
 .prest-section-animated.prest-visible,
 .prest-visible {
   opacity: 1;
-  transition: opacity 0.4s ease;
 }
 
 

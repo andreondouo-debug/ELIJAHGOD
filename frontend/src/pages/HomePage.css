@@ -833,13 +833,27 @@
    ANIMATIONS PROFESSIONNELLES D'APPARITION
    ======================================== */
 
-/* hp-section-enter : sections toujours visibles (remplace section-animated) */
-.hp-section-enter {
-  opacity: 1;
+/* hp-section-enter : animation CSS automatique à l'entrée dans le DOM */
+@keyframes hp-appear {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* section-animated : marqueur seulement, ne cache plus le contenu
-   Les animations sont un bonus visuel — le contenu reste toujours visible */
+.hp-section-enter {
+  animation: hp-appear 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Délais par type de section pour un effet de cascade */
+.mission-section.hp-section-enter  { animation-delay: 0ms; }
+.team-section.hp-section-enter     { animation-delay: 80ms; }
+.values-section.hp-section-enter   { animation-delay: 160ms; }
+.cta-section.hp-section-enter,
+.final-cta-section.hp-section-enter { animation-delay: 240ms; }
+.role-section.hp-section-enter     { animation-delay: 0ms; }
+.verse-section.hp-section-enter    { animation-delay: 80ms; }
+.inclusivity-section.hp-section-enter { animation-delay: 160ms; }
+
+/* section-animated : ne cache plus le contenu */
 .section-animated {
   opacity: 1;
 }
