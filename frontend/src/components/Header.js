@@ -139,12 +139,6 @@ function Header() {
                   </div>
                 )}
               </div>
-              {settings?.contact?.telephone && (
-                <a href={`tel:${settings.contact.telephone}`} className="contact-phone" onClick={fermerMenu}>
-                  <Phone size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  {settings.contact.telephone}
-                </a>
-              )}
             </div>
           </nav>
 
@@ -168,12 +162,6 @@ function Header() {
                   </div>
                 )}
               </div>
-              {settings?.contact?.telephone && (
-                <a href={`tel:${settings.contact.telephone}`} className="contact-phone">
-                  <Phone size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  {settings.contact.telephone}
-                </a>
-              )}
             </div>
 
             {/* Bouton hamburger — mobile/tablette uniquement */}
