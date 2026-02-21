@@ -104,9 +104,9 @@
   overflow: visible; /* indispensable pour le badge absolu hors carte */
 }
 
-/* === Animations de section (contrôlées par IntersectionObserver) === */
+/* === Animations de section — contenu toujours visible === */
 .prest-section-animated {
-  opacity: 0;
+  opacity: 1;
 }
 .prest-section-animated.prest-visible,
 .prest-visible {

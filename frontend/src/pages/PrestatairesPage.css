@@ -336,9 +336,9 @@
   }
 }
 
-/* === Animations de section (contrôlées par React state) === */
+/* === Animations de section — contenu toujours visible === */
 .prest-section-animated {
-  opacity: 0;
+  opacity: 1;
 }
 .prest-section-animated.prest-visible,
 .prest-visible {
