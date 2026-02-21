@@ -36,6 +36,8 @@ function HomePage() {
   const activeSections = sections.filter(s => s.actif).sort((a, b) => a.ordre - b.ordre);
   
   // Animation au scroll — via React state pour survivre aux re-renders
+  // Sections déjà visibles : pas d'animation (évite opacity 0→1)
+  // Sections hors viewport : animation au scroll
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -53,7 +55,8 @@ function HomePage() {
         if (!id) return;
         const rect = el.getBoundingClientRect();
         if (rect.top < window.innerHeight) {
-          markVisible(id);
+          // Déjà visible → marquer sans animation (pas de classe animate-*)
+          markVisible('__immediate__' + id);
         } else {
           observer.observe(el);
         }
@@ -70,12 +73,13 @@ function HomePage() {
     const animation = section.animation || { type: 'fade-in', delay: 0, duration: 800, easing: 'ease-out' };
 
     // Classe d'animation gérée par React state (résistante aux re-renders)
-    const isVisible = visibleSectionIds.has(section.id);
-    const animationClass = animation.type === 'none'
-      ? ''
-      : isVisible
-        ? `animate-${animation.type}`
-        : 'section-animated';
+    const isImmediate = visibleSectionIds.has('__immediate__' + section.id); // déjà visible au load
+    const isScrolled = visibleSectionIds.has(section.id);                    // scrollé dans le viewport
+    const animationClass = animation.type === 'none' || isImmediate
+      ? ''                              // visible immédiatement, pas d'animation
+      : isScrolled
+        ? `animate-${animation.type}`   // scrollé dans le viewport → animation
+        : 'section-animated';           // hors viewport (marqueur sans opacity:0)
 
     const className = `section ${section.type}-section section-${section.disposition} ${animationClass}`;
     

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2, Clapperboard, Phone, Smartphone, MessageSquare,
   Palette, FileText, FileStack, Rocket, User, Settings2,
-  ArrowLeft, Hourglass
+  ArrowLeft, Hourglass, Home
 } from 'lucide-react';
 import { SettingsContext } from '../context/SettingsContext';
 import axios from 'axios';
@@ -457,16 +457,17 @@ function ParametresPage() {
   };
 
   const tabs = [
-    { id: 'entreprise', label: 'Entreprise',      icon: Building2     },
-    { id: 'carousel',  label: 'Carousel & Pages', icon: Clapperboard  },
-    { id: 'contact',   label: 'Contact',           icon: Phone         },
-    { id: 'reseaux',   label: 'Réseaux sociaux',    icon: Smartphone    },
-    { id: 'messages',  label: 'Messages',          icon: MessageSquare },
-    { id: 'site',      label: 'Apparence',         icon: Palette       },
-    { id: 'devis',     label: 'Devis',             icon: FileText      },
-    { id: 'pages',     label: 'Autres Pages',      icon: FileStack     },
-    { id: 'seo',       label: 'SEO',               icon: Rocket        },
-    { id: 'aPropos',   label: 'À propos',           icon: User          }
+    { id: 'entreprise', label: 'Entreprise',       icon: Building2     },
+    { id: 'carousel',   label: 'Carousel',          icon: Clapperboard  },
+    { id: 'homepage',   label: "Page d'accueil",    icon: Home          },
+    { id: 'contact',    label: 'Contact',            icon: Phone         },
+    { id: 'reseaux',    label: 'Réseaux sociaux',    icon: Smartphone    },
+    { id: 'messages',   label: 'Messages',           icon: MessageSquare },
+    { id: 'site',       label: 'Apparence',          icon: Palette       },
+    { id: 'devis',      label: 'Devis',              icon: FileText      },
+    { id: 'pages',      label: 'Autres Pages',       icon: FileStack     },
+    { id: 'seo',        label: 'SEO',                icon: Rocket        },
+    { id: 'aPropos',    label: 'À propos',            icon: User          }
   ];
 
   if (settingsLoading) {
@@ -919,14 +920,26 @@ function ParametresPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ====== ONGLET PAGE D'ACCUEIL ====== */}
+          {activeTab === 'homepage' && (
+            <div className="tab-content">
+              <h2 style={{ marginBottom: '0.5rem', color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Home size={22} color="#d4af37" /> Textes de la Page d'Accueil
+              </h2>
+              <p style={{ color: '#666', marginBottom: '2rem' }}>
+                Modifiez tous les textes affichés sur la page d'accueil du site.
+              </p>
 
               {/* Section Sections de la Page d'Accueil */}
-              <div style={{ marginTop: '3rem' }}>
-                <h3 style={{ marginBottom: '1.5rem', color: '#1a1a2e', fontSize: '1.3rem' }}>
-                  📑 Sections de la Page d'Accueil
+              <div>
+                <h3 style={{ marginBottom: '1rem', color: '#1a1a2e', fontSize: '1.2rem', borderBottom: '2px solid #d4af37', paddingBottom: '0.5rem' }}>
+                  📑 Sections principales (Mission, Équipe, Valeurs, CTA)
                 </h3>
-                <p style={{ color: '#666', marginBottom: '2rem' }}>
-                  💡 Glissez-déposez les sections pour changer leur ordre d'affichage. Décochez pour masquer une section.
+                <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                  💡 Glissez-déposez les sections pour changer leur ordre. Décochez pour masquer une section.
                 </p>
 
                 {formData.homepage?.sections?.length > 0 ? (
@@ -1399,7 +1412,10 @@ function ParametresPage() {
               </div>
 
               {/* ====== SECTION RÔLE (fixe) ====== */}
-              <div style={{ marginTop: '3rem', padding: '2rem', background: '#f9f9f9', borderRadius: '1rem', border: '2px solid #e0e0e0' }}>
+              <h3 style={{ marginTop: '2.5rem', marginBottom: '1rem', color: '#1a1a2e', fontSize: '1.2rem', borderBottom: '2px solid #d4af37', paddingBottom: '0.5rem' }}>
+                📌 Sections fixes (toujours affichées)
+              </h3>
+              <div style={{ marginTop: '1rem', padding: '2rem', background: '#f9f9f9', borderRadius: '1rem', border: '2px solid #e0e0e0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h3 style={{ margin: 0, color: '#1a1a2e' }}>🎯 Section "Mon Rôle" <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 'normal' }}>(toujours affichée)</span></h3>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>

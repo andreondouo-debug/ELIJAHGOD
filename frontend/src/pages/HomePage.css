@@ -833,10 +833,10 @@
    ANIMATIONS PROFESSIONNELLES D'APPARITION
    ======================================== */
 
-/* État initial des sections avant animation */
+/* section-animated : marqueur seulement, ne cache plus le contenu
+   Les animations sont un bonus visuel — le contenu reste toujours visible */
 .section-animated {
-  opacity: 0;
-  transform: translateY(0);
+  /* opacity intentionnellement non définie : sections toujours visibles */
 }
 
 /* Classe appliquée quand la section est visible */
