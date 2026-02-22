@@ -112,10 +112,12 @@
 
 .prest-section-animated {
   animation: prest-appear var(--animation-duration, 600ms) ease var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
 
 .prest-section-animated.prest-visible,
 .prest-visible {
+  animation-play-state: running;
   opacity: 1;
 }
 

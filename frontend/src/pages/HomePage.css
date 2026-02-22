@@ -833,7 +833,7 @@
    ANIMATIONS PROFESSIONNELLES D'APPARITION
    ======================================== */
 
-/* hp-section-enter : animation CSS automatique à l'entrée dans le DOM */
+/* hp-section-enter : animation déclenchée au scroll (IntersectionObserver ajoute .is-visible) */
 @keyframes hp-appear {
   from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -841,7 +841,9 @@
 
 .hp-section-enter {
   animation: hp-appear 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-play-state: paused;
 }
+.hp-section-enter.is-visible { animation-play-state: running; }
 
 /* Délais par type de section pour un effet de cascade */
 .mission-section.hp-section-enter  { animation-delay: 0ms; }

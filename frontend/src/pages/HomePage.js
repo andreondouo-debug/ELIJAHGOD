@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { SettingsContext } from '../context/SettingsContext';
 import { API_URL } from '../config';
@@ -23,8 +23,35 @@ function HomePage() {
   const sections = settings?.homepage?.sections || [];
   const activeSections = sections.filter(s => s.actif !== false).sort((a, b) => a.ordre - b.ordre);
 
-  // Rendu d'une section — l'animation vient directement des paramètres admin,
-  // appliquée via une classe CSS + variables CSS. Aucun observer JS nécessaire.
+  // IntersectionObserver — déclenche les animations au scroll
+  // Utilise un ref sur le conteneur pour observer tous les .section après le rendu
+  const pageRef = useRef(null);
+  useEffect(() => {
+    const el = pageRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08 }
+    );
+
+    // Observer chaque section de la page
+    const sectionEls = el.querySelectorAll('section.section');
+    sectionEls.forEach(s => observer.observe(s));
+
+    return () => observer.disconnect();
+  // Se re-déclenche uniquement si le nombre de sections change (données chargées)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSections.length, settingsLoading]);
+
+
   const renderSection = (section) => {
     const anim = section.animation || { type: 'fade-in', delay: 0, duration: 800, easing: 'ease-out' };
     const animClass = anim.type && anim.type !== 'none' ? `animate-${anim.type}` : 'hp-section-enter';
@@ -157,7 +184,7 @@ function HomePage() {
   };
 
   return (
-    <div className="home-page">
+    <div className="home-page" ref={pageRef}>
       {/* Hero Section */}
       <section 
         className={`hero hero-${carousel.disposition} hero-align-${carousel.alignement}`}

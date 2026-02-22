@@ -428,10 +428,12 @@ button:active, a:active {
   }
 }
 
-/* Stagger animation pour les listes */
+/* Stagger animation pour les listes — déclenchée quand le parent section a .is-visible */
 .stagger-item {
   animation: fadeInUp 0.6s ease both;
+  animation-play-state: paused;
 }
+.is-visible .stagger-item { animation-play-state: running; }
 
 .stagger-item:nth-child(1) { animation-delay: 0.1s; }
 .stagger-item:nth-child(2) { animation-delay: 0.2s; }
@@ -463,6 +465,7 @@ button:active, a:active {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    animation-play-state: running !important;
   }
 }
 
@@ -484,7 +487,9 @@ button:active, a:active {
 }
 .animate-fade-in {
   animation: sectionFadeIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-fade-in.is-visible { animation-play-state: running; }
 
 /* Slide In Left */
 @keyframes sectionSlideInLeft {
@@ -493,7 +498,9 @@ button:active, a:active {
 }
 .animate-slide-in-left {
   animation: sectionSlideInLeft var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-slide-in-left.is-visible { animation-play-state: running; }
 
 /* Slide In Right */
 @keyframes sectionSlideInRight {
@@ -502,7 +509,9 @@ button:active, a:active {
 }
 .animate-slide-in-right {
   animation: sectionSlideInRight var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-slide-in-right.is-visible { animation-play-state: running; }
 
 /* Slide In Up */
 @keyframes sectionSlideInUp {
@@ -511,7 +520,9 @@ button:active, a:active {
 }
 .animate-slide-in-up {
   animation: sectionSlideInUp var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-slide-in-up.is-visible { animation-play-state: running; }
 
 /* Slide In Down */
 @keyframes sectionSlideInDown {
@@ -520,7 +531,9 @@ button:active, a:active {
 }
 .animate-slide-in-down {
   animation: sectionSlideInDown var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-slide-in-down.is-visible { animation-play-state: running; }
 
 /* Zoom In */
 @keyframes sectionZoomIn {
@@ -529,7 +542,9 @@ button:active, a:active {
 }
 .animate-zoom-in {
   animation: sectionZoomIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-zoom-in.is-visible { animation-play-state: running; }
 
 /* Flip In */
 @keyframes sectionFlipIn {
@@ -538,7 +553,9 @@ button:active, a:active {
 }
 .animate-flip-in {
   animation: sectionFlipIn var(--animation-duration, 800ms) var(--animation-easing, ease-out) var(--animation-delay, 0ms) both;
+  animation-play-state: paused;
 }
+.animate-flip-in.is-visible { animation-play-state: running; }
 
 @media (max-width: 768px) {
   @keyframes sectionSlideInLeft {
