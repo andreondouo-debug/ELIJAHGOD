@@ -90,33 +90,41 @@
 .ap-hero-inner {
   display: flex;
   align-items: center;
-  gap: 4rem;
-  max-width: 960px;
+  gap: 5rem;
+  max-width: 1050px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
 }
 
-/* Photo portrait */
+/* Photo portrait — grand format rectangulaire */
 .ap-hero-photo-wrap {
   flex-shrink: 0;
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 300px;
+  height: 380px;
+  transform: rotate(-2deg);
+  transition: transform 0.4s ease;
+}
+.ap-hero-photo-wrap:hover {
+  transform: rotate(0deg) scale(1.02);
 }
 .ap-hero-photo {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
+  width: 300px;
+  height: 380px;
+  border-radius: 18px;
   object-fit: cover;
-  border: 4px solid rgba(212, 175, 55, 0.8);
+  object-position: top center;
+  border: 4px solid rgba(212, 175, 55, 0.85);
   position: relative;
   z-index: 1;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(212, 175, 55, 0.2);
+  display: block;
 }
 .ap-hero-photo-placeholder {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
+  width: 300px;
+  height: 380px;
+  border-radius: 18px;
   background: linear-gradient(135deg, #d4af37 0%, #f0d060 100%);
   display: flex;
   align-items: center;
@@ -124,16 +132,40 @@
   font-size: 5rem;
   position: relative;
   z-index: 1;
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(212, 175, 55, 0.5);
 }
+/* Cadre décoratif décalé (remplace l'anneau tournant) */
 .ap-hero-photo-ring {
   position: absolute;
-  inset: -12px;
-  border-radius: 50%;
-  border: 2px dashed rgba(212, 175, 55, 0.4);
-  animation: ap-spin 20s linear infinite;
+  inset: 10px -10px -10px 10px;
+  border-radius: 22px;
+  border: 2px solid rgba(212, 175, 55, 0.35);
+  background: transparent;
+  z-index: 0;
+  animation: none;
 }
-@keyframes ap-spin { to { transform: rotate(360deg); } }
+.ap-hero-photo-ring::before {
+  content: '';
+  position: absolute;
+  bottom: -18px;
+  right: -18px;
+  width: 60px;
+  height: 60px;
+  border-radius: 0 0 16px 0;
+  border-bottom: 3px solid rgba(212, 175, 55, 0.5);
+  border-right: 3px solid rgba(212, 175, 55, 0.5);
+}
+.ap-hero-photo-ring::after {
+  content: '';
+  position: absolute;
+  top: -18px;
+  left: -18px;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px 0 0 0;
+  border-top: 3px solid rgba(212, 175, 55, 0.5);
+  border-left: 3px solid rgba(212, 175, 55, 0.5);
+}
 
 /* Texte hero */
 .ap-hero-text {
@@ -619,6 +651,18 @@
   }
   .ap-hero-citation { text-align: left; }
   .ap-hero-cta { justify-content: center; }
+  /* Sur mobile : portrait plus compact, sans rotation */
+  .ap-hero-photo-wrap {
+    width: 220px;
+    height: 280px;
+    transform: none;
+    margin: 0 auto;
+  }
+  .ap-hero-photo,
+  .ap-hero-photo-placeholder {
+    width: 220px;
+    height: 280px;
+  }
   .ap-hero-photo-ring { display: none; }
 
   /* Sur mobile, toutes les animations se font en fade simple */
