@@ -38,7 +38,9 @@ exports.getSettings = async (req, res) => {
       // Paramètres de mise en page (nécessaires pour le rendu frontend)
       carousel: settings.carousel,
       homepage: settings.homepage,
-      pages: settings.pages
+      pages: settings.pages,
+      // Page À propos (contenu public)
+      aPropos: settings.aPropos
     };
     
     res.json({

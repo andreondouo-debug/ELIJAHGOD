@@ -93,7 +93,14 @@ function AProposPage() {
     mission:      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80',
   };
 
-  const getPhoto = (section, key) => section?.photo || PHOTO_EXEMPLE[key];
+  // Résoudre les URLs relatives (uploads backend) en URL absolues
+  const resolvePhoto = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${API_URL}${url}`;
+  };
+
+  const getPhoto = (section, key) => resolvePhoto(section?.photo) || PHOTO_EXEMPLE[key];
 
   return (
     <div className="a-propos-page">
@@ -108,8 +115,8 @@ function AProposPage() {
         <div className="container">
           <div className="ap-hero-inner">
             <div className="ap-hero-photo-wrap">
-              {hero.photo ? (
-                <img src={hero.photo} alt="Portrait" className="ap-hero-photo" />
+              {resolvePhoto(hero.photo) ? (
+                <img src={resolvePhoto(hero.photo)} alt="Portrait de Randy ODOUNGA" className="ap-hero-photo" />
               ) : (
                 <div className="ap-hero-photo-placeholder">
                   <Headphones size={64} strokeWidth={1.2} />
