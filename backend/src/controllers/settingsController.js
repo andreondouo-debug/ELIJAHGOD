@@ -412,18 +412,13 @@ exports.uploadPhotoProfil = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: '❌ Aucun fichier reçu' });
 
-    const url = `/uploads/apropos/photo/${req.file.filename}`;
+    // req.file.path = URL Cloudinary HTTPS complète
+    const url = req.file.path;
 
     // Mettre à jour settings.aPropos.hero.photo
     const settings = await Settings.getSettings();
     if (!settings.aPropos) settings.aPropos = {};
     if (!settings.aPropos.hero) settings.aPropos.hero = {};
-
-    // Supprimer l'ancienne photo si locale
-    if (settings.aPropos.hero.photo && settings.aPropos.hero.photo.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, '../../', settings.aPropos.hero.photo);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
 
     settings.aPropos.hero.photo = url;
     settings.markModified('aPropos');
@@ -447,7 +442,7 @@ exports.uploadGalerieImages = async (req, res) => {
     if (!settings.aPropos.galerie) settings.aPropos.galerie = [];
 
     const nouvellesImages = req.files.map((file, idx) => ({
-      url: `/uploads/apropos/galerie/${file.filename}`,
+      url: file.path,  // URL Cloudinary HTTPS complète
       legende: '',
       ordre: (settings.aPropos.galerie.length || 0) + idx
     }));
@@ -487,16 +482,11 @@ exports.uploadCarouselBanniere = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: '❌ Aucun fichier reçu' });
 
-    const url = `/uploads/carousel/${req.file.filename}`;
+    // req.file.path = URL Cloudinary HTTPS complète
+    const url = req.file.path;
 
     const settings = await Settings.getSettings();
     if (!settings.entreprise) settings.entreprise = {};
-
-    // Supprimer l'ancienne bannière si locale
-    if (settings.entreprise.banniere && settings.entreprise.banniere.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, '../../', settings.entreprise.banniere);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
 
     settings.entreprise.banniere = url;
     settings.markModified('entreprise');

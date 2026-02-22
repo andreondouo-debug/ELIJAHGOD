@@ -1,30 +1,25 @@
 /**
  * 📸 MIDDLEWARE UPLOAD - Image de fond du Carousel
- * Upload de la bannière de la Hero Section
+ * Stockage sur Cloudinary (persistant même après redémarrage Render)
  */
 
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Dossier d'upload
-const carouselDir = path.join(__dirname, '../../uploads/carousel');
-
-if (!fs.existsSync(carouselDir)) fs.mkdirSync(carouselDir, { recursive: true });
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
 // Filtre images uniquement
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|gif|webp/;
-  const ext = path.extname(file.originalname).toLowerCase().slice(1);
   const mime = file.mimetype;
-  if (allowed.test(ext) && mime.startsWith('image/')) cb(null, true);
+  if (mime.startsWith('image/')) cb(null, true);
   else cb(new Error('❌ Format non supporté. Utilisez : jpg, png, gif, webp'));
 };
 
-const storageCarousel = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, carouselDir),
-  filename: (req, file, cb) => {
-    cb(null, `banniere-${Date.now()}${path.extname(file.originalname)}`);
+const storageCarousel = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'elijahgod/carousel',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ width: 1920, crop: 'limit', quality: 'auto' }]
   }
 });
 
