@@ -578,27 +578,27 @@ const settingsSchema = new mongoose.Schema({
   // Page À propos
   aPropos: {
     hero: {
-      surTitre: { type: String, default: 'Fondateur & Directeur artistique' },
-      titre: { type: String, default: "Bienvenue, je suis Elijah" },
-      citation: { type: String, default: "Servir avec excellence, inspiré par la foi." },
+      surTitre: { type: String, default: "Créateur d'événements qui marquent les cœurs" },
+      titre: { type: String, default: "Bienvenue, je suis Randy ODOUNGA" },
+      citation: { type: String, default: "Votre événement mérite plus qu'un souvenir\u00a0: il mérite une histoire." },
       photo: { type: String, default: '' }
     },
     presentation: {
       actif: { type: Boolean, default: true },
-      titre: { type: String, default: 'Qui suis-je ?' },
-      contenu: { type: String, default: "Je suis Elijah, entrepreneur passionné par la production artistique et l'événementiel. Depuis mon plus jeune âge, la musique et le service ont été au cœur de ma vie." }
+      titre: { type: String, default: 'Mon histoire' },
+      contenu: { type: String, default: "Tout a commencé dans mon adolescence, quand on me confiait spontanément l'organisation de petits événements : anniversaires, temps forts à l'église, rencontres entre amis.\n\nJ'ai vite compris que j'aimais faire les choses bien, et même plus que bien : transformer un \"c'est bien\" en un vrai \"wouaou\" qui restait gravé dans les mémoires." }
     },
     motivation: {
       actif: { type: Boolean, default: true },
       icone: { type: String, default: '🔥' },
-      titre: { type: String, default: "Ce qui m'a poussé" },
-      contenu: { type: String, default: "Tout a commencé lors d'un événement où j'ai réalisé que je pouvais faire la différence. Cette conviction m'a poussé à créer ELIJAH'GOD." }
+      titre: { type: String, default: "De l'église aux mariages" },
+      contenu: { type: String, default: "Au fil des ans, je me suis retrouvé impliqué dans l'organisation de mariages, d'événements d'église et de moments forts en tous genres. Pour mon propre mariage, j'avais à cœur que chaque détail soit maîtrisé : que les invités se sentent attendus, et que tout se déroule dans la paix, même face aux imprévus.\n\nSouvent, on m'invitait pour une petite prestation : gérer le son, la musique, ou une partie de la coordination. Et je finissais par dépasser ce cadre : trouver des solutions en cas de pépin, coordonner les prestataires, rassurer les mariés. C'est comme ça que j'ai appris à anticiper, à toujours avoir un plan B, et à transformer les obstacles en opportunités.\n\nToutes ces expériences m'ont permis de tisser un réseau solide de prestataires de confiance : musiciens, techniciens son, décorateurs et bien d'autres. C'est cette richesse accumulée qui m'a poussé à créer ce projet : mettre ce réseau au service de vos événements pour les rendre vraiment mémorables." }
     },
     mission: {
       actif: { type: Boolean, default: true },
       icone: { type: String, default: '🎯' },
-      titre: { type: String, default: 'Ce que je donne à travers mes prestations' },
-      contenu: { type: String, default: "Chaque prestation que je livre n'est pas juste un service technique — c'est un engagement émotionnel. Je mets mon cœur dans chaque installation." }
+      titre: { type: String, default: "Qui je suis aujourd'hui" },
+      contenu: { type: String, default: "Je suis musicien, chantre, chef de projet, manager, artiste et créatif. Mais par-dessus tout, je suis à l'écoute.\n\nMon objectif est de prendre vos idées, vos envies, même les plus simples, et de les transformer en réalité concrète, avec ce détail en plus qui fait toute la différence." }
     },
     valeurs: {
       type: [{
@@ -607,10 +607,10 @@ const settingsSchema = new mongoose.Schema({
         description: String
       }],
       default: [
-        { icone: '🙏', titre: 'Foi & Intégrité', description: "Mon travail est ancré dans des valeurs solides." },
-        { icone: '🎶', titre: 'Excellence artistique', description: "Pas de compromis sur la qualité." },
-        { icone: '❤️', titre: 'Service du cœur', description: "Je m'investis dans votre événement comme si c'était le mien." },
-        { icone: '🤝', titre: 'Relation de confiance', description: "Un prestataire disponible, à l'écoute et transparent." }
+        { icone: 'foi', titre: "Ma foi, mon moteur", description: "Dieu m'a apporté soutien et grâce dans tout ce que j'ai entrepris. Seul, on va plus vite. Mais avec Dieu et avec les autres, on va plus loin et dans l'excellence." },
+        { icone: 'excellence', titre: "L'exigence comme culture", description: "Diplômé d'un master en management de projet et excellence opérationnelle, j'applique la même rigueur de préparation et de suivi à chaque événement que j'accompagne." },
+        { icone: 'service', titre: "À l'écoute avant tout", description: "Je ne vous vends pas une formule toute faite. Je prends le temps de comprendre vos envies, même les plus simples, pour les transformer en réalité avec ce détail en plus qui fait la différence." },
+        { icone: 'confiance', titre: "Un réseau de confiance", description: "Des années d'expérience m'ont permis de tisser un réseau solide de prestataires sérieux : musiciens, techniciens son, décorateurs. Ce réseau, je le mets entièrement au service de votre événement." },
       ]
     },
     parcours: {
@@ -620,10 +620,10 @@ const settingsSchema = new mongoose.Schema({
         description: String
       }],
       default: [
-        { annee: '2015', titre: 'Les premières notes', description: 'Formation autodidacte en sonorisation et mixage audio.' },
-        { annee: '2018', titre: 'Premiers événements', description: 'Accompagnement de mariages et soirées privées.' },
-        { annee: '2021', titre: "Création d'ELIJAH'GOD", description: 'Lancement officiel de la structure.' },
-        { annee: '2024', titre: 'Expansion & équipe', description: 'Intégration de prestataires partenaires.' }
+        { annee: 'Ado', titre: 'Les premières responsabilités', description: "On me confiait spontanément l'organisation d'anniversaires, de temps forts à l'église, de rencontres entre amis. La passion était déjà là." },
+        { annee: 'Mariage', titre: 'Coordonner, anticiper, rassurer', description: "Impliqué dans de nombreux mariages et événements d'église, j'ai appris à avoir un plan B, à coordonner les prestataires et à transformer les imprévus en opportunités." },
+        { annee: 'Master', titre: 'Management de projet', description: "Diplômé d'un master en management de projet et excellence opérationnelle. Cette culture de l'exigence et du suivi s'applique désormais à chaque événement." },
+        { annee: "Aujourd'hui", titre: "Création d'ELIJAH'GOD", description: "Fort d'un réseau solide de prestataires de confiance, je lance ce projet pour mettre toutes ces expériences au service de vos événements." },
       ]
     },
     // Galerie de réalisations

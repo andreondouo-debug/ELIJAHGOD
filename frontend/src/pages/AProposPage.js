@@ -12,43 +12,63 @@ import { API_URL } from '../config';
 function AProposPage() {
   const { settings } = useContext(SettingsContext);
 
-  // --- Données paramétrables avec valeurs par défaut ---
+  // --- Données paramétrables avec valeurs par défaut riches ---
   const ap = settings?.aPropos || {};
 
-  const hero = ap.hero || {
-    surTitre: "Créateur d'événements qui marquent les cœurs",
-    titre: "Bienvenue, je suis Randy ODOUNGA",
-    citation: "Votre événement mérite plus qu'un souvenir\u00a0: il mérite une histoire.",
-    photo: null,
+  // Textes par défaut riches
+  const RICH_DEFAULTS = {
+    hero: {
+      surTitre: "Créateur d'événements qui marquent les cœurs",
+      titre: "Bienvenue, je suis Randy ODOUNGA",
+      citation: "Votre événement mérite plus qu'un souvenir\u00a0: il mérite une histoire.",
+      photo: null,
+    },
+    presentation: {
+      actif: true,
+      titre: 'Mon histoire',
+      photo: null,
+      contenu:
+        "Tout a commencé dans mon adolescence, quand on me confiait spontanément l'organisation de petits événements : anniversaires, temps forts à l'église, rencontres entre amis.\n\nJ'ai vite compris que j'aimais faire les choses bien, et même plus que bien : transformer un \"c'est bien\" en un vrai \"wouaou\" qui restait gravé dans les mémoires.",
+    },
+    motivation: {
+      actif: true,
+      icone: '🔥',
+      titre: "De l'église aux mariages",
+      photo: null,
+      contenu:
+        "Au fil des ans, je me suis retrouvé impliqué dans l'organisation de mariages, d'événements d'église et de moments forts en tous genres. Pour mon propre mariage, j'avais à cœur que chaque détail soit maîtrisé : que les invités se sentent attendus, et que tout se déroule dans la paix, même face aux imprévus.\n\nSouvent, on m'invitait pour une petite prestation : gérer le son, la musique, ou une partie de la coordination. Et je finissais par dépasser ce cadre : trouver des solutions en cas de pépin, coordonner les prestataires, rassurer les mariés. C'est comme ça que j'ai appris à anticiper, à toujours avoir un plan B, et à transformer les obstacles en opportunités.\n\nToutes ces expériences m'ont permis de tisser un réseau solide de prestataires de confiance : musiciens, techniciens son, décorateurs et bien d'autres. C'est cette richesse accumulée qui m'a poussé à créer ce projet : mettre ce réseau au service de vos événements pour les rendre vraiment mémorables.",
+    },
+    mission: {
+      actif: true,
+      icone: '🎯',
+      titre: "Qui je suis aujourd'hui",
+      photo: null,
+      contenu:
+        "Je suis musicien, chantre, chef de projet, manager, artiste et créatif. Mais par-dessus tout, je suis à l'écoute.\n\nMon objectif est de prendre vos idées, vos envies, même les plus simples, et de les transformer en réalité concrète, avec ce détail en plus qui fait toute la différence.",
+    },
   };
 
-  const presentation = ap.presentation || {
-    actif: true,
-    titre: 'Mon histoire',
-    photo: null,
-    contenu:
-      "Tout a commencé dans mon adolescence, quand on me confiait spontanément l'organisation de petits événements : anniversaires, temps forts à l'église, rencontres entre amis.\n\nJ'ai vite compris que j'aimais faire les choses bien, et même plus que bien : transformer un \"c'est bien\" en un vrai \"wouaou\" qui restait gravé dans les mémoires.",
+  // Merge : champ DB utilisé seulement s'il est non-vide ; sinon fallback riche
+  const mergeSection = (dbSection, defaultSection) => {
+    if (!dbSection) return defaultSection;
+    const result = { ...defaultSection };
+    Object.keys(defaultSection).forEach((key) => {
+      const dbVal = dbSection[key];
+      if (dbVal !== undefined && dbVal !== null && dbVal !== '' && dbVal !== false) {
+        result[key] = dbVal;
+      }
+    });
+    return result;
   };
 
-  const motivation = ap.motivation || {
-    actif: true,
-    icone: '🔥',
-    titre: "De l'église aux mariages",
-    photo: null,
-    contenu:
-      "Au fil des ans, je me suis retrouvé impliqué dans l'organisation de mariages, d'événements d'église et de moments forts en tous genres. Pour mon propre mariage, j'avais à cœur que chaque détail soit maîtrisé : que les invités se sentent attendus, et que tout se déroule dans la paix, même face aux imprévus.\n\nSouvent, on m'invitait pour une petite prestation : gérer le son, la musique, ou une partie de la coordination. Et je finissais par dépasser ce cadre : trouver des solutions en cas de pépin, coordonner les prestataires, rassurer les mariés. C'est comme ça que j'ai appris à anticiper, à toujours avoir un plan B, et à transformer les obstacles en opportunités.\n\nToutes ces expériences m'ont permis de tisser un réseau solide de prestataires de confiance : musiciens, techniciens son, décorateurs et bien d'autres. C'est cette richesse accumulée qui m'a poussé à créer ce projet : mettre ce réseau au service de vos événements pour les rendre vraiment mémorables.",
-  };
+  const hero         = mergeSection(ap.hero,         RICH_DEFAULTS.hero);
+  const presentation = mergeSection(ap.presentation, RICH_DEFAULTS.presentation);
+  const motivation   = mergeSection(ap.motivation,   RICH_DEFAULTS.motivation);
+  const mission      = mergeSection(ap.mission,      RICH_DEFAULTS.mission);
 
-  const mission = ap.mission || {
-    actif: true,
-    icone: '🎯',
-    titre: 'Qui je suis aujourd\'hui',
-    photo: null,
-    contenu:
-      "Je suis musicien, chantre, chef de projet, manager, artiste et créatif. Mais par-dessus tout, je suis à l'écoute.\n\nMon objectif est de prendre vos idées, vos envies, même les plus simples, et de les transformer en réalité concrète, avec ce détail en plus qui fait toute la différence.",
-  };
-
-  const valeurs = ap.valeurs?.length
+  // Si les descriptions DB sont courtes (<80 car), ce sont les anciens defaults génériques → utiliser les riches
+  const _valeursDB = ap.valeurs?.filter(v => v?.description?.length > 80);
+  const valeurs = _valeursDB?.length
     ? ap.valeurs
     : [
         { icone: 'foi', titre: "Ma foi, mon moteur", description: "Dieu m'a apporté soutien et grâce dans tout ce que j'ai entrepris. Seul, on va plus vite. Mais avec Dieu et avec les autres, on va plus loin et dans l'excellence." },
@@ -59,7 +79,8 @@ function AProposPage() {
 
   const galerie = ap.galerie?.filter(img => img?.url) || [];
 
-  const parcours = ap.parcours?.length
+  const _parcoursDB = ap.parcours?.filter(p => p?.description?.length > 80);
+  const parcours = _parcoursDB?.length
     ? ap.parcours
     : [
         { annee: 'Ado', titre: 'Les premières responsabilités', description: "On me confiait spontanément l'organisation d'anniversaires, de temps forts à l'église, de rencontres entre amis. La passion était déjà là." },
