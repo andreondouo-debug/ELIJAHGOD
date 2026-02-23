@@ -720,8 +720,8 @@ function ParametresPage() {
                             }));
                             setMessage({ type: 'success', text: '✅ Image du carousel mise à jour !' });
                           }
-                        } catch {
-                          setMessage({ type: 'error', text: '❌ Erreur lors de l\'upload de l\'image' });
+                        } catch (err) {
+                          setMessage({ type: 'error', text: `❌ ${err.response?.data?.message || 'Erreur lors de l\'upload de l\'image'}` });
                         }
                         e.target.value = '';
                       }}
@@ -1916,7 +1916,7 @@ function ParametresPage() {
                               setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, hero: { ...prev.aPropos.hero, photo: data.url } } }));
                               setMessage({ type: 'success', text: '✅ Photo de profil mise à jour !' });
                             }
-                          } catch { setMessage({ type: 'error', text: '❌ Erreur lors de l\'upload' }); }
+                          } catch (err) { setMessage({ type: 'error', text: `❌ ${err.response?.data?.message || 'Erreur lors de l\'upload'}` }); }
                         }} />
                       <label htmlFor="upload-photo-profil" style={{ display: 'inline-block', background: '#d4af37', color: '#1a1a2e', padding: '0.5rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}>
                         📁 Choisir une photo
@@ -1976,7 +1976,7 @@ function ParametresPage() {
                           try {
                             const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) { setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, presentation: { ...prev.aPropos.presentation, photo: data.url } } })); setMessage({ type: 'success', text: '✅ Photo mise à jour !' }); }
-                          } catch { setMessage({ type: 'error', text: '❌ Erreur upload' }); }
+                          } catch (err) { setMessage({ type: 'error', text: `❌ ${err.response?.data?.message || 'Erreur upload'}` }); }
                         }} />
                       <label htmlFor="upload-photo-presentation" style={{ display: 'inline-block', background: '#d4af37', color: '#1a1a2e', padding: '0.4rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
                         📁 Choisir une photo
@@ -2036,7 +2036,7 @@ function ParametresPage() {
                           try {
                             const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) { setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, motivation: { ...prev.aPropos.motivation, photo: data.url } } })); setMessage({ type: 'success', text: '✅ Photo mise à jour !' }); }
-                          } catch { setMessage({ type: 'error', text: '❌ Erreur upload' }); }
+                          } catch (err) { setMessage({ type: 'error', text: `❌ ${err.response?.data?.message || 'Erreur upload'}` }); }
                         }} />
                       <label htmlFor="upload-photo-motivation" style={{ display: 'inline-block', background: '#d4af37', color: '#1a1a2e', padding: '0.4rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
                         📁 Choisir une photo
@@ -2096,7 +2096,7 @@ function ParametresPage() {
                           try {
                             const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) { setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, mission: { ...prev.aPropos.mission, photo: data.url } } })); setMessage({ type: 'success', text: '✅ Photo mise à jour !' }); }
-                          } catch { setMessage({ type: 'error', text: '❌ Erreur upload' }); }
+                          } catch (err) { setMessage({ type: 'error', text: `❌ ${err.response?.data?.message || 'Erreur upload'}` }); }
                         }} />
                       <label htmlFor="upload-photo-mission" style={{ display: 'inline-block', background: '#d4af37', color: '#1a1a2e', padding: '0.4rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
                         📁 Choisir une photo
@@ -2167,7 +2167,7 @@ function ParametresPage() {
                         if (data.success) {
                           window.location.reload(); // Recharger pour afficher les nouvelles images
                         }
-                      } catch { setMessage({ type: 'error', text: '❌ Erreur lors de l\'upload des images' }); }
+                      } catch (err) { setMessage({ type: 'error', text: `❌ ${err.response?.data?.message || 'Erreur lors de l\'upload des images'}` }); }
                       e.target.value = '';
                     }} />
                   <label htmlFor="upload-galerie" style={{ cursor: 'pointer' }}>

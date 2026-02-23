@@ -51,9 +51,10 @@ const uploadGalerie = multer({
 
 // Middleware de gestion d'erreurs
 const handleUploadError = (err, req, res, next) => {
+  console.error('❌ [aProposUpload] Erreur upload:', err?.message || err);
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE')
-      return res.status(400).json({ success: false, message: '❌ Fichier trop volumineux' });
+      return res.status(400).json({ success: false, message: '❌ Fichier trop volumineux (max 15 Mo)' });
     return res.status(400).json({ success: false, message: `❌ Erreur upload : ${err.message}` });
   }
   if (err) return res.status(400).json({ success: false, message: err.message });
