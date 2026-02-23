@@ -58,7 +58,7 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/prestations" element={<PrestationsPage />} />
                     <Route path="/devis" element={<DevisPage />} />
-                    <Route path="/devis/nouveau" element={<DevisBuilderPage />} />
+                    <Route path="/devis/nouveau" element={<DevisPage />} />
                     <Route path="/devis/:devisId/confirmation" element={<DevisConfirmation />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/a-propos" element={<AProposPage />} />

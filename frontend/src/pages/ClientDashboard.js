@@ -1,6 +1,8 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { ClientContext } from '../context/ClientContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { API_URL } from '../config';
 import './ClientDashboard.css';
 
 /* ── Helpers ── */
@@ -15,8 +17,23 @@ const getInitials = (c) => {
 
 /* ── Composant ── */
 function ClientDashboard() {
-  const { client, isAuthenticated, loading, logout } = useContext(ClientContext);
+  const { client, isAuthenticated, loading, logout, token } = useContext(ClientContext);
   const navigate = useNavigate();
+  const [devisStats, setDevisStats] = useState({ total: 0, enAttente: 0, acceptes: 0 });
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+    axios.get(`${API_URL}/api/devis/client/mes-devis`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => {
+        const liste = r.data.devis || [];
+        setDevisStats({
+          total:      liste.length,
+          enAttente:  liste.filter(d => ['brouillon','soumis','en_etude'].includes(d.statut)).length,
+          acceptes:   liste.filter(d => d.statut === 'accepte').length,
+        });
+      })
+      .catch(() => {});
+  }, [isAuthenticated, token]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -51,7 +68,7 @@ function ClientDashboard() {
       color: 'gold',
       title: 'Mes Devis',
       desc: 'Consultez et suivez vos demandes de devis',
-      path: '/devis',
+      path: '/client/mes-devis',
     },
     {
       icon: '🛠️',
@@ -77,10 +94,10 @@ function ClientDashboard() {
   ];
 
   const statItems = [
-    { icon: '📝', value: '—', label: 'Devis' },
-    { icon: '✅', value: '—', label: 'Acceptés' },
-    { icon: '⏳', value: '—', label: 'En attente' },
-    { icon: '💼', value: '—', label: 'Missions' },
+    { icon: '📝', value: devisStats.total,     label: 'Devis' },
+    { icon: '✅', value: devisStats.acceptes,  label: 'Acceptés' },
+    { icon: '⏳', value: devisStats.enAttente, label: 'En attente' },
+    { icon: '💼', value: '—',                  label: 'Missions' },
   ];
 
   return (
@@ -161,12 +178,19 @@ function ClientDashboard() {
         {/* CTA devis */}
         <div className="client-dash-cta">
           <div className="client-dash-cta-text">
-            <h3>Besoin d'un devis ?</h3>
-            <p>Décrivez votre projet et recevez une offre personnalisée rapidement.</p>
+            <h3>Vos devis</h3>
+            <p>{devisStats.total === 0 ? 'Aucun devis pour le moment. Commencez dès maintenant !' : `${devisStats.total} devis — ${devisStats.enAttente} en cours, ${devisStats.acceptes} accepté(s).`}</p>
           </div>
-          <button className="client-dash-cta-btn" onClick={() => navigate('/devis/nouveau')}>
-            ✍️ Demander un devis
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button className="client-dash-cta-btn" onClick={() => navigate('/devis')}>
+              ✍️ Nouveau devis
+            </button>
+            {devisStats.total > 0 && (
+              <button className="client-dash-cta-btn" style={{ background: '#2c3e50' }} onClick={() => navigate('/client/mes-devis')}>
+                📋 Mes devis
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Menu actions */}
