@@ -56,6 +56,7 @@ function GestionTemoignages() {
   const [reponseTexte, setReponseTexte] = useState('');
   const [sendingReponse, setSendingReponse] = useState(false);
   const [actionLoading, setActionLoading]   = useState(null); // id de l'action en cours
+  const [seeding, setSeeding]               = useState(false);
 
   // ── Auth guard
   useEffect(() => {
@@ -142,6 +143,20 @@ function GestionTemoignages() {
     finally { setSendingReponse(false); }
   };
 
+  const seedDefault = async () => {
+    if (!window.confirm('Initialiser la base avec les 6 témoignages par défaut ?\nCette action ne fait rien si des témoignages existent déjà.')) return;
+    setSeeding(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/api/temoignages/admin/seed`, {}, { headers });
+      alert(data.message);
+      await charger();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de l\'initialisation');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   // ── Filtrage local par recherche
   const liste = temoignages.filter(t => {
     if (!recherche) return true;
@@ -189,6 +204,17 @@ function GestionTemoignages() {
           >
             <RefreshCw size={15} /> Actualiser
           </button>
+          {stats.total === 0 && !loading && (
+            <button
+              onClick={seedDefault}
+              disabled={seeding}
+              style={{ background: '#3498db', border: 'none', borderRadius: '0.75rem',
+                padding: '0.6rem 1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                color: '#fff', fontWeight: 600, fontSize: '0.9rem', opacity: seeding ? 0.7 : 1 }}
+            >
+              {seeding ? '⏳ Initialisation…' : '✨ Initialiser les témoignages par défaut'}
+            </button>
+          )}
         </div>
 
         {/* ── Stats */}
@@ -265,7 +291,25 @@ function GestionTemoignages() {
           <div style={{ textAlign: 'center', padding: '4rem', background: '#fff',
             borderRadius: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', color: '#888' }}>
             <div style={{ fontSize: '3rem', marginBottom: 12 }}>💬</div>
-            <p>Aucun témoignage{filtre !== 'tous' ? ' pour ce filtre' : ''}.</p>
+            {filtre === 'tous' && stats.total === 0 ? (
+              <>
+                <p style={{ marginBottom: 16 }}>La base de données ne contient pas encore de témoignages.</p>
+                <button
+                  onClick={seedDefault}
+                  disabled={seeding}
+                  style={{ background: '#1abc9c', border: 'none', borderRadius: '0.75rem',
+                    padding: '0.75rem 1.75rem', cursor: 'pointer', color: '#fff',
+                    fontWeight: 700, fontSize: '1rem', opacity: seeding ? 0.7 : 1 }}
+                >
+                  {seeding ? '⏳ Initialisation en cours…' : '✨ Initialiser avec les 6 témoignages par défaut'}
+                </button>
+                <p style={{ marginTop: 12, fontSize: '0.82rem', color: '#aaa' }}>
+                  Les visiteurs peuvent aussi soumettre des avis via la page Témoignages
+                </p>
+              </>
+            ) : (
+              <p>Aucun témoignage{filtre !== 'tous' ? ' pour ce filtre' : ''}.</p>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
