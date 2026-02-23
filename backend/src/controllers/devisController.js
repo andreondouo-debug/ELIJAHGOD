@@ -249,13 +249,13 @@ exports.sauvegarderEtape = async (req, res) => {
             if (prestation) {
               devis.prestations.push({
                 prestation: prestation._id,
-                prestataire: prestation.prestataire,
-                nom: prestation.titre,
+                prestataire: p.prestataireId || prestation.prestataire,
+                nom: prestation.titre || prestation.nom,
                 categorie: prestation.categorie,
                 quantite: p.quantite || 1,
                 duree: p.duree,
-                prixUnitaire: prestation.tarif,
-                prixTotal: prestation.tarif * (p.quantite || 1),
+                prixUnitaire: prestation.prixBase || prestation.tarif || 0,
+                prixTotal: (prestation.prixBase || prestation.tarif || 0) * (p.quantite || 1),
                 options: p.options || {},
                 commentaire: p.commentaire
               });

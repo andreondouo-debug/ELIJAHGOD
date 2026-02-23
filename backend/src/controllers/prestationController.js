@@ -17,7 +17,9 @@ exports.getPrestations = async (req, res) => {
     if (categorie) filtre.categorie = categorie;
     if (disponible !== undefined) filtre.disponible = disponible === 'true';
     
-    const prestations = await Prestation.find(filtre).sort('ordre nom');
+    const prestations = await Prestation.find(filtre)
+      .populate('prestatairesAssocies.prestataireId', 'nomEntreprise prenom nom photos noteGlobale')
+      .sort('ordre nom');
     
     res.json({
       success: true,

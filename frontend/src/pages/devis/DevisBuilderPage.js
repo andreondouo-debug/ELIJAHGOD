@@ -144,6 +144,72 @@ function DevisBuilderPage() {
     }
   };
 
+  // Répondre au message utilisateur dans le chatbot
+  const repondreAuMessage = (userMessage) => {
+    const msg = userMessage.toLowerCase().trim();
+    const step = etapeActuelle;
+
+    // Ajouter le message du client dans la conversation
+    const userEntry = {
+      timestamp: new Date(),
+      type: 'reponse',
+      source: 'client',
+      message: userMessage
+    };
+
+    // Générer une réponse contextuelle selon l'étape et le message
+    let reponse = '';
+    if (msg.includes('aide') || msg.includes('help') || msg.includes('comment')) {
+      const aides = {
+        informations: 'Renseignez vos coordonnées complètes pour que nous puissions vous contacter. Votre email sera utilisé pour vous envoyer le devis final.',
+        type_evenement: 'Choisissez le type d\'événement qui correspond le mieux à votre projet (mariage, anniversaire, concert…). Cela nous aide à vous proposer les prestations adaptées.',
+        date_lieu: 'Indiquez la date prévue et le lieu de votre événement. Plus les informations sont précises, plus notre offre sera personnalisée.',
+        invites: 'Le nombre d\'invités nous permet de calibrer les équipements et le personnel nécessaires.',
+        prestations: 'Parcourez notre catalogue et sélectionnez les prestations qui vous intéressent. Vous pouvez filtrer par catégorie. Le total s\'actualise en temps réel à droite.',
+        materiels: 'Sélectionnez les équipements dont vous avez besoin (sono, éclairage, scène…). Vous pouvez préciser les dates de location.',
+        demandes_speciales: 'Décrivez toute demande particulière : thème spécifique, contraintes techniques, préférences artistiques…',
+        recapitulatif: 'Vérifiez l\'ensemble de votre devis avant de le soumettre.',
+        validation: 'Lisez les conditions et soumettez votre devis. Notre équipe reviendra vers vous sous 24-48h.'
+      };
+      reponse = aides[step] || 'Je suis là pour vous guider ! N\'hésitez pas à me poser vos questions.';
+    } else if (msg.includes('prix') || msg.includes('tarif') || msg.includes('coût') || msg.includes('combien')) {
+      reponse = 'Les tarifs dépendent des prestations et équipements sélectionnés. Le récapitulatif à droite vous montre une estimation en temps réel. Notre équipe peut ajuster les prix selon vos besoins spécifiques.';
+    } else if (msg.includes('délai') || msg.includes('quand') || msg.includes('combien de temps')) {
+      reponse = 'Après soumission, notre équipe analyse votre devis sous 24-48h et vous envoie une offre personnalisée par email. Nous pouvons également organiser un entretien si vous le souhaitez.';
+    } else if (msg.includes('presta') || msg.includes('service') || msg.includes('propose')) {
+      reponse = 'Nous proposons : sonorisation, éclairage, animation, scène, mobilier événementiel, et bien plus ! À l\'étape "Prestations", vous trouverez tout notre catalogue avec les tarifs.';
+    } else if (msg.includes('bonjour') || msg.includes('salut') || msg.includes('hello')) {
+      reponse = `Bonjour ! 😊 Je suis ravi de vous accompagner dans la création de votre devis. Vous êtes actuellement à l'étape "${step.replace(/_/g, ' ')}". Comment puis-je vous aider ?`;
+    } else if (msg.includes('merci') || msg.includes('super') || msg.includes('parfait')) {
+      reponse = 'Avec plaisir ! 🌟 N\'hésitez pas si vous avez d\'autres questions.';
+    } else if (msg.includes('annuler') || msg.includes('recommencer')) {
+      reponse = 'Si vous souhaitez recommencer, vous pouvez recharger la page. Vos données seront conservées si vous êtes connecté.';
+    } else {
+      // Réponse par défaut selon l'étape
+      const defaults = {
+        informations: 'Pour cette étape, renseignez vos informations personnelles. Avez-vous besoin d\'aide pour remplir un champ ?',
+        type_evenement: 'Quel type d\'événement organisez-vous ? Je peux vous conseiller sur les prestations les plus adaptées !',
+        date_lieu: 'La date et le lieu sont importants pour vérifier la disponibilité de nos équipes.',
+        invites: 'Le nombre d\'invités influencera la capacité des équipements recommandés.',
+        prestations: 'Besoin d\'aide pour choisir une prestation ? Décrivez votre événement et je vous suggère ce qui convient !',
+        materiels: 'Quel type de matériel cherchez-vous ? Sono, éclairage, structure scénique ?',
+        demandes_speciales: 'N\'hésitez pas à être précis sur vos attentes, notre équipe en tiendra compte.',
+        recapitulatif: 'Relisez bien chaque section. Vous pouvez revenir en arrière pour modifier.',
+        validation: 'Prêt à soumettre votre devis ? Notre équipe reviendra vers vous très rapidement !'
+      };
+      reponse = defaults[step] || 'Je suis là pour vous aider ! Posez-moi vos questions sur le devis.';
+    }
+
+    const botEntry = {
+      timestamp: new Date(),
+      type: 'question',
+      source: 'guide',
+      message: reponse
+    };
+
+    setConversation(prev => [...prev, userEntry, botEntry]);
+  };
+
   // Retour à l'étape précédente
   const etapePrecedente = () => {
     const currentIndex = ETAPES.indexOf(etapeActuelle);
@@ -201,7 +267,7 @@ function DevisBuilderPage() {
       case 'invites':
         return <InvitesForm {...props} />;
       case 'prestations':
-        return <PrestationsSelecteur {...props} />;
+        return <PrestationsSelecteur {...props} onMontantsChange={setMontants} />;
       case 'materiels':
         return <MaterielsSelecteur {...props} />;
       case 'demandes_speciales':
@@ -238,7 +304,7 @@ function DevisBuilderPage() {
           {/* Zone principale avec formulaire */}
           <div className="devis-builder-main">
             {/* Assistant conversationnel */}
-            <ConversationAssistant messages={conversation} />
+            <ConversationAssistant messages={conversation} onUserMessage={repondreAuMessage} />
 
             {/* Message d'erreur */}
             {error && (

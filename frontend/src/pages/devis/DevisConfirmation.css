@@ -492,3 +492,194 @@
     padding-left: 2.5rem;
   }
 }
+
+/* ================================================
+   MESSAGE DE REMERCIEMENT PERSONNALISÉ
+   ================================================ */
+
+.thank-you-message {
+  margin: 1.5rem auto 0;
+  max-width: 640px;
+}
+
+.thank-you-main {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin-bottom: 0.75rem;
+}
+
+.thank-you-sub {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.7;
+}
+
+/* ================================================
+   TABLEAU PRESTATIONS
+   ================================================ */
+
+.prestations-detail {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.prestations-detail h3 {
+  color: #d4af37;
+  font-size: 1.15rem;
+  margin: 0 0 1.25rem 0;
+}
+
+.prestations-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+}
+
+.prestations-table th {
+  background: rgba(212,175,55,0.15);
+  color: #d4af37;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(212,175,55,0.3);
+}
+
+.prestations-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  vertical-align: middle;
+}
+
+.prestations-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prestations-table tfoot td {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(212,175,55,0.3);
+  color: rgba(255,255,255,0.8);
+}
+
+.prestations-table .row-total-ttc td {
+  background: rgba(212,175,55,0.12);
+  color: #d4af37;
+  font-size: 15px;
+}
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.total-cell {
+  font-weight: 600;
+  color: #d4af37;
+}
+
+.cat-badge {
+  background: rgba(212,175,55,0.15);
+  border: 1px solid rgba(212,175,55,0.3);
+  color: #d4af37;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.disclaimer {
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  font-style: italic;
+}
+
+/* ================================================
+   IMPRESSION — FILIGRANE "DEVIS NON VALIDÉ"
+   ================================================ */
+
+.print-watermark {
+  display: none; /* Caché à l'écran, visible uniquement à l'impression */
+}
+
+@media print {
+  /* Cacher les éléments non nécessaires */
+  .no-print,
+  nav,
+  header,
+  footer,
+  .error-message {
+    display: none !important;
+  }
+
+  /* Style page d'impression */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .devis-confirmation-page {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  .confirmation-container {
+    max-width: 100% !important;
+    position: relative;
+  }
+
+  .confirmation-header,
+  .prestations-detail,
+  .next-steps,
+  .quick-summary {
+    border-color: #ccc !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .thank-you-main,
+  .prestations-detail h3,
+  .prestations-table .row-total-ttc td,
+  .total-cell,
+  .cat-badge {
+    color: #a67c00 !important;
+  }
+
+  .prestations-table th {
+    background: #f5f0e0 !important;
+    color: #a67c00 !important;
+  }
+
+  .prestations-table td,
+  .prestations-table tfoot td {
+    color: black !important;
+    border-color: #ddd !important;
+  }
+
+  /* Filigrane diagonal */
+  .print-watermark {
+    display: block !important;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 72px;
+    font-weight: 900;
+    color: rgba(180, 40, 40, 0.15);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 9999;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-family: Arial, sans-serif;
+  }
+
+  /* Éviter les coupures de page au mauvais endroit */
+  .prestations-detail,
+  .next-steps,
+  .quick-summary {
+    page-break-inside: avoid;
+  }
+}
