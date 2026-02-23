@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PrestataireContext } from '../context/PrestataireContext';
 import './PrestataireMonProfil.css';
@@ -40,11 +40,12 @@ function PrestataireMonProfil() {
   const [erreurUpload, setErreurUpload] = useState('');
   const inputFichierRef = useRef(null);
 
-  // Redirection si non connecté
-  if (!loading && !isAuthenticated) {
-    navigate('/prestataire/login');
-    return null;
-  }
+  // Redirection si non connecté (dans useEffect pour éviter l'appel navigate pendant le rendu)
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/prestataire/login');
+    }
+  }, [loading, isAuthenticated, navigate]);
 
   if (loading || !prestataire) {
     return (

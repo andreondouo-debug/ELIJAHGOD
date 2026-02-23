@@ -14,7 +14,7 @@ import { API_URL } from '../config';
 function DevisDetailAdmin() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token, isAuthenticated } = useContext(AdminContext);
+  const { token, isAuthenticated, loading: authLoading } = useContext(AdminContext);
   
   const [devis, setDevis] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,12 +22,13 @@ function DevisDetailAdmin() {
   const [updatingStatut, setUpdatingStatut] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return; // attendre que le contexte soit initialisé
     if (!isAuthenticated) {
       navigate('/admin/login');
       return;
     }
     chargerDevis();
-  }, [id, isAuthenticated]);
+  }, [id, isAuthenticated, authLoading]);
 
   const chargerDevis = async () => {
     try {
