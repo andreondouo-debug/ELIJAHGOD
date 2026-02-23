@@ -70,6 +70,7 @@ function AProposPage() {
 
   // Animation au scroll
   const [lightbox, setLightbox] = useState(null); // index image ouverte
+  const [heroImgError, setHeroImgError] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -93,11 +94,13 @@ function AProposPage() {
     mission:      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80',
   };
 
-  // Résoudre les URLs relatives (uploads backend) en URL absolues
+  // Résoudre les URLs photos :
+  // - URLs Cloudinary (https://) → valides
+  // - Chemins /uploads/... → null (fichiers éphémères perdus à chaque restart Render)
   const resolvePhoto = (url) => {
     if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `${API_URL}${url}`;
+    if (url.startsWith('https://') || url.startsWith('http://')) return url;
+    return null; // chemin local /uploads/ inutilisable sur Render
   };
 
   const getPhoto = (section, key) => resolvePhoto(section?.photo) || PHOTO_EXEMPLE[key];
@@ -115,8 +118,13 @@ function AProposPage() {
         <div className="container">
           <div className="ap-hero-inner">
             <div className="ap-hero-photo-wrap">
-              {resolvePhoto(hero.photo) ? (
-                <img src={resolvePhoto(hero.photo)} alt="Portrait de Randy ODOUNGA" className="ap-hero-photo" />
+              {resolvePhoto(hero.photo) && !heroImgError ? (
+                <img
+                  src={resolvePhoto(hero.photo)}
+                  alt="Portrait de Randy ODOUNGA"
+                  className="ap-hero-photo"
+                  onError={() => setHeroImgError(true)}
+                />
               ) : (
                 <div className="ap-hero-photo-placeholder">
                   <Headphones size={64} strokeWidth={1.2} />
