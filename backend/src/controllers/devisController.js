@@ -245,12 +245,14 @@ exports.sauvegarderEtape = async (req, res) => {
           devis.prestations = [];
           
           for (const p of data.prestations) {
-            const prestation = await Prestation.findById(p.prestationId);
+            // Support both field names: prestationId (legacy) and prestation (frontend)
+            const prestationId = p.prestationId || p.prestation;
+            const prestation = await Prestation.findById(prestationId);
             if (prestation) {
               devis.prestations.push({
                 prestation: prestation._id,
                 prestataire: p.prestataireId || prestation.prestataire,
-                nom: prestation.titre || prestation.nom,
+                nom: prestation.nom || prestation.titre,
                 categorie: prestation.categorie,
                 quantite: p.quantite || 1,
                 duree: p.duree,
