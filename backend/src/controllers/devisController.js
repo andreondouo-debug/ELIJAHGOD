@@ -487,11 +487,37 @@ exports.soumettre = async (req, res) => {
           <p><strong>Date:</strong> ${new Date(devis.evenement.date).toLocaleDateString('fr-FR')}</p>
           <p><strong>Montant estimé:</strong> ${devis.montants.totalTTC.toFixed(2)} €</p>
           <p>Notre équipe va étudier votre demande et vous recontacter sous 48h.</p>
-          <a href="${process.env.FRONTEND_URL}/client/devis/${devis._id}">Voir mon devis</a>
+          <a href="${process.env.FRONTEND_URL}/client/mes-devis">Voir mes devis</a>
         `
       });
     } catch (emailError) {
-      console.error('❌ Erreur envoi email:', emailError);
+      console.error('❌ Erreur envoi email client:', emailError);
+    }
+
+    // Notifier l'admin par email
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      try {
+        await sendEmail({
+          to: adminEmail,
+          subject: `🚨 Nouveau devis reçu — ${devis.numeroDevis}`,
+          html: `
+            <h2>🚨 Nouveau devis à traiter</h2>
+            <p><strong>Numéro :</strong> ${devis.numeroDevis}</p>
+            <p><strong>Client :</strong> ${client.prenom} ${client.nom} (${client.email})</p>
+            <p><strong>Téléphone :</strong> ${client.telephone || 'Non renseigné'}</p>
+            <p><strong>Événement :</strong> ${devis.evenement.type}</p>
+            <p><strong>Date événement :</strong> ${new Date(devis.evenement.date).toLocaleDateString('fr-FR')}</p>
+            <p><strong>Lieu :</strong> ${devis.evenement.lieu?.nom || 'Non précisé'}</p>
+            <p><strong>Invités :</strong> ${devis.evenement.nbInvites}</p>
+            <p><strong>Montant estimé :</strong> ${devis.montants.totalTTC.toFixed(2)} €</p>
+            <br>
+            <a href="${process.env.FRONTEND_URL}/admin/devis" style="background:#d4af37;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Traiter ce devis →</a>
+          `
+        });
+      } catch (emailError) {
+        console.error('❌ Erreur envoi email admin:', emailError);
+      }
     }
 
     res.json({
@@ -708,6 +734,34 @@ exports.changerStatut = async (req, res) => {
     }
 
     await devis.save();
+
+    // Email au client selon le nouveau statut
+    const messagesStatut = {
+      en_etude:  { emoji: '🔍', titre: 'Votre devis est en cours d’étude', corps: 'Notre équipe analyse attentivement votre demande. Vous serez contacté(e) très prochainement.' },
+      accepte:   { emoji: '✅', titre: 'Votre devis a été accepté !', corps: `Félicitations ! Votre devis <strong>${devis.numeroDevis}</strong> a été validé. Connectez-vous pour voir les détails et signer.` },
+      refuse:    { emoji: '❌', titre: 'Votre devis n’a pas été retenu', corps: 'Nous ne sommes malheureusement pas en mesure de répondre favorablement à votre demande. N’hésitez pas à nous recontacter pour un autre créneau.' },
+    };
+    const msgConfig = messagesStatut[statut];
+    if (msgConfig) {
+      try {
+        const clientDoc = await Client.findById(devis.clientId);
+        if (clientDoc?.email) {
+          await sendEmail({
+            to: clientDoc.email,
+            subject: `${msgConfig.emoji} Devis ${devis.numeroDevis} — ${msgConfig.titre}`,
+            html: `
+              <h2>${msgConfig.emoji} ${msgConfig.titre}</h2>
+              <p>Bonjour ${clientDoc.prenom},</p>
+              <p>${msgConfig.corps}</p>
+              <br>
+              <a href="${process.env.FRONTEND_URL}/client/mes-devis" style="background:#d4af37;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Voir mon devis →</a>
+            `
+          });
+        }
+      } catch (emailError) {
+        console.error('❌ Erreur email client statut:', emailError);
+      }
+    }
 
     console.log(`✅ Statut changé: ${ancienStatut} → ${statut}`);
 

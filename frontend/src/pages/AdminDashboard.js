@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, FileText, Music2, Sliders, Settings2,
   BarChart3, MessageSquare, ShieldCheck, ArrowRight, ArrowLeft
 } from 'lucide-react';
+import axios from 'axios';
+import { AdminContext } from '../context/AdminContext';
+import { API_URL } from '../config';
 import './AdminDashboard.css';
 
 /**
@@ -11,6 +14,15 @@ import './AdminDashboard.css';
  */
 function AdminDashboard() {
   const navigate = useNavigate();
+  const { token } = useContext(AdminContext);
+  const [devisEnAttente, setDevisEnAttente] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    axios.get(`${API_URL}/api/devis/admin/tous?statut=soumis&limit=100`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => setDevisEnAttente(r.data.devis?.length || 0)).catch(() => {});
+  }, [token]);
 
   const adminCards = [
     {
@@ -25,7 +37,8 @@ function AdminDashboard() {
       description: 'Voir et traiter les demandes',
       path: '/admin/devis',
       color: '#3498db',
-      icon: FileText
+      icon: FileText,
+      badge: devisEnAttente
     },
     {
       title: 'Gestion prestations',
@@ -103,18 +116,24 @@ function AdminDashboard() {
                 e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
               }}
             >
-              {/* Icône moderne */}
-              <div style={{
-                width: 52,
-                height: 52,
-                borderRadius: '1rem',
-                background: `${card.color}18`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1.25rem'
-              }}>
-                <card.icon size={26} color={card.color} />
+              {/* Icône moderne + badge */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <div style={{
+                  width: 52, height: 52, borderRadius: '1rem',
+                  background: `${card.color}18`, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <card.icon size={26} color={card.color} />
+                </div>
+                {card.badge > 0 && (
+                  <span style={{
+                    background: '#e74c3c', color: '#fff', borderRadius: '999px',
+                    padding: '2px 10px', fontSize: '0.8rem', fontWeight: 800,
+                    minWidth: 24, textAlign: 'center'
+                  }}>
+                    {card.badge}
+                  </span>
+                )}
               </div>
               <h3 style={{ 
                 fontSize: '1.25rem', 

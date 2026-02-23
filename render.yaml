@@ -16,6 +16,8 @@ services:
         sync: false   # À saisir manuellement dans le dashboard Render
       - key: FRONTEND_URL
         sync: false   # URL Vercel ex: https://elijahgod.vercel.app
+      - key: ADMIN_EMAIL
+        sync: false   # Adresse email de l'admin pour recevoir les notifications devis
       - key: EMAIL_SERVICE
         sync: false   # brevo, gmail, ou ethereal
       - key: EMAIL_USER
