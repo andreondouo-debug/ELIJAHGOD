@@ -13,6 +13,24 @@ import { API_URL } from '../config';
 function MesDevisPage() {
   const { client, isAuthenticated, token } = useContext(ClientContext);
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+
+  const soumettreBrouillon = async (devisId) => {
+    if (!window.confirm('Soumettre ce devis à notre équipe ?')) return;
+    setSubmitting(devisId);
+    try {
+      await axios.post(
+        `${API_URL}/api/devis/${devisId}/soumettre`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await chargerDevis();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de la soumission');
+    } finally {
+      setSubmitting(null);
+    }
+  };
   
   const [devis, setDevis] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -140,7 +158,7 @@ function MesDevisPage() {
           </div>
           <button 
             className="btn-primary"
-            onClick={() => navigate('/devis/nouveau')}
+            onClick={() => navigate('/devis')}
           >
             ➕ Nouveau devis
           </button>
@@ -207,7 +225,8 @@ function MesDevisPage() {
             {devis.length === 0 && (
               <button 
                 className="btn-primary"
-                onClick={() => navigate('/devis/nouveau')}
+                onClick={() => navigate('/devis')}
+              >
               >
                 ➕ Créer mon premier devis
               </button>
@@ -282,9 +301,10 @@ function MesDevisPage() {
                   {d.statut === 'brouillon' && (
                     <button
                       className="btn-action btn-continue"
-                      onClick={() => navigate(`/devis/${d._id}/continuer`)}
+                      onClick={() => soumettreBrouillon(d._id)}
+                      disabled={submitting === d._id}
                     >
-                      ✏️ Continuer
+                      {submitting === d._id ? '⏳ Envoi...' : '📤 Soumettre'}
                     </button>
                   )}
 

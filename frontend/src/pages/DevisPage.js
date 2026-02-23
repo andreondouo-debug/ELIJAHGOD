@@ -305,17 +305,21 @@ function DevisPage() {
         isAuthenticated && clientToken ? { headers: { Authorization: `Bearer ${clientToken}` } } : {}
       );
 
-      console.log('✅ Devis créé:', response.data);
-      setSuccess(true);
-      
-      // Redirection après 3 secondes
-      setTimeout(() => {
-        if (isAuthenticated || response.data.devis) {
-          navigate(`/client/dashboard`);
-        } else {
-          navigate('/');
+      // Si client connecté → soumettre directement le devis (admin le voit immédiatement)
+      if (isAuthenticated && clientToken && response.data.devis?._id) {
+        try {
+          await axios.post(
+            `${API_URL}/api/devis/${response.data.devis._id}/soumettre`,
+            {},
+            { headers: { Authorization: `Bearer ${clientToken}` } }
+          );
+        } catch (e) {
+          console.warn('Soumission auto échouée, devis resté en brouillon:', e.message);
         }
-      }, 3000);
+      }
+
+      setSuccess(true);
+      setTimeout(() => navigate(isAuthenticated ? '/client/mes-devis' : '/'), 3000);
 
     } catch (err) {
       console.error('❌ Erreur création devis:', err);
@@ -332,8 +336,9 @@ function DevisPage() {
           <div className="success-message">
             <div className="success-icon">🎉</div>
             <h2>Merci pour votre demande !</h2>
-            <p>Votre devis a été créé avec succès.</p>
-            <p>Nous vous contactons sous 24-48h pour finaliser votre projet.</p>
+            <p>Votre devis a été soumis avec succès.</p>
+            <p>Notre équipe l'étudie et vous recontacte sous <strong>24-48h</strong>.</p>
+            {isAuthenticated && <p style={{color:'#27ae60',fontWeight:600}}>Retrouvez-le dans <strong>Mes Devis</strong> sur votre tableau de bord.</p>}
             <div className="loader-dots">
               <span></span><span></span><span></span>
             </div>
