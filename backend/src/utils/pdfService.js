@@ -384,7 +384,14 @@ class PDFService {
     doc.rect(bX, cy - 1, bW, 2).fill(C.gold); cy += 3;
     ligne('Total HT', m.totalAvantRemise || 0);
     if ((m.montantRemise || 0) > 0) {
-      ligne(`Remise (${m.tauxRemise || '?'} %)`, -(m.montantRemise), false, '#c0392b');
+      const remiseLabel = m.remise?.type === 'montant'
+        ? `Remise (montant fixe)`
+        : `Remise (${m.remise?.valeur || 0} %)`;
+      if (m.remise?.raison) {
+        ligne(`${remiseLabel} — ${m.remise.raison}`, -(m.montantRemise), false, '#c0392b');
+      } else {
+        ligne(remiseLabel, -(m.montantRemise), false, '#c0392b');
+      }
       ligne('Total HT après remise', m.totalFinal || 0);
     }
     ligne(`TVA (${m.tauxTVA || 20} %)`, m.montantTVA || 0);

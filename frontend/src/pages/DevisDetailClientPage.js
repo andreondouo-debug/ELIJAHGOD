@@ -239,25 +239,34 @@ function DevisDetailClientPage() {
             <div className="detail-card">
               <h2 className="detail-card-title">💰 Montants</h2>
               <div className="detail-rows">
-                {devis.montants.sousTotal > 0 && (
+                {(devis.montants.totalAvantRemise || 0) > 0 && (
                   <div className="detail-row">
                     <span className="dr-label">Sous-total HT</span>
-                    <span className="dr-value">{formatMontant(devis.montants.sousTotal)}</span>
+                    <span className="dr-value">{formatMontant(devis.montants.totalAvantRemise)}</span>
                   </div>
                 )}
-                {devis.montants.remise > 0 && (
+                {(devis.montants.fraisKilometriques?.montant || 0) > 0 && (
                   <div className="detail-row">
-                    <span className="dr-label">Remise</span>
-                    <span className="dr-value remise">
-                      − {formatMontant(devis.montants.remise)}
-                      {devis.montants.remisePourcentage > 0 && ` (${devis.montants.remisePourcentage}%)`}
+                    <span className="dr-label">🚗 Frais kilométriques</span>
+                    <span className="dr-value">+ {formatMontant(devis.montants.fraisKilometriques.montant)}</span>
+                  </div>
+                )}
+                {(devis.montants.montantRemise || 0) > 0 && (
+                  <div className="detail-row">
+                    <span className="dr-label">
+                      🎁 Remise
+                      {devis.montants.remise?.type === 'pourcentage'
+                        ? ` (${devis.montants.remise.valeur}%)`
+                        : ' (montant fixe)'}
+                      {devis.montants.remise?.raison ? ` — ${devis.montants.remise.raison}` : ''}
                     </span>
+                    <span className="dr-value remise">− {formatMontant(devis.montants.montantRemise)}</span>
                   </div>
                 )}
-                {devis.montants.fraisDeplacement > 0 && (
+                {(devis.montants.montantRemise || 0) > 0 && (
                   <div className="detail-row">
-                    <span className="dr-label">Frais déplacement</span>
-                    <span className="dr-value">{formatMontant(devis.montants.fraisDeplacement)}</span>
+                    <span className="dr-label">Total HT après remise</span>
+                    <span className="dr-value">{formatMontant(devis.montants.totalFinal)}</span>
                   </div>
                 )}
               </div>

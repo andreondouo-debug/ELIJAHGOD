@@ -92,6 +92,11 @@ router.get('/admin/:devisId', authAdmin, devisController.detailsDevis);
 // @access  Privé (Admin)
 router.patch('/:devisId/statut', authAdmin, devisController.changerStatut);
 
+// @route   PATCH /api/devis/:devisId/remise
+// @desc    Appliquer ou modifier une remise sur un devis (Admin)
+// @access  Privé (Admin)
+router.patch('/:devisId/remise', authAdmin, devisController.appliquerRemise);
+
 // @route   PUT /api/devis/admin/:devisId/valider
 // @desc    Valider, modifier ou refuser un devis
 // @access  Privé (Admin)

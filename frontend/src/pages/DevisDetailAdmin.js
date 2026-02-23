@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import AdminContext from '../context/AdminContext';
-import { ArrowLeft, Download, Edit, Trash2, Check, X, Calendar, User, Mail, Phone, MapPin, Package, Euro } from 'lucide-react';
+import { ArrowLeft, Download, Edit, Trash2, Check, X, Calendar, User, Mail, Phone, MapPin, Package, Euro, Tag } from 'lucide-react';
 import './AdminDashboard.css';
 import './MesDevisPage.css';
 
@@ -20,6 +20,8 @@ function DevisDetailAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingStatut, setUpdatingStatut] = useState(false);
+  const [remiseForm, setRemiseForm] = useState({ type: 'pourcentage', valeur: '', raison: '' });
+  const [applyingRemise, setApplyingRemise] = useState(false);
 
   useEffect(() => {
     if (authLoading) return; // attendre que le contexte soit initialisé
@@ -38,7 +40,16 @@ function DevisDetailAdmin() {
           Authorization: `Bearer ${token}`
         }
       });
-      setDevis(response.data.devis);
+      const data = response.data.devis;
+      setDevis(data);
+      // Pré-remplir le formulaire de remise si une remise est déjà active
+      if (data.montants?.remise?.valeur > 0) {
+        setRemiseForm({
+          type: data.montants.remise.type || 'pourcentage',
+          valeur: String(data.montants.remise.valeur),
+          raison: data.montants.remise.raison || ''
+        });
+      }
       setError('');
     } catch (err) {
       console.error('❌ Erreur chargement devis:', err);
@@ -64,6 +75,46 @@ function DevisDetailAdmin() {
       alert(err.response?.data?.message || 'Erreur lors du changement de statut');
     } finally {
       setUpdatingStatut(false);
+    }
+  };
+
+  const appliquerRemise = async (e) => {
+    e.preventDefault();
+    const val = parseFloat(remiseForm.valeur);
+    if (isNaN(val) || val < 0) { alert('Valeur de remise invalide'); return; }
+    if (!window.confirm(`Appliquer une remise de ${val}${remiseForm.type === 'pourcentage' ? '%' : '€'}${remiseForm.raison ? ` (${remiseForm.raison})` : ''} sur ce devis ?`)) return;
+    setApplyingRemise(true);
+    try {
+      await axios.patch(
+        `${API_URL}/api/devis/${id}/remise`,
+        { type: remiseForm.type, valeur: val, raison: remiseForm.raison },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await chargerDevis();
+      alert(`✅ Remise appliquée avec succès`);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de l\'application de la remise');
+    } finally {
+      setApplyingRemise(false);
+    }
+  };
+
+  const supprimerRemise = async () => {
+    if (!window.confirm('Supprimer la remise de ce devis ?')) return;
+    setApplyingRemise(true);
+    try {
+      await axios.patch(
+        `${API_URL}/api/devis/${id}/remise`,
+        { type: 'pourcentage', valeur: 0, raison: '' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await chargerDevis();
+      setRemiseForm({ type: 'pourcentage', valeur: '', raison: '' });
+      alert('✅ Remise supprimée');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur');
+    } finally {
+      setApplyingRemise(false);
     }
   };
 
@@ -306,31 +357,128 @@ function DevisDetailAdmin() {
 
       {/* Totaux */}
       <div className="card" style={{ marginTop: '2rem', backgroundColor: '#f0f9ff' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <span>Sous-total:</span>
-          <strong style={{ fontSize: '1.1rem' }}>{devis.sousTotal?.toFixed(2)} €</strong>
-        </div>
-        {devis.remise > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', color: '#16a34a' }}>
-            <span>Remise ({devis.remisePourcentage}%):</span>
-            <strong>- {devis.remise?.toFixed(2)} €</strong>
-          </div>
-        )}
-        {devis.fraisSupplementaires > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span>Frais supplémentaires:</span>
-            <strong>+ {devis.fraisSupplementaires?.toFixed(2)} €</strong>
-          </div>
-        )}
-        <div style={{ borderTop: '2px solid #0ea5e9', paddingTop: '0.75rem', marginTop: '0.75rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '1.2rem', fontWeight: '600' }}>
-              <Euro size={18} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-              TOTAL:
+        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Euro size={18} /> Récapitulatif financier
+        </h3>
+        {(() => {
+          const m = devis.montants || {};
+          const fmt = (n) => n != null ? `${Number(n).toFixed(2)} €` : '—';
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Sous-total HT :</span><strong>{fmt(m.totalAvantRemise)}</strong>
+              </div>
+              {(m.fraisKilometriques?.montant || 0) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#555' }}>
+                  <span>Frais kilométriques :</span><strong>+ {fmt(m.fraisKilometriques.montant)}</strong>
+                </div>
+              )}
+              {(m.montantRemise || 0) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#c0392b', background: '#fff5f5', padding: '6px 10px', borderRadius: '6px' }}>
+                  <span>
+                    🎁 Remise
+                    {m.remise?.type === 'pourcentage' ? ` (${m.remise.valeur}%)` : ' (montant fixe)'}
+                    {m.remise?.raison ? ` — ${m.remise.raison}` : ''} :
+                  </span>
+                  <strong>- {fmt(m.montantRemise)}</strong>
+                </div>
+              )}
+              {(m.montantRemise || 0) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Total HT après remise :</span><strong>{fmt(m.totalFinal)}</strong>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#555' }}>
+                <span>TVA ({m.tauxTVA || 20}%) :</span><strong>+ {fmt(m.montantTVA)}</strong>
+              </div>
+              <div style={{ borderTop: '2px solid #0ea5e9', paddingTop: '0.75rem', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: '600' }}>TOTAL TTC :</span>
+                <strong style={{ fontSize: '1.8rem', color: '#0369a1' }}>{fmt(m.totalTTC)}</strong>
+              </div>
+              {(m.acompte?.montant || 0) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', background: '#f0fdf4', padding: '6px 10px', borderRadius: '6px' }}>
+                  <span>💳 Acompte ({m.acompte.pourcentage}%) :</span>
+                  <strong>{fmt(m.acompte.montant)}</strong>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Formulaire Remise */}
+      <div className="card" style={{ marginTop: '2rem', border: '2px solid #f59e0b' }}>
+        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e' }}>
+          <Tag size={18} /> Appliquer / Modifier une remise
+        </h3>
+        {(devis.montants?.montantRemise || 0) > 0 && (
+          <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '8px', padding: '10px 14px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#92400e' }}>
+              ⚠️ Remise active : <strong>
+                {devis.montants.remise?.type === 'pourcentage'
+                  ? `${devis.montants.remise.valeur}%`
+                  : `${devis.montants.remise?.valeur} €`}
+              </strong>{devis.montants.remise?.raison ? ` — ${devis.montants.remise.raison}` : ''}
             </span>
-            <strong style={{ fontSize: '1.8rem', color: '#0369a1' }}>{devis.total?.toFixed(2)} €</strong>
+            <button
+              onClick={supprimerRemise}
+              disabled={applyingRemise}
+              style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.85rem' }}
+            >
+              × Supprimer
+            </button>
           </div>
-        </div>
+        )}
+        <form onSubmit={appliquerRemise} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Type de remise</label>
+            <select
+              value={remiseForm.type}
+              onChange={e => setRemiseForm(f => ({ ...f, type: e.target.value }))}
+              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
+            >
+              <option value="pourcentage">Pourcentage (%)</option>
+              <option value="montant">Montant fixe (€)</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>
+              Valeur {remiseForm.type === 'pourcentage' ? '(%)' : '(€)'}
+            </label>
+            <input
+              type="number"
+              min="0"
+              max={remiseForm.type === 'pourcentage' ? '100' : undefined}
+              step="0.01"
+              placeholder={remiseForm.type === 'pourcentage' ? 'Ex: 10' : 'Ex: 50'}
+              value={remiseForm.valeur}
+              onChange={e => setRemiseForm(f => ({ ...f, valeur: e.target.value }))}
+              required
+              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.95rem', width: '120px' }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#555' }}>Raison (optionnel)</label>
+            <input
+              type="text"
+              placeholder="Ex: Fidélité, promotion..."
+              value={remiseForm.raison}
+              onChange={e => setRemiseForm(f => ({ ...f, raison: e.target.value }))}
+              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={applyingRemise || !remiseForm.valeur}
+            className="btn btn-success"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {applyingRemise ? '⏳ Application...' : '✅ Appliquer la remise'}
+          </button>
+        </form>
+        <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.75rem', margin: '0.75rem 0 0' }}>
+          Le client recevra un email de notification. Les montants (totalTTC, acompte) seront recalculés automatiquement.
+        </p>
       </div>
 
       {/* Notes */}

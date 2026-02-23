@@ -680,6 +680,101 @@ exports.supprimerDevis = async (req, res) => {
 };
 
 // ============================================
+// 5c. ADMIN: APPLIQUER UNE REMISE À UN DEVIS
+// ============================================
+exports.appliquerRemise = async (req, res) => {
+  try {
+    const { devisId } = req.params;
+    const { type, valeur, raison } = req.body;
+
+    if (!['pourcentage', 'montant'].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: '❌ Type de remise invalide. Utilisez "pourcentage" ou "montant".'
+      });
+    }
+    const val = parseFloat(valeur);
+    if (isNaN(val) || val < 0) {
+      return res.status(400).json({
+        success: false,
+        message: '❌ Valeur de remise invalide.'
+      });
+    }
+    if (type === 'pourcentage' && val > 100) {
+      return res.status(400).json({
+        success: false,
+        message: '❌ Le pourcentage ne peut pas dépasser 100.'
+      });
+    }
+
+    const devis = await Devis.findById(devisId);
+    if (!devis) {
+      return res.status(404).json({ success: false, message: '❌ Devis non trouvé' });
+    }
+
+    // Appliquer la remise
+    devis.montants.remise = {
+      type,
+      valeur: val,
+      raison: (raison || '').trim()
+    };
+
+    // Recalculer tous les montants
+    devis.calculerMontants();
+
+    // Historique
+    if (devis.ajouterHistorique) {
+      const desc = val === 0
+        ? 'Remise supprimée'
+        : `Remise de ${val}${type === 'pourcentage' ? '%' : '€'} appliquée${raison ? ` — ${raison}` : ''}`;
+      devis.ajouterHistorique('remise_appliquee', 'admin', req.adminId, desc);
+    }
+
+    await devis.save();
+
+    // Notifier le client si la remise est significative (> 0)
+    if (val > 0) {
+      try {
+        const clientDoc = await Client.findById(devis.clientId);
+        if (clientDoc?.email) {
+          const montantRemise = devis.montants.montantRemise;
+          const nouveauTotal = devis.montants.totalTTC;
+          await sendEmail({
+            to: clientDoc.email,
+            subject: `🎁 Remise appliquée sur votre devis ${devis.numeroDevis}`,
+            html: `
+              <h2>🎁 Une remise a été appliquée sur votre devis</h2>
+              <p>Bonjour ${clientDoc.prenom},</p>
+              <p>Notre équipe a appliqué une remise de <strong>${val}${type === 'pourcentage' ? '%' : '€'}</strong>${raison ? ` (${raison})` : ''} sur votre devis <strong>${devis.numeroDevis}</strong>.</p>
+              <p>Montant de la remise : <strong>- ${montantRemise?.toFixed(2)} €</strong><br/>
+              Nouveau total TTC : <strong>${nouveauTotal?.toFixed(2)} €</strong></p>
+              <br>
+              <a href="${process.env.FRONTEND_URL}/client/devis/${devis._id}" style="background:#d4af37;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Voir mon devis →</a>
+            `
+          });
+        }
+      } catch (emailErr) {
+        console.warn('⚠️ Email remise non envoyé:', emailErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: val === 0 ? '✅ Remise supprimée' : `✅ Remise de ${val}${type === 'pourcentage' ? '%' : '€'} appliquée`,
+      devis
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur application remise:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'application de la remise',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
 // 6. ADMIN: LISTER TOUS LES DEVIS
 // ============================================
 exports.listerTous = async (req, res) => {
