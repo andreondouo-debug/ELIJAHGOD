@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import './TemoignagesPage.css';
 
 import { API_URL } from '../config';
+import { ClientContext } from '../context/ClientContext';
 
 // Témoignages par défaut si la base est vide
 const TEMOIGNAGES_DEFAUT = [
@@ -74,16 +75,37 @@ function EtoileNote({ note }) {
 
 function TemoignagesPage() {
   const [temoignages, setTemoignages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filtre, setFiltre] = useState('tous');
+  const [loading, setLoading]         = useState(true);
+  const [filtre, setFiltre]           = useState('tous');
 
+  // ── Formulaire soumission témoignage
+  const [showForm, setShowForm]       = useState(false);
+  const [formData, setFormData]       = useState({ nom: '', email: '', entreprise: '', titre: '', contenu: '', note: 5 });
+  const [submitStatus, setSubmitStatus] = useState(''); // '' | 'sending' | 'success' | 'error'
+
+  // Pré-remplir si connecté
+  const clientCtx = useContext(ClientContext);
+  const clientConnecte = clientCtx?.client;
+
+  useEffect(() => {
+    if (clientConnecte) {
+      setFormData(prev => ({
+        ...prev,
+        nom:   `${clientConnecte.prenom || ''} ${clientConnecte.nom || ''}`.trim() || prev.nom,
+        email: clientConnecte.email || prev.email,
+      }));
+    }
+  }, [clientConnecte]);
+
+  // ── Chargement depuis l'API
   useEffect(() => {
     const charger = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/temoignages?approuve=true&limit=20`);
+        const res = await fetch(`${API_URL}/api/temoignages?limit=20`);
         if (res.ok) {
           const data = await res.json();
-          const liste = data.data || data || [];
+          // Le contrôleur retourne { temoignages: [...] }
+          const liste = data.temoignages || data.data || (Array.isArray(data) ? data : []);
           setTemoignages(liste.length > 0 ? liste : TEMOIGNAGES_DEFAUT);
         } else {
           setTemoignages(TEMOIGNAGES_DEFAUT);
@@ -97,14 +119,53 @@ function TemoignagesPage() {
     charger();
   }, []);
 
+  // ── Soumission d'un témoignage externe
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitStatus('sending');
+    try {
+      const res = await fetch(`${API_URL}/api/temoignages/externe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        setSubmitStatus('success');
+        setFormData({ nom: '', email: '', entreprise: '', titre: '', contenu: '', note: 5 });
+        // Pré-remplir de nouveau si connecté
+        if (clientConnecte) {
+          setFormData(prev => ({
+            ...prev,
+            nom:   `${clientConnecte.prenom || ''} ${clientConnecte.nom || ''}`.trim(),
+            email: clientConnecte.email || '',
+          }));
+        }
+      } else {
+        const err = await res.json();
+        alert(err.message || 'Erreur lors de la soumission');
+        setSubmitStatus('');
+      }
+    } catch {
+      alert('Erreur réseau, veuillez réessayer');
+      setSubmitStatus('');
+    }
+  };
+
+  // ── Helper : extraire les champs depuis le modèle DB ou les données statiques
+  const getNom      = (t) => t.auteur?.nom || t.nom       || 'Client';
+  const getContenu  = (t) => t.contenu    || t.message    || '';
+  const getEvenement= (t) => t.evenement?.type || t.evenement || 'Événement';
+  const getDate     = (t) => t.createdAt  || t.date       || null;
+
   const types = ['tous', 'Mariage', 'Anniversaire', 'Entreprise', 'Église'];
 
   const filtres = temoignages.filter(t => {
-    if (filtre === 'tous') return true;
-    if (filtre === 'Mariage') return t.evenement?.toLowerCase().includes('mariage');
-    if (filtre === 'Anniversaire') return t.evenement?.toLowerCase().includes('anniversaire');
-    if (filtre === 'Entreprise') return t.evenement?.toLowerCase().includes('entreprise') || t.evenement?.toLowerCase().includes('séminaire') || t.evenement?.toLowerCase().includes('conférence');
-    if (filtre === 'Église') return t.evenement?.toLowerCase().includes('culte') || t.evenement?.toLowerCase().includes('église') || t.evenement?.toLowerCase().includes('louange');
+    const ev = getEvenement(t).toLowerCase();
+    if (filtre === 'tous')         return true;
+    if (filtre === 'Mariage')      return ev.includes('mariage');
+    if (filtre === 'Anniversaire') return ev.includes('anniversaire');
+    if (filtre === 'Entreprise')   return ev.includes('entreprise') || ev.includes('séminaire') || ev.includes('conférence');
+    if (filtre === 'Église')       return ev.includes('culte') || ev.includes('église') || ev.includes('louange');
     return true;
   });
 
@@ -181,25 +242,33 @@ function TemoignagesPage() {
                 <div key={t._id || idx} className="temoignage-card">
                   <div className="temoignage-card-top">
                     <EtoileNote note={t.note || 5} />
-                    <span className="temoignage-evenement">{t.evenement || 'Événement'}</span>
+                    <span className="temoignage-evenement">{getEvenement(t)}</span>
                   </div>
                   <blockquote className="temoignage-message">
-                    "{t.message || t.contenu}"
+                    "{getContenu(t)}"
                   </blockquote>
                   <div className="temoignage-card-bottom">
                     <div className="temoignage-avatar">
-                      {(t.nom || t.auteur || 'C')[0].toUpperCase()}
+                      {getNom(t)[0]?.toUpperCase() || 'C'}
                     </div>
                     <div className="temoignage-auteur-info">
-                      <strong>{t.nom || t.auteur}</strong>
+                      <strong>{getNom(t)}</strong>
+                      {t.auteur?.entreprise && <span>{t.auteur.entreprise}</span>}
                       {t.ville && <span>{t.ville}</span>}
-                      {t.date && (
+                      {getDate(t) && (
                         <span className="temoignage-date">
-                          {new Date(t.date || t.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                          {new Date(getDate(t)).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                         </span>
                       )}
                     </div>
                   </div>
+                  {t.reponse?.texte && (
+                    <div style={{ marginTop: 12, padding: '0.7rem 1rem', background: '#e8f5e9',
+                      borderLeft: '3px solid #1abc9c', borderRadius: '0 0.5rem 0.5rem 0',
+                      fontSize: '0.85rem', color: '#2e7d32' }}>
+                      <strong>Réponse ELIJAH'GOD :</strong> {t.reponse.texte}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -207,15 +276,118 @@ function TemoignagesPage() {
         </div>
       </section>
 
-      {/* CTA LAISSER UN AVIS */}
+      {/* FORMULAIRE TÉMOIGNAGE */}
       <section className="temoignages-cta">
         <div className="container temoignages-cta-content">
-          <div className="temoignages-cta-icon">✨</div>
-          <h2>Vous avez travaillé avec nous ?</h2>
-          <p>Votre avis nous aide à nous améliorer et aide d'autres personnes à nous faire confiance.</p>
-          <Link to="/contact" className="btn-gold">
-            💬 Laisser un témoignage
-          </Link>
+          {!showForm && submitStatus !== 'success' ? (
+            <>
+              <div className="temoignages-cta-icon">✨</div>
+              <h2>Vous avez travaillé avec nous ?</h2>
+              <p>Votre avis nous aide à nous améliorer et aide d'autres personnes à nous faire confiance.</p>
+              <button onClick={() => setShowForm(true)} className="btn-gold" style={{ cursor: 'pointer', border: 'none' }}>
+                💬 Laisser un témoignage
+              </button>
+            </>
+          ) : submitStatus === 'success' ? (
+            <>
+              <div className="temoignages-cta-icon">✅</div>
+              <h2>Merci pour votre témoignage !</h2>
+              <p>Il sera visible sur le site après validation par notre équipe.</p>
+              <button onClick={() => { setShowForm(false); setSubmitStatus(''); }} className="btn-gold"
+                style={{ cursor: 'pointer', border: 'none' }}>
+                Fermer
+              </button>
+            </>
+          ) : (
+            <div style={{ width: '100%', maxWidth: 600, textAlign: 'left' }}>
+              <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>💬 Partagez votre expérience</h2>
+
+              {/* Note étoiles */}
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <p style={{ marginBottom: 8, fontWeight: 600, color: '#d4af37' }}>Votre note *</p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                  {[1,2,3,4,5].map(n => (
+                    <button key={n} type="button" onClick={() => setFormData(p => ({...p, note: n}))}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: '2rem', color: n <= formData.note ? '#f39c12' : '#ccc',
+                        transition: 'color 0.15s' }}>
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: '0.88rem', color: '#555' }}>Votre nom *</label>
+                    <input type="text" required
+                      value={formData.nom} placeholder="Prénom Nom"
+                      onChange={e => setFormData(p => ({...p, nom: e.target.value}))}
+                      readOnly={!!clientConnecte?.nom}
+                      style={{ width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid #ddd',
+                        borderRadius: '0.6rem', fontSize: '0.9rem', boxSizing: 'border-box',
+                        background: clientConnecte?.nom ? '#f9fef9' : '#fff',
+                        borderColor: clientConnecte?.nom ? '#81c784' : '#ddd' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: '0.88rem', color: '#555' }}>Email *</label>
+                    <input type="email" required
+                      value={formData.email} placeholder="votre@email.com"
+                      onChange={e => setFormData(p => ({...p, email: e.target.value}))}
+                      readOnly={!!clientConnecte?.email}
+                      style={{ width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid #ddd',
+                        borderRadius: '0.6rem', fontSize: '0.9rem', boxSizing: 'border-box',
+                        background: clientConnecte?.email ? '#f9fef9' : '#fff',
+                        borderColor: clientConnecte?.email ? '#81c784' : '#ddd' }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: '0.88rem', color: '#555' }}>Entreprise / Organisation</label>
+                  <input type="text"
+                    value={formData.entreprise} placeholder="(optionnel)"
+                    onChange={e => setFormData(p => ({...p, entreprise: e.target.value}))}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid #ddd',
+                      borderRadius: '0.6rem', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: '0.88rem', color: '#555' }}>Titre (court résumé)</label>
+                  <input type="text"
+                    value={formData.titre} placeholder="Ex : Une soirée inoubliable !"
+                    onChange={e => setFormData(p => ({...p, titre: e.target.value}))}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid #ddd',
+                      borderRadius: '0.6rem', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: '0.88rem', color: '#555' }}>Votre témoignage *</label>
+                  <textarea required rows={4}
+                    value={formData.contenu}
+                    placeholder="Décrivez votre expérience avec ELIJAH'GOD…"
+                    onChange={e => setFormData(p => ({...p, contenu: e.target.value}))}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', border: '1.5px solid #ddd',
+                      borderRadius: '0.6rem', fontSize: '0.9rem', resize: 'vertical',
+                      boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 4 }}>
+                  <button type="button" onClick={() => setShowForm(false)}
+                    style={{ padding: '0.7rem 1.5rem', borderRadius: '0.75rem', border: '2px solid #ddd',
+                      background: 'transparent', color: '#666', fontWeight: 600, cursor: 'pointer' }}>
+                    Annuler
+                  </button>
+                  <button type="submit" disabled={submitStatus === 'sending'} className="btn-gold"
+                    style={{ cursor: 'pointer', border: 'none',
+                      opacity: submitStatus === 'sending' ? 0.7 : 1 }}>
+                    {submitStatus === 'sending' ? '⏳ Envoi…' : '✅ Soumettre mon témoignage'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </section>
 
