@@ -20,8 +20,12 @@ function PrestataireDashboard() {
     return <div className="dashboard-loading">⏳ Chargement...</div>;
   }
 
+  if (!isAuthenticated) {
+    return null; // useEffect gère la redirection
+  }
+
   if (!prestataire) {
-    return null;
+    return <div className="dashboard-loading">⏳ Chargement du profil...</div>;
   }
 
   const handleLogout = () => {

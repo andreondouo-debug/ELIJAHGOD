@@ -10,9 +10,17 @@ import { API_URL } from '../config';
 export const PrestataireContext = createContext();
 
 export function PrestataireProvider({ children }) {
+  // Nettoyer un token "undefined" qui aurait pu être stocké par un bug précédent
+  const storedToken = localStorage.getItem('prestataireToken');
+  if (storedToken === 'undefined' || storedToken === 'null') {
+    localStorage.removeItem('prestataireToken');
+  }
+
   const [prestataire, setPrestataire] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('prestataireToken'));
-  const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+  const [token, setToken] = useState(
+    storedToken && storedToken !== 'undefined' && storedToken !== 'null' ? storedToken : null
+  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Charger le profil prestataire au montage si token existe
@@ -49,8 +57,11 @@ export function PrestataireProvider({ children }) {
     try {
       const response = await axios.post(`${API_URL}/api/prestataires/inscription`, formData);
 
-      const { token: newToken, prestataire: newPrestataire } = response.data;
-      
+      // Le backend retourne { success, message, data: { token, prestataire } }
+      const { token: newToken, prestataire: newPrestataire } = response.data.data;
+
+      if (!newToken) throw new Error('Token manquant dans la réponse');
+
       setToken(newToken);
       setPrestataire(newPrestataire);
       setIsAuthenticated(true);
@@ -71,8 +82,11 @@ export function PrestataireProvider({ children }) {
         password
       });
 
-      const { token: newToken, prestataire: newPrestataire } = response.data;
-      
+      // Le backend retourne { success, message, data: { token, prestataire, isVerified } }
+      const { token: newToken, prestataire: newPrestataire } = response.data.data;
+
+      if (!newToken) throw new Error('Token manquant dans la réponse');
+
       setToken(newToken);
       setPrestataire(newPrestataire);
       setIsAuthenticated(true);
