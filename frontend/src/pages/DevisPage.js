@@ -103,6 +103,32 @@ function DevisPage() {
     { id: 'traiteur', nom: 'Traiteur', icon: '🍽️', description: 'Service restauration', categorie: 'Traiteur' }
   ];
 
+  // ── Helper : calcul prix selon invités (miroir du backend)
+  const getPrixPrestation = (prestationDoc, nbInvites) => {
+    if (!prestationDoc) return 0;
+    const nb = parseInt(nbInvites) || 50;
+    if (!prestationDoc.tarifsParInvites || prestationDoc.tarifsParInvites.length === 0) {
+      return prestationDoc.prixBase || 0;
+    }
+    const tranche = prestationDoc.tarifsParInvites.find(t => {
+      const minOk = nb >= t.min;
+      const maxOk = t.max == null || nb <= t.max;
+      return minOk && maxOk;
+    });
+    if (tranche) return tranche.prix;
+    const sorted = [...prestationDoc.tarifsParInvites].sort((a, b) => b.min - a.min);
+    return sorted[0]?.prix || prestationDoc.prixBase || 0;
+  };
+
+  // ── Helper : prestation sélectionnée ?
+  const isPrestationSelected = (localId, categorieKey) => {
+    return formData.prestations.some(p => {
+      if (typeof p === 'string') return p === localId;
+      return p.prestationId === localId ||
+             (p.categorie && p.categorie.toLowerCase() === categorieKey?.toLowerCase());
+    });
+  };
+
   // Charger les prestations détaillées depuis l'API
   useEffect(() => {
     const fetchPrestations = async () => {
@@ -118,50 +144,30 @@ function DevisPage() {
 
   // 💰 CALCUL AUTOMATIQUE DU BUDGET selon les prestations sélectionnées
   useEffect(() => {
-    if (formData.prestations.length === 0) {
-      return; // Pas de calcul si aucune prestation
-    }
-
+    if (formData.prestations.length === 0) return;
     let prixTotal = 0;
-
-    // Calculer le prix total des prestations sélectionnées
-    formData.prestations.forEach(prestationId => {
-      // Trouver la prestation dans les détails chargés
-      const prestation = prestationsDetail.find(p => {
-        // Matcher par ID ou par nom de catégorie
-        if (typeof prestationId === 'string') {
-          return p._id === prestationId || 
-                 p.categorie.toLowerCase() === prestationId.toLowerCase() ||
-                 p.nom.toLowerCase().includes(prestationId.toLowerCase());
-        }
-        return p._id === prestationId.prestationId;
-      });
-
-      if (prestation) {
-        prixTotal += prestation.prixBase || 0;
+    formData.prestations.forEach(p => {
+      if (typeof p === 'object' && p.prix) {
+        prixTotal += p.prix;
       } else {
-        // Valeur par défaut si prestation non trouvée
-        prixTotal += 500;
+        const searchId = typeof p === 'string' ? p : (p.prestationId || '');
+        const real = prestationsDetail.find(pd =>
+          pd._id === searchId ||
+          pd.categorie?.toLowerCase().includes(searchId.toLowerCase()) ||
+          pd.nom?.toLowerCase().includes(searchId.toLowerCase())
+        );
+        prixTotal += getPrixPrestation(real, formData.nombreInvites);
       }
     });
-
-    // Déterminer la tranche de budget automatiquement
     let budgetAuto = '';
-    if (prixTotal <= 1000) {
-      budgetAuto = '500-1000';
-    } else if (prixTotal <= 2000) {
-      budgetAuto = '1000-2000';
-    } else if (prixTotal <= 5000) {
-      budgetAuto = '2000-5000';
-    } else {
-      budgetAuto = '5000+';
-    }
-
-    // Mettre à jour le budget uniquement s'il a changé
+    if (prixTotal <= 1000)       budgetAuto = '500-1000';
+    else if (prixTotal <= 2000)  budgetAuto = '1000-2000';
+    else if (prixTotal <= 5000)  budgetAuto = '2000-5000';
+    else                         budgetAuto = '5000+';
     if (budgetAuto !== formData.budget) {
       setFormData(prev => ({ ...prev, budget: budgetAuto }));
     }
-  }, [formData.prestations, prestationsDetail]);
+  }, [formData.prestations, formData.nombreInvites, prestationsDetail]);
 
   const budgets = [
     { value: '500-1000', label: '500€ - 1000€', icon: '💰' },
@@ -179,13 +185,39 @@ function DevisPage() {
     setError('');
   };
 
-  const togglePrestation = (prestationId) => {
-    setFormData(prev => ({
-      ...prev,
-      prestations: prev.prestations.includes(prestationId)
-        ? prev.prestations.filter(p => p !== prestationId)
-        : [...prev.prestations, prestationId]
-    }));
+  const togglePrestation = (localId, categorieKey) => {
+    const realPrestation = prestationsDetail.find(p =>
+      p.categorie?.toLowerCase() === categorieKey?.toLowerCase() ||
+      p.nom?.toLowerCase().includes(localId.toLowerCase())
+    );
+    const currentId = realPrestation?._id || localId;
+
+    const isAlreadySelected = formData.prestations.some(p => {
+      const pid = typeof p === 'string' ? p : (p.prestationId || p.id);
+      return pid === currentId || pid === localId;
+    });
+
+    if (isAlreadySelected) {
+      setFormData(prev => ({
+        ...prev,
+        prestations: prev.prestations.filter(p => {
+          const pid = typeof p === 'string' ? p : (p.prestationId || p.id);
+          return pid !== currentId && pid !== localId;
+        })
+      }));
+    } else {
+      const nbInvites = parseInt(formData.nombreInvites) || 50;
+      const prixEstime = getPrixPrestation(realPrestation, nbInvites);
+      setFormData(prev => ({
+        ...prev,
+        prestations: [...prev.prestations, {
+          prestationId: currentId,
+          nom: realPrestation?.nom || localId,
+          categorie: categorieKey,
+          prix: prixEstime
+        }]
+      }));
+    }
   };
 
   const ouvrirModalPrestation = (prestation, event) => {
@@ -529,27 +561,37 @@ function DevisPage() {
               <p className="etape-description">Sélectionnez les prestations qui vous intéressent</p>
               
               <div className="prestations-grid">
-                {prestationsDisponibles.map(prestation => (
-                  <div
-                    key={prestation.id}
-                    className={`prestation-card ${formData.prestations.includes(prestation.id) ? 'selected' : ''}`}
-                  >
-                    <div className="prestation-content" onClick={() => togglePrestation(prestation.id)}>
-                      <div className="prestation-icon">{prestation.icon}</div>
-                      <div className="prestation-nom">{prestation.nom}</div>
-                      <div className="prestation-desc">{prestation.description}</div>
-                      <div className="prestation-check">
-                        {formData.prestations.includes(prestation.id) && '✓'}
+                {prestationsDisponibles.map(prestation => {
+                  const real = prestationsDetail.find(p =>
+                    p.categorie?.toLowerCase() === prestation.categorie?.toLowerCase() ||
+                    p.nom?.toLowerCase().includes(prestation.id.toLowerCase())
+                  );
+                  const selected = isPrestationSelected(prestation.id, prestation.categorie);
+                  const prixAffiche = real
+                    ? getPrixPrestation(real, formData.nombreInvites)
+                    : null;
+                  return (
+                    <div key={prestation.id} className={`prestation-card ${selected ? 'selected' : ''}`}>
+                      <div className="prestation-content" onClick={() => togglePrestation(prestation.id, prestation.categorie)}>
+                        <div className="prestation-icon">{prestation.icon}</div>
+                        <div className="prestation-nom">{prestation.nom}</div>
+                        <div className="prestation-desc">{prestation.description}</div>
+                        {prixAffiche > 0 && (
+                          <div className="prestation-prix" style={{ color: '#27ae60', fontWeight: 700, fontSize: '0.9rem', marginTop: 4 }}>
+                            À partir de {prixAffiche.toLocaleString('fr-FR')} €
+                          </div>
+                        )}
+                        <div className="prestation-check">{selected && '✓'}</div>
                       </div>
+                      <button
+                        className="btn-voir-details"
+                        onClick={(e) => ouvrirModalPrestation(prestation, e)}
+                      >
+                        👁️ Voir détails
+                      </button>
                     </div>
-                    <button
-                      className="btn-voir-details"
-                      onClick={(e) => ouvrirModalPrestation(prestation, e)}
-                    >
-                      👁️ Voir détails
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="form-group" style={{ marginTop: '2rem' }}>
@@ -737,11 +779,28 @@ function DevisPage() {
                 <div className="recap-item"><strong>Événement:</strong> {typesEvenement.find(t => t.value === formData.typeEvenement)?.label}</div>
                 <div className="recap-item"><strong>Date:</strong> {new Date(formData.dateEvenement).toLocaleDateString('fr-FR')}</div>
                 <div className="recap-item"><strong>Lieu:</strong> {formData.lieu}</div>
-                <div className="recap-item"><strong>Prestations:</strong> {formData.prestations.length} sélectionnée(s)</div>
+                <div className="recap-item"><strong>Invités:</strong> {formData.nombreInvites || 'Non précisé'}</div>
+                <div className="recap-item"><strong>Prestations :</strong>
+                  {formData.prestations.map((p, i) => (
+                    <span key={i} style={{ display:'inline-block', background:'#e8f5e9', borderRadius:6, padding:'2px 8px', margin:'2px', fontSize:'0.85rem' }}>
+                      {typeof p === 'object' ? p.nom : p}
+                      {typeof p === 'object' && p.prix > 0 ? ` — ${p.prix.toLocaleString('fr-FR')} €` : ''}
+                    </span>
+                  ))}
+                </div>
                 {formData.articlesSup && formData.articlesSup.length > 0 && (
                   <div className="recap-item"><strong>Articles supplémentaires:</strong> {formData.articlesSup.length} article(s)</div>
                 )}
-                <div className="recap-item"><strong>Budget:</strong> {budgets.find(b => b.value === formData.budget)?.label}</div>
+                {(() => {
+                  const total = formData.prestations.reduce((acc, p) => acc + (typeof p === 'object' ? (p.prix || 0) : 0), 0);
+                  return total > 0 ? (
+                    <div className="recap-item" style={{ background:'#d4edda', borderRadius:8, padding:'8px 12px', marginTop:8 }}>
+                      <strong>💰 Estimation totale :</strong>
+                      <span style={{ fontSize:'1.2rem', fontWeight:800, color:'#27ae60', marginLeft:8 }}>{total.toLocaleString('fr-FR')} €</span>
+                      <span style={{ fontSize:'0.8rem', color:'#666', marginLeft:6 }}>(hors options, TVA et frais km)</span>
+                    </div>
+                  ) : null;
+                })()}
               </div>
             </div>
           )}

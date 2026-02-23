@@ -161,6 +161,62 @@ exports.creerBrouillon = async (req, res) => {
 
     await devis.save();
 
+    // ── Traiter les prestations avec calcul de prix réel
+    if (req.body.prestations && req.body.prestations.length > 0) {
+      const nbInvites = parseNbInvites(req.body.nombreInvites);
+      const isWeekend = req.body.dateEvenement
+        ? [0, 6].includes(new Date(req.body.dateEvenement).getDay())
+        : false;
+
+      for (const p of req.body.prestations) {
+        let prestationDoc = null;
+
+        // 1. Chercher par MongoDB ObjectId
+        const pid = typeof p === 'string' ? null : (p.prestationId || p.prestation || p._id);
+        if (pid && /^[0-9a-fA-F]{24}$/.test(pid)) {
+          prestationDoc = await Prestation.findById(pid);
+        }
+
+        // 2. Fallback : chercher par catégorie ou nom
+        if (!prestationDoc) {
+          const searchTerm = typeof p === 'string' ? p : (p.categorie || p.nom || '');
+          if (searchTerm) {
+            prestationDoc = await Prestation.findOne({
+              $or: [
+                { categorie: new RegExp(searchTerm, 'i') },
+                { nom: new RegExp(searchTerm, 'i') }
+              ],
+              disponible: true
+            }).sort({ ordre: 1 });
+          }
+        }
+
+        if (prestationDoc) {
+          let prixUnit = prestationDoc.calculerPrixParInvites(nbInvites);
+          if (isWeekend && prestationDoc.tarifWeekend) prixUnit += prestationDoc.tarifWeekend;
+          devis.prestations.push({
+            prestation: prestationDoc._id,
+            nom: prestationDoc.nom,
+            categorie: prestationDoc.categorie,
+            quantite: 1,
+            prixUnitaire: prixUnit,
+            prixTotal: prixUnit
+          });
+        } else if (typeof p === 'object' && (p.prix || p.prixBase)) {
+          // Utiliser le prix envoyé par le frontend en dernier recours
+          const prixUnit = p.prix || p.prixBase || 0;
+          devis.prestations.push({
+            nom: p.nom || 'Prestation',
+            categorie: p.categorie || 'Autre',
+            quantite: 1,
+            prixUnitaire: prixUnit,
+            prixTotal: prixUnit
+          });
+        }
+      }
+      devis.calculerMontants();
+    }
+
     // Ajouter dans l'historique
     devis.ajouterHistorique('creation', 'client', clientId, 'Création du brouillon');
     devis.ajouterConversation('validation', 'system', `Bonjour ${client.prenom}! Commençons la construction de votre devis.`);
