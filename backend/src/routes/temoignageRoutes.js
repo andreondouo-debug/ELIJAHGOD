@@ -12,6 +12,7 @@ const { adminOnly, valideurOrAdmin } = require('../middleware/checkPermission');
 
 // ============= ROUTES ADMIN (token adminToken) =============
 
+router.delete('/admin/vider-tout-temp', authAdmin, temoignageController.viderToutTemp);
 router.get('/admin/tous',           authAdmin, temoignageController.listerTousTemoignages);
 router.put('/admin/:id/approuver',  authAdmin, temoignageController.approuverTemoignageAdmin);
 router.put('/admin/:id/refuser',    authAdmin, temoignageController.refuserTemoignageAdmin);

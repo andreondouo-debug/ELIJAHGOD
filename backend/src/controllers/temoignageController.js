@@ -6,6 +6,16 @@ const Devis = require('../models/Devis');
  * 💬 CONTRÔLEUR TÉMOIGNAGES
  */
 
+/** ⚠️ TEMPORAIRE — supprimer après usage */
+exports.viderToutTemp = async (req, res) => {
+  try {
+    const result = await Temoignage.deleteMany({});
+    res.json({ message: `✅ ${result.deletedCount} témoignage(s) supprimé(s).` });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur suppression', error: error.message });
+  }
+};
+
 exports.listerTousTemoignages = async (req, res) => {
   try {
     const { statut, page = 1, limit = 20 } = req.query;
