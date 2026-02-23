@@ -34,6 +34,10 @@ import PrestataireSignupPage from './pages/PrestataireSignupPage';
 import PrestataireLoginPage from './pages/PrestataireLoginPage';
 import PrestataireDashboard from './pages/PrestataireDashboard';
 import PrestataireMonProfil from './pages/PrestataireMonProfil';
+import PrestataireMissionsPage from './pages/PrestataireMissionsPage';
+import PrestataireStatsPage from './pages/PrestataireStatsPage';
+import PrestataireAvisPage from './pages/PrestataireAvisPage';
+import ClientProfilPage from './pages/ClientProfilPage';
 import ParametresPage from './pages/ParametresPage';
 import GestionPrestationsAdmin from './pages/GestionPrestationsAdmin';
 import NotFoundPage from './pages/NotFoundPage';
@@ -70,12 +74,16 @@ function App() {
                     <Route path="/client/dashboard" element={<ClientDashboard />} />
                     <Route path="/mes-devis" element={<MesDevisPage />} />
                     <Route path="/client/mes-devis" element={<MesDevisPage />} />
+                    <Route path="/client/profil" element={<ClientProfilPage />} />
                     
                     {/* Routes Prestataire/Fournisseur */}
                     <Route path="/prestataire/inscription" element={<PrestataireSignupPage />} />
                     <Route path="/prestataire/login" element={<PrestataireLoginPage />} />
                     <Route path="/prestataire/dashboard" element={<PrestataireDashboard />} />
                     <Route path="/prestataire/profil" element={<PrestataireMonProfil />} />
+                    <Route path="/prestataire/missions" element={<PrestataireMissionsPage />} />
+                    <Route path="/prestataire/stats" element={<PrestataireStatsPage />} />
+                    <Route path="/prestataire/avis" element={<PrestataireAvisPage />} />
                     
                     {/* Routes admin */}
                     <Route path="/admin/login" element={<AdminLoginPage />} />

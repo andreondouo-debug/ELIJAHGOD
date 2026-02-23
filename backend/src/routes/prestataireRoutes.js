@@ -42,12 +42,14 @@ router.post('/batch', prestataireController.getBatch);
 router.get('/admin/tous', authAdmin, prestataireController.listerTousAdmin);
 router.put('/admin/:id', authAdmin, prestataireController.modifierPrestataire);
 router.delete('/admin/:id', authAdmin, prestataireController.supprimerPrestataire);
+router.patch('/admin/:id/toggle-verified', authAdmin, prestataireController.toggleVerified);
 
 /**
  * 🔒 ROUTES PROTÉGÉES PRESTATAIRE — avant /:id pour éviter les conflits
  */
 router.get('/me/profil', authPrestataire, prestataireController.monProfil);
 router.get('/me/statistiques', authPrestataire, prestataireController.statistiques);
+router.get('/me/avis', authPrestataire, prestataireController.mesAvis);
 router.post('/disponibilite', authPrestataire, prestataireController.gererDisponibilite);
 router.put('/profil', authPrestataire, prestataireController.mettreAJourProfil);
 router.post('/profil/media', authPrestataire, uploadMultiple, handleUploadError, prestataireController.uploadMedia);

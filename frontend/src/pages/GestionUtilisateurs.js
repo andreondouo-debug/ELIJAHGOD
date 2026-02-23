@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import './GestionPrestationsAdmin.css'; // Réutilise les styles existants
-
+import { SettingsContext } from '../context/SettingsContext';
 import { API_URL } from '../config';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'DJ', 'Photographe', 'Vidéaste', 'Animateur', 'Groupe de louange',
   'Wedding planner', 'Traiteur', 'Sonorisation', 'Éclairage', 'Décoration',
   'Location matériel', 'Autre'
@@ -15,6 +15,10 @@ const CATEGORIES = [
  * 👥 GESTION DES PRESTATAIRES - Page admin
  */
 function GestionUtilisateurs() {
+  const { settings } = useContext(SettingsContext);
+  const CATEGORIES = (settings?.categoriesPrestataires?.length > 0)
+    ? settings.categoriesPrestataires
+    : DEFAULT_CATEGORIES;
   const [prestataires, setPrestataires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { PrestataireContext } from '../context/PrestataireContext';
+import { SettingsContext } from '../context/SettingsContext';
 import './SignupPage.css';
 
 /**
@@ -9,6 +10,16 @@ import './SignupPage.css';
 function PrestataireSignupPage() {
   const navigate = useNavigate();
   const { signup } = useContext(PrestataireContext);
+  const { settings } = useContext(SettingsContext);
+
+  const DEFAULT_CATEGORIES = [
+    'DJ','Photographe','Vidéaste','Animateur','Groupe de louange',
+    'Wedding planner','Traiteur','Sonorisation','Éclairage','Décoration',
+    'Location matériel','Autre'
+  ];
+  const categories = (settings?.categoriesPrestataires?.length > 0)
+    ? settings.categoriesPrestataires
+    : DEFAULT_CATEGORIES;
 
   const [formData, setFormData] = useState({
     nomEntreprise: '',
@@ -117,18 +128,7 @@ function PrestataireSignupPage() {
                   className="form-select"
                 >
                   <option value="">-- Sélectionnez une catégorie --</option>
-                  <option value="DJ">DJ</option>
-                  <option value="Photographe">Photographe</option>
-                  <option value="Vidéaste">Vidéaste</option>
-                  <option value="Animateur">Animateur</option>
-                  <option value="Groupe de louange">Groupe de louange</option>
-                  <option value="Wedding planner">Wedding planner</option>
-                  <option value="Traiteur">Traiteur</option>
-                  <option value="Sonorisation">Sonorisation</option>
-                  <option value="Éclairage">Éclairage</option>
-                  <option value="Décoration">Décoration</option>
-                  <option value="Location matériel">Location matériel</option>
-                  <option value="Autre">Autre</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
                 <small>Choisissez la catégorie principale de votre entreprise</small>
               </div>

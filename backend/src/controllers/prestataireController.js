@@ -1,4 +1,5 @@
 const Prestataire = require('../models/Prestataire');
+const Settings = require('../models/Settings');
 const jwt = require('jsonwebtoken');
 
 /**
@@ -428,19 +429,12 @@ exports.gererDisponibilite = async (req, res) => {
  */
 exports.categories = async (req, res) => {
   try {
-    const categories = [
-      'DJ',
-      'Photographe',
-      'Vidéaste',
-      'Animateur',
-      'Groupe de louange',
-      'Wedding planner',
-      'Traiteur',
-      'Sonorisation',
-      'Éclairage',
-      'Décoration',
-      'Location matériel',
-      'Autre'
+    // Lire les catégories depuis Settings (paramétrables par l'admin)
+    const settings = await Settings.getSettings();
+    const categories = settings.categoriesPrestataires || [
+      'DJ', 'Photographe', 'Vidéaste', 'Animateur', 'Groupe de louange',
+      'Wedding planner', 'Traiteur', 'Sonorisation', 'Éclairage',
+      'Décoration', 'Location matériel', 'Autre'
     ];
 
     // Compter le nombre de prestataires par catégorie
@@ -570,6 +564,55 @@ exports.listerTousAdmin = async (req, res) => {
   } catch (error) {
     console.error('❌ Erreur liste admin prestataires:', error);
     res.status(500).json({ success: false, message: error.message || 'Erreur serveur' });
+  }
+};
+
+/**
+ * ✅ TOGGLE VÉRIFICATION PRESTATAIRE (Admin)
+ * @route PATCH /api/prestataires/admin/:id/toggle-verified
+ */
+exports.toggleVerified = async (req, res) => {
+  try {
+    const prestataire = await Prestataire.findById(req.params.id);
+    if (!prestataire) {
+      return res.status(404).json({ success: false, message: '❌ Prestataire introuvable' });
+    }
+    prestataire.isVerified = !prestataire.isVerified;
+    await prestataire.save();
+    res.json({
+      success: true,
+      message: prestataire.isVerified ? '✅ Compte vérifié avec succès' : '⚠️ Vérification retirée',
+      isVerified: prestataire.isVerified
+    });
+  } catch (error) {
+    console.error('❌ Erreur toggle verified:', error);
+    res.status(500).json({ success: false, message: error.message || 'Erreur serveur' });
+  }
+};
+
+/**
+ * ⭐ MES AVIS (prestataire connecté)
+ * @route GET /api/prestataires/me/avis
+ */
+exports.mesAvis = async (req, res) => {
+  try {
+    const prestataire = await Prestataire.findById(req.prestataireId)
+      .select('avis noteGlobale nombreAvis nomEntreprise');
+    if (!prestataire) {
+      return res.status(404).json({ success: false, message: '❌ Prestataire introuvable' });
+    }
+    const avis = (prestataire.avis || []).sort((a, b) => new Date(b.dateAvis) - new Date(a.dateAvis));
+    res.json({
+      success: true,
+      data: {
+        avis,
+        noteGlobale: prestataire.noteGlobale,
+        nombreAvis: prestataire.nombreAvis
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur mes avis:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des avis' });
   }
 };
 

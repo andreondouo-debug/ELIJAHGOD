@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2, Clapperboard, Phone, Smartphone, MessageSquare,
   Palette, FileText, FileStack, Rocket, User, Settings2,
-  ArrowLeft, Hourglass, Home
+  ArrowLeft, Hourglass, Home, List
 } from 'lucide-react';
 import { SettingsContext } from '../context/SettingsContext';
 import axios from 'axios';
@@ -296,7 +296,13 @@ function ParametresPage() {
         { annee: '2021', titre: "Création d'ELIJAH'GOD", description: 'Lancement officiel.' },
         { annee: '2024', titre: 'Expansion & équipe', description: 'Prestataires partenaires.' }
       ]
-    }
+    },
+    // Catégories prestataires
+    categoriesPrestataires: [
+      'DJ','Photographe','Vidéaste','Animateur','Groupe de louange',
+      'Wedding planner','Traiteur','Sonorisation','Éclairage','Décoration',
+      'Location matériel','Autre'
+    ]
   });
 
   const [activeTab, setActiveTab] = useState('entreprise');
@@ -334,7 +340,8 @@ function ParametresPage() {
         site: settings.site || formData.site,
         devis: settings.devis || formData.devis,
         seo: settings.seo || formData.seo,
-        aPropos: settings.aPropos || formData.aPropos
+        aPropos: settings.aPropos || formData.aPropos,
+        categoriesPrestataires: settings.categoriesPrestataires || formData.categoriesPrestataires
       });
     }
   }, [settings]);
@@ -467,7 +474,8 @@ function ParametresPage() {
     { id: 'devis',      label: 'Devis',              icon: FileText      },
     { id: 'pages',      label: 'Autres Pages',       icon: FileStack     },
     { id: 'seo',        label: 'SEO',                icon: Rocket        },
-    { id: 'aPropos',    label: 'À propos',            icon: User          }
+    { id: 'aPropos',    label: 'À propos',            icon: User          },
+    { id: 'categories', label: 'Catégories',           icon: List          }
   ];
 
   if (settingsLoading) {
@@ -2206,6 +2214,72 @@ function ParametresPage() {
           )}
 
           {/* ONGLET AUTRES PAGES */}
+          {/* ONGLET CATÉGORIES PRESTATAIRES */}
+          {activeTab === 'categories' && (
+            <div className="tab-content">
+              <h2 style={{ marginBottom: '0.5rem', color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <List size={22} color="#d4af37" /> Catégories de Prestataires
+              </h2>
+              <p style={{ color: '#666', marginBottom: '2rem' }}>Gérez les catégories disponibles lors de l'inscription des prestataires</p>
+
+              <div style={{ background: '#fff', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e0e5ff', marginBottom: '1.5rem' }}>
+                <h3 style={{ color: '#1a1a2e', marginBottom: '1rem' }}>Catégories actuelles ({formData.categoriesPrestataires.length})</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                  {formData.categoriesPrestataires.map((cat, i) => (
+                    <span key={i} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                      background: '#f4f0ff', border: '1px solid #c7bfff',
+                      borderRadius: '20px', padding: '4px 12px', fontSize: '0.9rem',
+                      color: '#3730a3'
+                    }}>
+                      {cat}
+                      <button
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          categoriesPrestataires: prev.categoriesPrestataires.filter((_, idx) => idx !== i)
+                        }))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontWeight: '700', fontSize: '0.9rem', padding: '0 2px', lineHeight: 1 }}
+                        title="Supprimer"
+                      >✕</button>
+                    </span>
+                  ))}
+                </div>
+
+                <h4 style={{ color: '#444', marginBottom: '0.75rem' }}>Ajouter une catégorie</h4>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <input
+                    id="new-cat-input"
+                    type="text"
+                    placeholder="Ex : Musicien, Fleuriste…"
+                    style={{ flex: 1, padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #e0e5ff', fontSize: '0.9rem' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = e.target.value.trim();
+                        if (val && !formData.categoriesPrestataires.includes(val)) {
+                          setFormData(prev => ({ ...prev, categoriesPrestataires: [...prev.categoriesPrestataires, val] }));
+                          e.target.value = '';
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    style={{ background: 'linear-gradient(135deg,#d4af37,#f4e5b8)', color: '#1a1a2e', fontWeight: 700 }}
+                    onClick={() => {
+                      const input = document.getElementById('new-cat-input');
+                      const val = input.value.trim();
+                      if (val && !formData.categoriesPrestataires.includes(val)) {
+                        setFormData(prev => ({ ...prev, categoriesPrestataires: [...prev.categoriesPrestataires, val] }));
+                        input.value = '';
+                      }
+                    }}
+                  >+ Ajouter</button>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem' }}>Appuyez sur Entrée ou cliquez sur Ajouter. N'oubliez pas d'enregistrer.</p>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'pages' && (
             <div className="tab-content">
               <h2 style={{ marginBottom: '0.5rem', color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -556,6 +556,25 @@ const settingsSchema = new mongoose.Schema({
     totalClients: { type: Number, default: 0 }
   },
   
+  // Catégories des prestataires (paramétrables par l'admin)
+  categoriesPrestataires: {
+    type: [String],
+    default: [
+      'DJ',
+      'Photographe',
+      'Vidéaste',
+      'Animateur',
+      'Groupe de louange',
+      'Wedding planner',
+      'Traiteur',
+      'Sonorisation',
+      'Éclairage',
+      'Décoration',
+      'Location matériel',
+      'Autre'
+    ]
+  },
+
   // Page À propos
   aPropos: {
     hero: {

@@ -25,21 +25,8 @@ const prestataireSchema = new mongoose.Schema({
   categorie: {
     type: String,
     required: [true, "La catégorie est requise"],
-    enum: [
-      'DJ',
-      'Photographe',
-      'Vidéaste',
-      'Animateur',
-      'Groupe de louange',
-      'Wedding planner',
-      'Traiteur',
-      'Sonorisation',
-      'Éclairage',
-      'Décoration',
-      'Location matériel',
-      'Autre'
-    ]
-  },
+    // Enum géré dynamiquement via Settings.categoriesPrestataires
+  },,
   specialites: [String], // Ex: ["Mariage", "Anniversaire", "Événement d'entreprise"]
 
   // Contact
