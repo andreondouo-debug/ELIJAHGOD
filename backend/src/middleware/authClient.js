@@ -59,3 +59,19 @@ const authClient = (req, res, next) => {
 };
 
 module.exports = authClient;
+
+/**
+ * Auth optionnel : injecte clientId si token présent, continue sinon
+ */
+const optionalAuthClient = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.type === 'client') req.clientId = decoded.clientId;
+  } catch (e) { /* token invalide ou absent — on continue */ }
+  next();
+};
+
+module.exports.optionalAuthClient = optionalAuthClient;

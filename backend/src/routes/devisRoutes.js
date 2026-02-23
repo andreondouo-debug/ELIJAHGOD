@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const devisController = require('../controllers/devisController');
 const authClient = require('../middleware/authClient');
+const { optionalAuthClient } = require('../middleware/authClient');
 const { authAdmin } = require('../middleware/authAdmin'); // Import destructuré
 
 /**
@@ -16,7 +17,7 @@ const { authAdmin } = require('../middleware/authAdmin'); // Import destructuré
 // @route   POST /api/devis/brouillon
 // @desc    Créer un nouveau brouillon de devis (+ création compte auto si besoin)
 // @access  Public/Client
-router.post('/brouillon', devisController.creerBrouillon);
+router.post('/brouillon', optionalAuthClient, devisController.creerBrouillon);
 
 // @route   PUT /api/devis/:devisId/etape
 // @desc    Sauvegarder une étape du workflow guidé

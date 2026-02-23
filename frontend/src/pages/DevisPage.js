@@ -299,14 +299,18 @@ function DevisPage() {
       console.log('📤 Envoi devis:', JSON.stringify(devisData, null, 2));
       console.log('📞 Téléphone:', formData.telephone);
 
-      const response = await axios.post(`${API_URL}/api/devis/brouillon`, devisData);
+      const response = await axios.post(
+        `${API_URL}/api/devis/brouillon`,
+        devisData,
+        isAuthenticated && clientToken ? { headers: { Authorization: `Bearer ${clientToken}` } } : {}
+      );
 
       console.log('✅ Devis créé:', response.data);
       setSuccess(true);
       
       // Redirection après 3 secondes
       setTimeout(() => {
-        if (response.data.clientId) {
+        if (isAuthenticated || response.data.devis) {
           navigate(`/client/dashboard`);
         } else {
           navigate('/');
