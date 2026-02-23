@@ -5,64 +5,6 @@ import './TemoignagesPage.css';
 import { API_URL } from '../config';
 import { ClientContext } from '../context/ClientContext';
 
-// Témoignages par défaut si la base est vide
-const TEMOIGNAGES_DEFAUT = [
-  {
-    _id: 'd1',
-    nom: 'Marie & Thomas',
-    evenement: 'Mariage',
-    note: 5,
-    message: 'Une soirée absolument parfaite ! Randy a su créer une ambiance incroyable pour notre mariage. Les invités ont adoré, la musique était parfaitement choisie et la sono impeccable. Merci infiniment pour ce moment inoubliable.',
-    date: '2025-09-15',
-    ville: 'Paris'
-  },
-  {
-    _id: 'd2',
-    nom: 'Association Lumière',
-    evenement: 'Conférence / Gala',
-    note: 5,
-    message: 'Nous avons fait appel à ELIJAH\'GOD pour notre gala annuel. Professionnalisme exemplaire, ponctualité, équipement de qualité. Tout s\'est déroulé parfaitement. Nous renouvèlerons l\'expérience sans hésiter.',
-    date: '2025-11-20',
-    ville: 'Lyon'
-  },
-  {
-    _id: 'd3',
-    nom: 'Famille Dubois',
-    evenement: 'Anniversaire 50 ans',
-    note: 5,
-    message: 'Pour les 50 ans de mon mari, j\'avais besoin de quelqu\'un de fiable et talentueux. Randy a dépassé toutes nos attentes ! L\'ambiance était festive, conviviale et les surprises musicales ont ému toute la famille.',
-    date: '2025-10-05',
-    ville: 'Versailles'
-  },
-  {
-    _id: 'd4',
-    nom: 'Église Nouvelle Vie',
-    evenement: 'Culte & Louange',
-    note: 5,
-    message: 'Randy est un véritable serviteur. Sa sensibilité spirituelle et son expertise technique font de lui le partenaire idéal pour nos événements d\'église. La sonorisation était claire et puissante, le tout dans un esprit de paix.',
-    date: '2025-08-10',
-    ville: 'Créteil'
-  },
-  {
-    _id: 'd5',
-    nom: 'Sophie & Julien',
-    evenement: 'Mariage',
-    note: 5,
-    message: 'Nous avons eu la chance de travailler avec Randy pour notre mariage champêtre. Son écoute, sa réactivité et sa créativité nous ont permis d\'avoir exactement la soirée dont nous rêvions. Un grand merci du fond du cœur !',
-    date: '2025-06-28',
-    ville: 'Seine-et-Marne'
-  },
-  {
-    _id: 'd6',
-    nom: 'Entreprise InnoTech',
-    evenement: 'Séminaire d\'entreprise',
-    note: 5,
-    message: 'Installation rapide, son parfait pour nos deux jours de conférence. L\'équipe d\'ELIJAH\'GOD a géré tout le côté technique avec brio nous permettant de nous concentrer sur notre contenu. Service au top !',
-    date: '2025-12-03',
-    ville: 'La Défense'
-  }
-];
-
 function EtoileNote({ note }) {
   return (
     <div className="temoignage-etoiles">
@@ -104,14 +46,11 @@ function TemoignagesPage() {
         const res = await fetch(`${API_URL}/api/temoignages?limit=20`);
         if (res.ok) {
           const data = await res.json();
-          // Le contrôleur retourne { temoignages: [...] }
           const liste = data.temoignages || data.data || (Array.isArray(data) ? data : []);
-          setTemoignages(liste.length > 0 ? liste : TEMOIGNAGES_DEFAUT);
-        } else {
-          setTemoignages(TEMOIGNAGES_DEFAUT);
+          setTemoignages(liste);
         }
       } catch {
-        setTemoignages(TEMOIGNAGES_DEFAUT);
+        // erreur réseau : liste reste vide
       } finally {
         setLoading(false);
       }
