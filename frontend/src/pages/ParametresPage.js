@@ -712,9 +712,7 @@ function ParametresPage() {
                         fd.append('banniere', file);
                         try {
                           setMessage({ type: 'info', text: '⏳ Upload en cours…' });
-                          const { data } = await axios.post(`${API_URL}/api/settings/carousel/upload-banniere`, fd, {
-                            headers: { 'Content-Type': 'multipart/form-data' }
-                          });
+                          const { data } = await axios.post(`${API_URL}/api/settings/carousel/upload-banniere`, fd);
                           if (data.success) {
                             setFormData(prev => ({
                               ...prev,
@@ -1913,7 +1911,7 @@ function ParametresPage() {
                           const fd = new FormData();
                           fd.append('photo', file);
                           try {
-                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) {
                               setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, hero: { ...prev.aPropos.hero, photo: data.url } } }));
                               setMessage({ type: 'success', text: '✅ Photo de profil mise à jour !' });
@@ -1976,7 +1974,7 @@ function ParametresPage() {
                           const file = e.target.files[0]; if (!file) return;
                           const fd = new FormData(); fd.append('photo', file);
                           try {
-                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) { setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, presentation: { ...prev.aPropos.presentation, photo: data.url } } })); setMessage({ type: 'success', text: '✅ Photo mise à jour !' }); }
                           } catch { setMessage({ type: 'error', text: '❌ Erreur upload' }); }
                         }} />
@@ -2036,7 +2034,7 @@ function ParametresPage() {
                           const file = e.target.files[0]; if (!file) return;
                           const fd = new FormData(); fd.append('photo', file);
                           try {
-                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) { setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, motivation: { ...prev.aPropos.motivation, photo: data.url } } })); setMessage({ type: 'success', text: '✅ Photo mise à jour !' }); }
                           } catch { setMessage({ type: 'error', text: '❌ Erreur upload' }); }
                         }} />
@@ -2096,7 +2094,7 @@ function ParametresPage() {
                           const file = e.target.files[0]; if (!file) return;
                           const fd = new FormData(); fd.append('photo', file);
                           try {
-                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                            const { data } = await axios.post(`${API_URL}/api/settings/apropos/upload-photo`, fd);
                             if (data.success) { setFormData(prev => ({ ...prev, aPropos: { ...prev.aPropos, mission: { ...prev.aPropos.mission, photo: data.url } } })); setMessage({ type: 'success', text: '✅ Photo mise à jour !' }); }
                           } catch { setMessage({ type: 'error', text: '❌ Erreur upload' }); }
                         }} />
@@ -2165,7 +2163,7 @@ function ParametresPage() {
                       const fd = new FormData();
                       files.forEach(f => fd.append('images', f));
                       try {
-                        const { data } = await axios.post(`${API_URL}/api/settings/apropos/galerie`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                        const { data } = await axios.post(`${API_URL}/api/settings/apropos/galerie`, fd);
                         if (data.success) {
                           window.location.reload(); // Recharger pour afficher les nouvelles images
                         }
