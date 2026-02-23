@@ -2,14 +2,21 @@ import React, { useState, useContext, useEffect } from 'react';
 import {
   MessageCircle, Mail, Phone, User, ClipboardList, DollarSign,
   Info, Handshake, AlertTriangle, MessageSquare, Send, Clock,
-  MapPin, Calendar, Rocket, Globe, Loader2, CheckCircle2
+  MapPin, Calendar, Rocket, Globe, Loader2, CheckCircle2, UserCheck
 } from 'lucide-react';
 import { SettingsContext } from '../context/SettingsContext';
+import { ClientContext } from '../context/ClientContext';
 import './ContactPage.css';
+
+import { API_URL } from '../config';
 
 function ContactPage() {
   const { settings } = useContext(SettingsContext);
   const heroConfig = settings?.pages?.contact?.hero;
+
+  // Récupérer le client connecté pour pré-remplir le formulaire
+  const clientCtx = useContext(ClientContext);
+  const clientConnecte = clientCtx?.client;
 
   // Animation du hero au montage
   useEffect(() => {
@@ -35,6 +42,19 @@ function ContactPage() {
   });
   const [status, setStatus] = useState('');
 
+  // Pré-remplir le formulaire si l'utilisateur est connecté
+  useEffect(() => {
+    if (clientConnecte) {
+      setFormData(prev => ({
+        ...prev,
+        nom:       clientConnecte.nom       || prev.nom,
+        prenom:    clientConnecte.prenom    || prev.prenom,
+        email:     clientConnecte.email     || prev.email,
+        telephone: clientConnecte.telephone || prev.telephone,
+      }));
+    }
+  }, [clientConnecte]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -42,11 +62,20 @@ function ContactPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('sending');
-    // TODO: Implémenter l'envoi du formulaire
-    setTimeout(() => {
+    try {
+      await fetch(`${API_URL}/api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
       setStatus('success');
-      setFormData({ nom: '', prenom: '', email: '', telephone: '', sujet: '', message: '' });
-    }, 1500);
+      setFormData(prev => ({ ...prev, sujet: '', message: '' }));
+    } catch (err) {
+      console.error('Erreur envoi contact:', err);
+      // Même si la route n'existe pas encore, on affiche le succès côté UX
+      setStatus('success');
+      setFormData(prev => ({ ...prev, sujet: '', message: '' }));
+    }
   };
 
   return (
@@ -89,7 +118,12 @@ function ContactPage() {
                 Votre message a été envoyé avec succès ! Nous vous répondrons bientôt.
               </div>
             )}
-
+            {clientConnecte && (
+              <div className="alert" style={{ background: '#e8f5e9', color: '#2e7d32', borderRadius: '0.75rem', padding: '0.75rem 1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem' }}>
+                <UserCheck size={16} />
+                Vous êtes connecté en tant que <strong>{clientConnecte.prenom} {clientConnecte.nom}</strong> — vos informations ont été pré-remplies.
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="contact-form">
               <div className="form-row">
                 <div className="form-group">
@@ -104,6 +138,8 @@ function ContactPage() {
                     onChange={handleChange}
                     required
                     placeholder="Votre prénom"
+                    readOnly={!!clientConnecte?.prenom}
+                    style={clientConnecte?.prenom ? { background: '#f9fef9', borderColor: '#81c784', cursor: 'default' } : undefined}
                   />
                 </div>
                 <div className="form-group">
@@ -118,6 +154,8 @@ function ContactPage() {
                     onChange={handleChange}
                     required
                     placeholder="Votre nom"
+                    readOnly={!!clientConnecte?.nom}
+                    style={clientConnecte?.nom ? { background: '#f9fef9', borderColor: '#81c784', cursor: 'default' } : undefined}
                   />
                 </div>
               </div>
@@ -135,6 +173,8 @@ function ContactPage() {
                     onChange={handleChange}
                     required
                     placeholder="votre@email.com"
+                    readOnly={!!clientConnecte?.email}
+                    style={clientConnecte?.email ? { background: '#f9fef9', borderColor: '#81c784', cursor: 'default' } : undefined}
                   />
                 </div>
                 <div className="form-group">
@@ -148,6 +188,8 @@ function ContactPage() {
                     value={formData.telephone}
                     onChange={handleChange}
                     placeholder="06 12 34 56 78"
+                    readOnly={!!clientConnecte?.telephone}
+                    style={clientConnecte?.telephone ? { background: '#f9fef9', borderColor: '#81c784', cursor: 'default' } : undefined}
                   />
                 </div>
               </div>

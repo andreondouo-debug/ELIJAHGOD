@@ -2,12 +2,22 @@ const express = require('express');
 const router = express.Router();
 const temoignageController = require('../controllers/temoignageController');
 const authClient = require('../middleware/authClient');
+const { authAdmin } = require('../middleware/authAdmin');
 const { adminOnly, valideurOrAdmin } = require('../middleware/checkPermission');
 
 /**
  * 💬 Routes de gestion des témoignages
  * Routes mixtes : publiques, authentifiées et admin
  */
+
+// ============= ROUTES ADMIN (token adminToken) =============
+
+router.get('/admin/tous',           authAdmin, temoignageController.listerTousTemoignages);
+router.put('/admin/:id/approuver',  authAdmin, temoignageController.approuverTemoignageAdmin);
+router.put('/admin/:id/refuser',    authAdmin, temoignageController.refuserTemoignageAdmin);
+router.put('/admin/:id/featured',   authAdmin, temoignageController.toggleFeaturedAdmin);
+router.post('/admin/:id/repondre',  authAdmin, temoignageController.repondreTemoignageAdmin);
+router.delete('/admin/:id',         authAdmin, temoignageController.supprimerTemoignageAdmin);
 
 // ============= ROUTES PUBLIQUES =============
 

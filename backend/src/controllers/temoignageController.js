@@ -7,6 +7,149 @@ const Devis = require('../models/Devis');
  */
 
 /**
+ * [ADMIN] Lister tous les témoignages avec filtres et stats
+ * GET /api/temoignages/admin/tous
+ */
+exports.listerTousTemoignages = async (req, res) => {
+  try {
+    const { statut, page = 1, limit = 20 } = req.query;
+    const query = {};
+    if (statut && statut !== 'tous') query.statut = statut;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [temoignages, total, stats] = await Promise.all([
+      Temoignage.find(query)
+        .populate('auteur.client', 'prenom nom email photo')
+        .populate('evenement.devis', 'numeroDevis evenement')
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Temoignage.countDocuments(query),
+      Promise.all([
+        Temoignage.countDocuments({}),
+        Temoignage.countDocuments({ statut: 'en_attente' }),
+        Temoignage.countDocuments({ statut: 'approuve' }),
+        Temoignage.countDocuments({ statut: 'refuse' }),
+      ]).then(([total, enAttente, approuve, refuse]) => ({
+        total, enAttente, approuve, refuse
+      }))
+    ]);
+
+    res.json({
+      temoignages,
+      stats,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur listerTousTemoignages:', error);
+    res.status(500).json({ message: 'Erreur lors du chargement des témoignages' });
+  }
+};
+
+/**
+ * [ADMIN] Approuver un témoignage
+ * PUT /api/temoignages/admin/:id/approuver
+ */
+exports.approuverTemoignageAdmin = async (req, res) => {
+  try {
+    const temoignage = await Temoignage.findById(req.params.id);
+    if (!temoignage) return res.status(404).json({ message: 'Témoignage non trouvé' });
+
+    temoignage.statut = 'approuve';
+    temoignage.isVisible = true;
+    temoignage.dateModeree = new Date();
+    if (req.body.isFeatured) temoignage.isFeatured = true;
+    await temoignage.save();
+
+    res.json({ message: '✅ Témoignage approuvé', temoignage });
+  } catch (error) {
+    console.error('❌ Erreur approbation admin:', error);
+    res.status(500).json({ message: "Erreur lors de l'approbation" });
+  }
+};
+
+/**
+ * [ADMIN] Refuser un témoignage
+ * PUT /api/temoignages/admin/:id/refuser
+ */
+exports.refuserTemoignageAdmin = async (req, res) => {
+  try {
+    const temoignage = await Temoignage.findById(req.params.id);
+    if (!temoignage) return res.status(404).json({ message: 'Témoignage non trouvé' });
+
+    temoignage.statut = 'refuse';
+    temoignage.isVisible = false;
+    temoignage.dateModeree = new Date();
+    if (req.body.raison) temoignage.raisonRefus = req.body.raison;
+    await temoignage.save();
+
+    res.json({ message: '✅ Témoignage refusé', temoignage });
+  } catch (error) {
+    console.error('❌ Erreur refus admin:', error);
+    res.status(500).json({ message: 'Erreur lors du refus' });
+  }
+};
+
+/**
+ * [ADMIN] Répondre à un témoignage
+ * POST /api/temoignages/admin/:id/repondre
+ */
+exports.repondreTemoignageAdmin = async (req, res) => {
+  try {
+    const { texte } = req.body;
+    if (!texte) return res.status(400).json({ message: 'Le texte de la réponse est requis' });
+
+    const temoignage = await Temoignage.findById(req.params.id);
+    if (!temoignage) return res.status(404).json({ message: 'Témoignage non trouvé' });
+
+    temoignage.reponse = { texte, date: new Date() };
+    await temoignage.save();
+
+    res.json({ message: '✅ Réponse ajoutée', temoignage });
+  } catch (error) {
+    console.error('❌ Erreur réponse admin:', error);
+    res.status(500).json({ message: "Erreur lors de l'ajout de la réponse" });
+  }
+};
+
+/**
+ * [ADMIN] Supprimer un témoignage
+ * DELETE /api/temoignages/admin/:id
+ */
+exports.supprimerTemoignageAdmin = async (req, res) => {
+  try {
+    const temoignage = await Temoignage.findByIdAndDelete(req.params.id);
+    if (!temoignage) return res.status(404).json({ message: 'Témoignage non trouvé' });
+    res.json({ message: '✅ Témoignage supprimé' });
+  } catch (error) {
+    console.error('❌ Erreur suppression admin:', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression' });
+  }
+};
+
+/**
+ * [ADMIN] Basculer featured
+ * PUT /api/temoignages/admin/:id/featured
+ */
+exports.toggleFeaturedAdmin = async (req, res) => {
+  try {
+    const temoignage = await Temoignage.findById(req.params.id);
+    if (!temoignage) return res.status(404).json({ message: 'Témoignage non trouvé' });
+    temoignage.isFeatured = !temoignage.isFeatured;
+    await temoignage.save();
+    res.json({ message: `✅ Featured: ${temoignage.isFeatured}`, temoignage });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur' });
+  }
+};
+
+/**
  * Créer un témoignage (client authentifié)
  * POST /api/temoignages
  */
