@@ -78,7 +78,7 @@ function PrestationsPage() {
     }, 100);
     return () => { clearTimeout(timer); observer.disconnect(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sectionsConfig, selectedCategory]);
+  }, [sectionsConfig, selectedCategory, loading]);
 
   // Animation du hero via React state
   useEffect(() => {
