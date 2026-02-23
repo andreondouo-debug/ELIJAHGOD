@@ -631,6 +631,55 @@ exports.detailsDevis = async (req, res) => {
 };
 
 // ============================================
+// 5b. CLIENT: SUPPRIMER UN BROUILLON
+// ============================================
+exports.supprimerDevis = async (req, res) => {
+  try {
+    const { devisId } = req.params;
+
+    const devis = await Devis.findById(devisId);
+
+    if (!devis) {
+      return res.status(404).json({
+        success: false,
+        message: '❌ Devis non trouvé'
+      });
+    }
+
+    // Vérifier que le devis appartient au client
+    if (devis.clientId.toString() !== req.clientId) {
+      return res.status(403).json({
+        success: false,
+        message: '❌ Non autorisé'
+      });
+    }
+
+    // Seuls les brouillons peuvent être supprimés par le client
+    if (devis.statut !== 'brouillon') {
+      return res.status(400).json({
+        success: false,
+        message: '❌ Seuls les brouillons peuvent être supprimés. Contactez-nous pour annuler un devis soumis.'
+      });
+    }
+
+    await Devis.findByIdAndDelete(devisId);
+
+    res.json({
+      success: true,
+      message: '🗑️ Brouillon supprimé avec succès'
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur suppression devis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la suppression du devis',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
 // 6. ADMIN: LISTER TOUS LES DEVIS
 // ============================================
 exports.listerTous = async (req, res) => {

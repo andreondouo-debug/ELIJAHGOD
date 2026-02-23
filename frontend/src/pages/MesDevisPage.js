@@ -14,6 +14,23 @@ function MesDevisPage() {
   const { client, isAuthenticated, token } = useContext(ClientContext);
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+
+  const supprimerBrouillon = async (devisId, numeroDevis) => {
+    if (!window.confirm(`Supprimer définitivement le brouillon ${numeroDevis} ? Cette action est irréversible.`)) return;
+    setDeleting(devisId);
+    try {
+      await axios.delete(
+        `${API_URL}/api/devis/${devisId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await chargerDevis();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de la suppression');
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const soumettreBrouillon = async (devisId) => {
     if (!window.confirm('Soumettre ce devis à notre équipe ?')) return;
@@ -227,7 +244,6 @@ function MesDevisPage() {
                 className="btn-primary"
                 onClick={() => navigate('/devis')}
               >
-              >
                 ➕ Créer mon premier devis
               </button>
             )}
@@ -312,18 +328,27 @@ function MesDevisPage() {
                   )}
                   
                   {d.statut === 'brouillon' && (
-                    <button
-                      className="btn-action btn-continue"
-                      onClick={() => soumettreBrouillon(d._id)}
-                      disabled={submitting === d._id}
-                    >
-                      {submitting === d._id ? '⏳ Envoi...' : '📤 Soumettre'}
-                    </button>
+                    <>
+                      <button
+                        className="btn-action btn-continue"
+                        onClick={() => soumettreBrouillon(d._id)}
+                        disabled={submitting === d._id}
+                      >
+                        {submitting === d._id ? '⏳ Envoi...' : '📤 Soumettre'}
+                      </button>
+                      <button
+                        className="btn-action btn-delete"
+                        onClick={() => supprimerBrouillon(d._id, d.numeroDevis)}
+                        disabled={deleting === d._id}
+                      >
+                        {deleting === d._id ? '⏳...' : '🗑️ Supprimer'}
+                      </button>
+                    </>
                   )}
 
                   <button
                     className="btn-action btn-view"
-                    onClick={() => navigate(`/devis/${d._id}/details`)}
+                    onClick={() => navigate(`/client/devis/${d._id}`)}
                   >
                     👁️ Voir détails
                   </button>

@@ -29,6 +29,7 @@ import SignupPage from './pages/SignupPage';
 import ClientLoginPage from './pages/ClientLoginPage';
 import ClientDashboard from './pages/ClientDashboard';
 import MesDevisPage from './pages/MesDevisPage';
+import DevisDetailClientPage from './pages/DevisDetailClientPage';
 // Pages Prestataire
 import PrestataireSignupPage from './pages/PrestataireSignupPage';
 import PrestataireLoginPage from './pages/PrestataireLoginPage';
@@ -77,6 +78,7 @@ function App() {
                     <Route path="/client/dashboard" element={<ClientDashboard />} />
                     <Route path="/mes-devis" element={<MesDevisPage />} />
                     <Route path="/client/mes-devis" element={<MesDevisPage />} />
+                    <Route path="/client/devis/:devisId" element={<DevisDetailClientPage />} />
                     <Route path="/client/profil" element={<ClientProfilPage />} />
                     
                     {/* Routes Prestataire/Fournisseur */}

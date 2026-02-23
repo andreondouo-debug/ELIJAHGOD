@@ -53,6 +53,11 @@ router.get('/:devisId/pdf-url', authClient, devisController.obtenirUrlPDF);
 // @access  Privé (Client ou Admin)
 router.get('/:devisId', authClient, devisController.detailsDevis);
 
+// @route   DELETE /api/devis/:devisId
+// @desc    Supprimer un brouillon de devis (Client uniquement)
+// @access  Privé (Client)
+router.delete('/:devisId', authClient, devisController.supprimerDevis);
+
 // @route   PUT /api/devis/:devisId/valider-modifications
 // @desc    Client valide ou refuse les modifications admin
 // @access  Privé (Client)
