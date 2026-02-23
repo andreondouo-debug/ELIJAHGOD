@@ -634,14 +634,14 @@ exports.uploadMedia = async (req, res) => {
       return res.status(404).json({ success: false, message: '❌ Prestataire introuvable' });
     }
 
-    // Traitement des fichiers : images -> photos[], vidéos -> video (seule la première vidéo est conservée)
+    // Traitement des fichiers : images -> photos[], vidéos -> video
     for (const f of files) {
-      const relativeUrl = `/uploads/prestataires/${f.filename}`;
+      const cloudinaryUrl = f.path; // URL Cloudinary HTTPS
       if (f.mimetype && f.mimetype.startsWith('image/')) {
-        prestataire.photos.push({ url: relativeUrl, publicId: f.filename });
+        prestataire.photos.push({ url: cloudinaryUrl, publicId: f.filename });
       } else if (f.mimetype && f.mimetype.startsWith('video/')) {
         // Remplacer la vidéo de présentation si existante
-        prestataire.video = relativeUrl;
+        prestataire.video = cloudinaryUrl;
       }
     }
 

@@ -220,8 +220,8 @@ exports.uploadImage = async (req, res) => {
       });
     }
     
-    // Construction de l'URL de l'image (servie par Express)
-    const imageUrl = `/uploads/prestations/${req.file.filename}`;
+    // URL Cloudinary retournée par multer-storage-cloudinary
+    const imageUrl = req.file.path;
     
     // Ajouter à la galerie
     if (!prestation.galerie) {
@@ -283,7 +283,7 @@ exports.uploadGalerie = async (req, res) => {
     
     // Ajouter toutes les images à la galerie
     const uploadedFiles = req.files.map((file, index) => {
-      const imageUrl = `/uploads/prestations/${file.filename}`;
+      const imageUrl = file.path; // URL Cloudinary
       const galerieItem = {
         url: imageUrl,
         type: file.mimetype.startsWith('video/') ? 'video' : 'image',
