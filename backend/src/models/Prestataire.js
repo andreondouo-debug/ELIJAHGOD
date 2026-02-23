@@ -26,7 +26,7 @@ const prestataireSchema = new mongoose.Schema({
     type: String,
     required: [true, "La catégorie est requise"],
     // Enum géré dynamiquement via Settings.categoriesPrestataires
-  },,
+  },
   specialites: [String], // Ex: ["Mariage", "Anniversaire", "Événement d'entreprise"]
 
   // Contact
