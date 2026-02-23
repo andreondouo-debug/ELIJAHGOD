@@ -272,12 +272,25 @@ function MesDevisPage() {
                   )}
 
                   {d.montants && (
-                    <div className="devis-montant">
-                      <span className="montant-label">Total TTC:</span>
-                      <span className="montant-value">
-                        {formatMontant(d.montants.totalTTC)}
-                      </span>
-                    </div>
+                    <>
+                      <div className="devis-montant">
+                        <span className="montant-label">Total TTC:</span>
+                        <span className="montant-value">
+                          {formatMontant(d.montants.totalTTC)}
+                        </span>
+                      </div>
+                      {d.montants.totalTTC > 0 && (
+                        <div className="devis-acompte">
+                          <span className="acompte-label">💳 Acompte à verser (30 %) :</span>
+                          <span className="acompte-value">
+                            {formatMontant(
+                              d.montants.acompte?.montant ||
+                              d.montants.totalTTC * 0.3
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {d.dateCreation && (

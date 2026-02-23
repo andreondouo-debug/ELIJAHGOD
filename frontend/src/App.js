@@ -41,6 +41,9 @@ import ClientProfilPage from './pages/ClientProfilPage';
 import ParametresPage from './pages/ParametresPage';
 import GestionPrestationsAdmin from './pages/GestionPrestationsAdmin';
 import NotFoundPage from './pages/NotFoundPage';
+import CGVPage from './pages/CGVPage';
+import MentionsLegalesPage from './pages/MentionsLegalesPage';
+import PolitiqueConfidentialitePage from './pages/PolitiqueConfidentialitePage';
 import './styles/App.css';
 
 function App() {
@@ -97,6 +100,11 @@ function App() {
                     <Route path="/admin/temoignages" element={<GestionTemoignages />} />
                     <Route path="/admin/parametres" element={<ParametresPage />} />
                     
+                    {/* Pages légales */}
+                    <Route path="/cgv" element={<CGVPage />} />
+                    <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
+                    <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
+
                     {/* 404 */}
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>

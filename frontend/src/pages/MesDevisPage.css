@@ -216,6 +216,30 @@
   font-weight: 700;
 }
 
+/* ACOMPTE */
+.devis-acompte {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.acompte-label {
+  color: #d4af37;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.acompte-value {
+  color: #d4af37;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
 .devis-date-creation {
   color: rgba(255, 255, 255, 0.4);
   font-size: 0.85rem;

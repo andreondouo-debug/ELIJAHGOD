@@ -68,7 +68,17 @@ function Footer() {
             </ul>
           </div>
 
-          {/* Colonne 4 : Réseaux sociaux */}
+          {/* Colonne 4 : Légal */}
+          <div className="footer-column">
+            <h4 className="footer-subtitle">⚖️ Légal</h4>
+            <ul className="footer-links">
+              <li><Link to="/cgv">📋 CGV</Link></li>
+              <li><Link to="/mentions-legales">📄 Mentions légales</Link></li>
+              <li><Link to="/politique-confidentialite">🔒 Confidentialité</Link></li>
+            </ul>
+          </div>
+
+          {/* Colonne 5 : Réseaux sociaux */}
           {settings?.reseauxSociaux && (
             <div className="footer-column">
               <h4 className="footer-subtitle">🌐 Suivez-nous</h4>
