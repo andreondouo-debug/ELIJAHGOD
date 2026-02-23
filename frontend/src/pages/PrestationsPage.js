@@ -155,7 +155,7 @@ function PrestationsPage() {
     <div className="prestations-page">
       {/* Hero */}
       <section
-        className={`prestations-hero${heroConfig?.animation?.type && heroConfig.animation.type !== 'none' ? (heroVisible ? ` animate-${heroConfig.animation.type}` : ' section-animated') : ''}`}
+        className={`prestations-hero${heroConfig?.animation?.type && heroConfig.animation.type !== 'none' ? (heroVisible ? ` animate-${heroConfig.animation.type} is-visible` : ' section-animated') : ''}`}
         data-animation={heroConfig?.animation?.type || 'none'}
         style={{
           backgroundColor: heroConfig?.couleurs?.arrierePlan || undefined,

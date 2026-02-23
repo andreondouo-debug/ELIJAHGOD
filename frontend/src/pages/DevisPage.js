@@ -23,6 +23,7 @@ function DevisPage() {
         const animType = el.dataset.animation;
         if (animType && animType !== 'none') {
           el.classList.add(`animate-${animType}`);
+          el.classList.add('is-visible');
         }
       });
     }, 50);

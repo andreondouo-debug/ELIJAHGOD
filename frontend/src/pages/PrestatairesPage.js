@@ -130,7 +130,7 @@ function PrestatairesPage() {
     <div className="prestataires-page">
       {/* Hero */}
       <section
-        className={`prestataires-hero${heroConfig?.animation?.type && heroConfig.animation.type !== 'none' ? (heroVisible ? ` animate-${heroConfig.animation.type}` : ' section-animated') : ''}`}
+        className={`prestataires-hero${heroConfig?.animation?.type && heroConfig.animation.type !== 'none' ? (heroVisible ? ` animate-${heroConfig.animation.type} is-visible` : ' section-animated') : ''}`}
         data-animation={heroConfig?.animation?.type || 'none'}
         style={{
           backgroundColor: heroConfig?.couleurs?.arrierePlan || undefined,
