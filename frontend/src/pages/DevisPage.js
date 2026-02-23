@@ -4,6 +4,7 @@ import axios from 'axios';
 import './DevisPage.css';
 import PrestationDetailModal from '../components/PrestationDetailModal';
 import { SettingsContext } from '../context/SettingsContext';
+import { ClientContext } from '../context/ClientContext';
 
 import { API_URL } from '../config';
 
@@ -14,7 +15,21 @@ import { API_URL } from '../config';
 function DevisPage() {
   const navigate = useNavigate();
   const { settings } = useContext(SettingsContext);
+  const { client, isAuthenticated, token: clientToken } = useContext(ClientContext);
   const heroConfig = settings?.pages?.devis?.hero;
+
+  // Auto-remplissage depuis le compte connecté
+  useEffect(() => {
+    if (isAuthenticated && client) {
+      setFormData(prev => ({
+        ...prev,
+        prenom:    client.prenom    || prev.prenom,
+        nom:       client.nom       || prev.nom,
+        email:     client.email     || prev.email,
+        telephone: client.telephone || prev.telephone,
+      }));
+    }
+  }, [isAuthenticated, client]);
 
   // Animation du header au montage
   useEffect(() => {
@@ -258,13 +273,15 @@ function DevisPage() {
     
     try {
       // 1. Créer le compte client si besoin (avec mot de passe optionnel)
-      const clientData = {
-        prenom: formData.prenom,
-        nom: formData.nom,
-        email: formData.email,
-        telephone: formData.telephone,
-        ...(formData.motDePasse && { password: formData.motDePasse })
-      };
+      const clientData = isAuthenticated && client
+        ? { prenom: client.prenom, nom: client.nom, email: client.email, telephone: client.telephone }
+        : {
+            prenom: formData.prenom,
+            nom: formData.nom,
+            email: formData.email,
+            telephone: formData.telephone,
+            ...(formData.motDePasse && { password: formData.motDePasse })
+          };
 
       // 2. Créer le devis
       const devisData = {
@@ -372,7 +389,14 @@ function DevisPage() {
             <div className="etape-card fade-in">
               <h2 className="etape-title">👤 Vos coordonnées</h2>
               <p className="etape-description">Commençons par faire connaissance !</p>
-              
+
+              {isAuthenticated && client && (
+                <div style={{ background: '#d4edda', border: '1px solid #28a745', borderRadius: 8,
+                  padding: '10px 14px', marginBottom: 16, color: '#155724', fontSize: '0.9rem' }}>
+                  ✅ Connecté en tant que <strong>{client.prenom} {client.nom}</strong> — vos informations ont été pré-remplies
+                </div>
+              )}
+
               <div className="form-grid">
                 <div className="form-group">
                   <label>Prénom *</label>
@@ -382,6 +406,8 @@ function DevisPage() {
                     onChange={(e) => handleChange('prenom', e.target.value)}
                     placeholder="Votre prénom"
                     className="input-modern"
+                    readOnly={isAuthenticated && !!client?.prenom}
+                    style={isAuthenticated && client?.prenom ? { background: '#f0fff4', borderColor: '#28a745', color: '#155724' } : {}}
                   />
                 </div>
 
@@ -393,6 +419,8 @@ function DevisPage() {
                     onChange={(e) => handleChange('nom', e.target.value)}
                     placeholder="Votre nom"
                     className="input-modern"
+                    readOnly={isAuthenticated && !!client?.nom}
+                    style={isAuthenticated && client?.nom ? { background: '#f0fff4', borderColor: '#28a745', color: '#155724' } : {}}
                   />
                 </div>
 
@@ -404,6 +432,8 @@ function DevisPage() {
                     onChange={(e) => handleChange('email', e.target.value)}
                     placeholder="votre@email.com"
                     className="input-modern"
+                    readOnly={isAuthenticated && !!client?.email}
+                    style={isAuthenticated && client?.email ? { background: '#f0fff4', borderColor: '#28a745', color: '#155724' } : {}}
                   />
                 </div>
 
@@ -415,20 +445,24 @@ function DevisPage() {
                     onChange={(e) => handleChange('telephone', e.target.value)}
                     placeholder="+33 6 12 34 56 78"
                     className="input-modern"
+                    readOnly={isAuthenticated && !!client?.telephone}
+                    style={isAuthenticated && client?.telephone ? { background: '#f0fff4', borderColor: '#28a745', color: '#155724' } : {}}
                   />
                 </div>
 
-                <div className="form-group full-width">
-                  <label>Mot de passe (optionnel)</label>
-                  <input
-                    type="password"
-                    value={formData.motDePasse}
-                    onChange={(e) => handleChange('motDePasse', e.target.value)}
-                    placeholder="Pour créer votre espace client"
-                    className="input-modern"
-                  />
-                  <small>Si vous souhaitez suivre votre devis en ligne</small>
-                </div>
+                {!isAuthenticated && (
+                  <div className="form-group full-width">
+                    <label>Mot de passe (optionnel)</label>
+                    <input
+                      type="password"
+                      value={formData.motDePasse}
+                      onChange={(e) => handleChange('motDePasse', e.target.value)}
+                      placeholder="Pour créer votre espace client"
+                      className="input-modern"
+                    />
+                    <small>Si vous souhaitez suivre votre devis en ligne</small>
+                  </div>
+                )}
               </div>
             </div>
           )}
