@@ -160,4 +160,5 @@ export const AdminProvider = ({ children }) => {
   );
 };
 
+export { AdminContext };
 export default AdminContext;
