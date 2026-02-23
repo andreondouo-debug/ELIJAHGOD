@@ -142,17 +142,14 @@ function GestionTemoignages() {
     finally { setSendingReponse(false); }
   };
 
-  const seedDefault = async () => {
-    if (!window.confirm('Initialiser la base avec les 6 témoignages par défaut ?\nCette action ne fait rien si des témoignages existent déjà.')) return;
-    setSeeding(true);
+  const viderTout = async () => {
+    if (!window.confirm('⚠️ Supprimer TOUS les témoignages ? Cette action est irréversible.')) return;
     try {
-      const { data } = await axios.post(`${API_URL}/api/temoignages/admin/seed`, {}, { headers });
+      const { data } = await axios.delete(`${API_URL}/api/temoignages/admin/vider-tout-temp`, { headers });
       alert(data.message);
       await charger();
     } catch (err) {
-      alert(err.response?.data?.message || 'Erreur lors de l\'initialisation');
-    } finally {
-      setSeeding(false);
+      alert(err.response?.data?.message || 'Erreur suppression');
     }
   };
 
@@ -195,14 +192,26 @@ function GestionTemoignages() {
             </h1>
             <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.95rem' }}>Modérez et répondez aux avis clients</p>
           </div>
-          <button
-            onClick={charger}
-            style={{ marginLeft: 'auto', background: '#1abc9c', border: 'none', borderRadius: '0.75rem',
-              padding: '0.6rem 1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-              color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}
-          >
-            <RefreshCw size={15} /> Actualiser
-          </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+            {stats.total > 0 && (
+              <button
+                onClick={viderTout}
+                style={{ background: '#e74c3c', border: 'none', borderRadius: '0.75rem',
+                  padding: '0.6rem 1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}
+              >
+                🗑️ Vider tout
+              </button>
+            )}
+            <button
+              onClick={charger}
+              style={{ background: '#1abc9c', border: 'none', borderRadius: '0.75rem',
+                padding: '0.6rem 1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}
+            >
+              <RefreshCw size={15} /> Actualiser
+            </button>
+          </div>
         </div>
 
         {/* ── Stats */}
