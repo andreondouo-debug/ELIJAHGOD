@@ -99,6 +99,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Test email
+app.get('/api/test-email', async (req, res) => {
+  try {
+    const sendEmail = require('./src/utils/sendEmail');
+    const dest = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    if (!dest) return res.status(400).json({ success: false, message: 'ADMIN_EMAIL non configuré sur Render' });
+    const result = await sendEmail({
+      to: dest,
+      subject: `✅ Test email ELIJAH'GOD — ${new Date().toLocaleString('fr-FR')}`,
+      html: `<div style="font-family:Arial,sans-serif;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;"><h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2><p>Configuration Gmail opérationnelle sur ELIJAH'GOD.</p><p style="color:#aaa;font-size:0.85rem;">Envoyé le ${new Date().toLocaleString('fr-FR')}</p></div>`
+    });
+    if (result) return res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: result.messageId });
+    res.status(500).json({ success: false, message: '❌ Email non envoyé — vérifier EMAIL_USER et EMAIL_PASSWORD sur Render' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Routes API
 app.use('/api/admin/auth', require('./src/routes/adminAuthRoutes')); // Authentification admin
 app.use('/api/clients', require('./src/routes/clientRoutes'));
@@ -111,36 +129,6 @@ app.use('/api/materiel', require('./src/routes/materielRoutes'));
 app.use('/api/users', require('./src/routes/userRoutes')); // Gestion utilisateurs (admin)
 app.use('/api/temoignages', require('./src/routes/temoignageRoutes')); // Témoignages clients
 app.use('/api/stats', require('./src/routes/statsRoutes')); // 📊 Statistiques admin
-
-// Route test email (admin uniquement)
-app.get('/api/test-email', async (req, res) => {
-  try {
-    const sendEmail = require('./src/utils/sendEmail');
-    const dest = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
-    if (!dest) return res.status(400).json({ success: false, message: 'ADMIN_EMAIL non configuré sur Render' });
-
-    const result = await sendEmail({
-      to: dest,
-      subject: `✅ Test email ELIJAH'GOD — ${new Date().toLocaleString('fr-FR')}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;">
-          <h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2>
-          <p>Ce message confirme que la configuration Gmail est opérationnelle sur ton site <strong>ELIJAH'GOD</strong>.</p>
-          <hr style="border-color:#333;margin:20px 0;">
-          <p style="color:#aaa;font-size:0.85rem;">Envoyé le ${new Date().toLocaleString('fr-FR')} depuis elijahgod.onrender.com</p>
-        </div>
-      `
-    });
-
-    if (result) {
-      res.json({ success: true, message: `📧 Email de test envoyé à ${dest}`, messageId: result.messageId });
-    } else {
-      res.status(500).json({ success: false, message: '❌ Email non envoyé — vérifier EMAIL_USER et EMAIL_PASSWORD sur Render' });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
 
 // Route par défaut
 app.get('/', (req, res) => {
