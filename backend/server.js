@@ -101,31 +101,56 @@ app.get('/api/health', (req, res) => {
 
 // Test email
 app.get('/api/test-email', async (req, res) => {
-  // Timeout 20s pour ne jamais rester bloqué
   const timeout = setTimeout(() => {
-    if (!res.headersSent) res.status(504).json({ success: false, message: '⏱️ Timeout — connexion SMTP bloquée. Vérifier les variables Render.' });
+    if (!res.headersSent) res.status(504).json({ success: false, message: '⏱️ Timeout — connexion SMTP bloquée.' });
   }, 20000);
 
   try {
-    const sendEmail = require('./src/utils/sendEmail');
-    const dest = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
-    if (!dest) {
+    const nodemailer = require('nodemailer');
+    const user = process.env.EMAIL_USER;
+    const pass = process.env.EMAIL_PASSWORD;
+    const dest = process.env.ADMIN_EMAIL || user;
+
+    // Diagnostic complet
+    const diag = {
+      EMAIL_USER: user ? `✅ ${user}` : '❌ MANQUANT',
+      EMAIL_PASSWORD: pass ? `✅ (${pass.length} caractères)` : '❌ MANQUANT',
+      ADMIN_EMAIL: process.env.ADMIN_EMAIL || '(non défini, utilisera EMAIL_USER)',
+    };
+
+    if (!user || !pass) {
       clearTimeout(timeout);
-      return res.status(400).json({ success: false, message: 'ADMIN_EMAIL non configuré sur Render' });
+      return res.status(400).json({ success: false, diagnostic: diag, message: 'Variables manquantes sur Render' });
     }
-    const result = await sendEmail({
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      connectionTimeout: 10000,
+      socketTimeout: 15000
+    });
+
+    // Vérifier la connexion d'abord
+    await transporter.verify();
+
+    // Envoyer
+    const info = await transporter.sendMail({
+      from: `ELIJAH'GOD <${user}>`,
       to: dest,
       subject: `✅ Test email ELIJAH'GOD — ${new Date().toLocaleString('fr-FR')}`,
-      html: `<div style="font-family:Arial,sans-serif;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;"><h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2><p>Configuration Gmail opérationnelle sur ELIJAH'GOD.</p><p style="color:#aaa;font-size:0.85rem;">Envoyé le ${new Date().toLocaleString('fr-FR')}</p></div>`
+      html: `<div style="font-family:Arial,sans-serif;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;"><h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2><p>Configuration Gmail opérationnelle.</p></div>`
     });
+
     clearTimeout(timeout);
-    if (!res.headersSent) {
-      if (result) return res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: result.messageId });
-      res.status(500).json({ success: false, message: '❌ Échec envoi — vérifier EMAIL_USER et EMAIL_PASSWORD sur Render' });
-    }
+    if (!res.headersSent) res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: info.messageId, diagnostic: diag });
   } catch (err) {
     clearTimeout(timeout);
-    if (!res.headersSent) res.status(500).json({ success: false, message: err.message });
+    if (!res.headersSent) res.status(500).json({ success: false, message: err.message, code: err.code, diagnostic: {
+      EMAIL_USER: process.env.EMAIL_USER ? `✅ ${process.env.EMAIL_USER}` : '❌ MANQUANT',
+      EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? `✅ (${process.env.EMAIL_PASSWORD.length} chars)` : '❌ MANQUANT',
+    }});
   }
 });
 
