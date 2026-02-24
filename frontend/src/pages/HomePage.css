@@ -132,7 +132,7 @@
 
 .hero-tagline {
   font-family: var(--font-family-accent); /* Cormorant Garamond */
-  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  font-size: clamp(0.95rem, 1.8vw, 1.35rem);
   font-weight: 300;
   font-style: italic;
   margin-bottom: 0.6rem;
@@ -629,19 +629,19 @@
   font-size: clamp(1.8rem, 3.5vw, 2.8rem);
   font-weight: 400;
   font-style: italic;
-  color: #1a1a2e;
+  color: rgba(255, 255, 255, 0.80);
   margin-bottom: var(--spacing-sm);
 }
 
 .final-cta-highlight {
   font-family: var(--font-family-heading);
   font-size: clamp(1.5rem, 3vw, 2.5rem);
-  color: #1a1a2e;
+  color: #d4af37;
   font-weight: 700;
   letter-spacing: 4px;
   text-transform: uppercase;
   margin-bottom: var(--spacing-xl);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 12px rgba(212, 175, 55, 0.35);
 }
 
 .final-cta-buttons {
