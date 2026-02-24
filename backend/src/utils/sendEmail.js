@@ -1,58 +1,56 @@
-const nodemailer = require('nodemailer');
-
 /**
- * 📧 UTILITAIRE D'ENVOI D'EMAIL
- * Gmail via mot de passe d'application — port 465 (SSL) pour Render
+ * 📧 ENVOI D'EMAIL VIA BREVO API (HTTP port 443)
+ * Fonctionne sur Render (SMTP bloqué, API HTTP non bloquée)
  * Variables Render :
- *   EMAIL_USER     = elijahwebgod@gmail.com
- *   EMAIL_PASSWORD = mot de passe app Google (sans espaces)
- *   ADMIN_EMAIL    = email admin pour les notifs
+ *   BREVO_API_KEY = clé API depuis brevo.com → Settings → SMTP & API → API Keys
+ *   EMAIL_FROM    = contact@elijahgod.fr (domaine vérifié dans Brevo avec SPF+DKIM → évite les spams)
+ *   ADMIN_EMAIL   = email admin pour les notifs
  */
 
-const createTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASSWORD;
-
-  if (!user || !pass) {
-    console.warn('⚠️ EMAIL_USER ou EMAIL_PASSWORD manquant — emails désactivés');
-    return null;
-  }
-
-  // Port 465 + secure:true (SSL) — fonctionne sur Render contrairement au port 587
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user, pass },
-    connectionTimeout: 10000,  // 10s max pour la connexion
-    greetingTimeout: 10000,
-    socketTimeout: 15000
-  });
-};
-
 const sendEmail = async (options) => {
-  const transporter = createTransporter();
+  const apiKey = process.env.BREVO_API_KEY;
+  const emailFrom = process.env.EMAIL_FROM || 'elijahwebgod@gmail.com';
+  const senderName = "ELIJAH'GOD Events";
 
-  if (!transporter) {
-    console.warn(`📭 Email non envoyé (pas de config) : "${options.subject}" → ${options.to}`);
+  if (!apiKey) {
+    console.warn(`📭 Email non envoyé (BREVO_API_KEY manquante) : "${options.subject}" → ${options.to}`);
     return null;
   }
 
-  const from = `ELIJAH'GOD Events <${process.env.EMAIL_USER}>`;
+  const payload = {
+    sender: { name: senderName, email: emailFrom },
+    to: [{ email: options.to }],
+    replyTo: { email: emailFrom, name: senderName },
+    subject: options.subject,
+    htmlContent: options.html || `<p>${options.text}</p>`,
+    textContent: options.text || options.subject,
+    headers: {
+      'X-Mailer': 'ElijahGod-Mailer/1.0'
+    }
+  };
 
   try {
-    const info = await transporter.sendMail({
-      from,
-      to: options.to,
-      subject: options.subject,
-      text: options.text,
-      html: options.html || options.text
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
 
-    console.log(`📧 Email envoyé → ${options.to} | ${options.subject} | id: ${info.messageId}`);
-    return info;
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Erreur Brevo API:', data);
+      return null;
+    }
+
+    console.log(`📧 Email envoyé → ${options.to} | ${options.subject} | id: ${data.messageId}`);
+    return data;
   } catch (error) {
-    console.error('❌ Erreur envoi email:', error.message);
+    console.error('❌ Erreur sendEmail:', error.message);
     return null;
   }
 };
