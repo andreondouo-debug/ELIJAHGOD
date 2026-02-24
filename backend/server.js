@@ -101,19 +101,31 @@ app.get('/api/health', (req, res) => {
 
 // Test email
 app.get('/api/test-email', async (req, res) => {
+  // Timeout 20s pour ne jamais rester bloqué
+  const timeout = setTimeout(() => {
+    if (!res.headersSent) res.status(504).json({ success: false, message: '⏱️ Timeout — connexion SMTP bloquée. Vérifier les variables Render.' });
+  }, 20000);
+
   try {
     const sendEmail = require('./src/utils/sendEmail');
     const dest = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
-    if (!dest) return res.status(400).json({ success: false, message: 'ADMIN_EMAIL non configuré sur Render' });
+    if (!dest) {
+      clearTimeout(timeout);
+      return res.status(400).json({ success: false, message: 'ADMIN_EMAIL non configuré sur Render' });
+    }
     const result = await sendEmail({
       to: dest,
       subject: `✅ Test email ELIJAH'GOD — ${new Date().toLocaleString('fr-FR')}`,
       html: `<div style="font-family:Arial,sans-serif;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;"><h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2><p>Configuration Gmail opérationnelle sur ELIJAH'GOD.</p><p style="color:#aaa;font-size:0.85rem;">Envoyé le ${new Date().toLocaleString('fr-FR')}</p></div>`
     });
-    if (result) return res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: result.messageId });
-    res.status(500).json({ success: false, message: '❌ Email non envoyé — vérifier EMAIL_USER et EMAIL_PASSWORD sur Render' });
+    clearTimeout(timeout);
+    if (!res.headersSent) {
+      if (result) return res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: result.messageId });
+      res.status(500).json({ success: false, message: '❌ Échec envoi — vérifier EMAIL_USER et EMAIL_PASSWORD sur Render' });
+    }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    clearTimeout(timeout);
+    if (!res.headersSent) res.status(500).json({ success: false, message: err.message });
   }
 });
 
