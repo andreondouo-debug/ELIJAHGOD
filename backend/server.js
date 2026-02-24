@@ -101,56 +101,35 @@ app.get('/api/health', (req, res) => {
 
 // Test email
 app.get('/api/test-email', async (req, res) => {
-  const timeout = setTimeout(() => {
-    if (!res.headersSent) res.status(504).json({ success: false, message: '⏱️ Timeout — connexion SMTP bloquée.' });
-  }, 20000);
-
   try {
-    const nodemailer = require('nodemailer');
-    const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASSWORD;
-    const dest = process.env.ADMIN_EMAIL || user;
+    const apiKey = process.env.BREVO_API_KEY;
+    const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'elijahwebgod@gmail.com';
+    const dest = process.env.ADMIN_EMAIL || emailFrom;
 
-    // Diagnostic complet
     const diag = {
-      EMAIL_USER: user ? `✅ ${user}` : '❌ MANQUANT',
-      EMAIL_PASSWORD: pass ? `✅ (${pass.length} caractères)` : '❌ MANQUANT',
-      ADMIN_EMAIL: process.env.ADMIN_EMAIL || '(non défini, utilisera EMAIL_USER)',
+      BREVO_API_KEY: apiKey ? `✅ (${apiKey.length} chars)` : '❌ MANQUANT',
+      EMAIL_FROM: emailFrom,
+      ADMIN_EMAIL: dest
     };
 
-    if (!user || !pass) {
-      clearTimeout(timeout);
-      return res.status(400).json({ success: false, diagnostic: diag, message: 'Variables manquantes sur Render' });
-    }
+    if (!apiKey) return res.status(400).json({ success: false, diagnostic: diag, message: 'BREVO_API_KEY manquante sur Render' });
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-      connectionTimeout: 10000,
-      socketTimeout: 15000
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': apiKey, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: "ELIJAH'GOD Events", email: emailFrom },
+        to: [{ email: dest }],
+        subject: `✅ Test email ELIJAH'GOD — ${new Date().toLocaleString('fr-FR')}`,
+        htmlContent: `<div style="font-family:Arial,sans-serif;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;"><h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2><p>Configuration Brevo opérationnelle sur ELIJAH'GOD.</p></div>`
+      })
     });
 
-    // Vérifier la connexion d'abord
-    await transporter.verify();
-
-    // Envoyer
-    const info = await transporter.sendMail({
-      from: `ELIJAH'GOD <${user}>`,
-      to: dest,
-      subject: `✅ Test email ELIJAH'GOD — ${new Date().toLocaleString('fr-FR')}`,
-      html: `<div style="font-family:Arial,sans-serif;padding:30px;background:#0d0d20;color:#fff;border-radius:12px;"><h2 style="color:#d4af37;">✅ Les emails fonctionnent !</h2><p>Configuration Gmail opérationnelle.</p></div>`
-    });
-
-    clearTimeout(timeout);
-    if (!res.headersSent) res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: info.messageId, diagnostic: diag });
+    const data = await response.json();
+    if (!response.ok) return res.status(500).json({ success: false, message: JSON.stringify(data), diagnostic: diag });
+    res.json({ success: true, message: `📧 Email envoyé à ${dest}`, messageId: data.messageId, diagnostic: diag });
   } catch (err) {
-    clearTimeout(timeout);
-    if (!res.headersSent) res.status(500).json({ success: false, message: err.message, code: err.code, diagnostic: {
-      EMAIL_USER: process.env.EMAIL_USER ? `✅ ${process.env.EMAIL_USER}` : '❌ MANQUANT',
-      EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? `✅ (${process.env.EMAIL_PASSWORD.length} chars)` : '❌ MANQUANT',
-    }});
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
