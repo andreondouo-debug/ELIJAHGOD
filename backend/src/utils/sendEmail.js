@@ -2,73 +2,63 @@ const nodemailer = require('nodemailer');
 
 /**
  * 📧 UTILITAIRE D'ENVOI D'EMAIL
- * Configuration Nodemailer pour les emails transactionnels
+ * Gmail via mot de passe d'application (fonctionne sur Render/Vercel)
+ * Variables Render à configurer :
+ *   EMAIL_USER     = elijahwebgod@gmail.com
+ *   EMAIL_PASSWORD = aoechtvcycuuejos   (mot de passe app Google sans espaces)
+ *   ADMIN_EMAIL    = ton email admin pour les notifs
  */
 
-// Créer le transporteur selon l'environnement
+// Créer le transporteur Gmail
 const createTransporter = () => {
-  if (process.env.NODE_ENV === 'production') {
-    // Configuration production (ex: SendGrid, Mailgun, etc.)
-    return nodemailer.createTransporter({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-  } else {
-    // Configuration développement (Ethereal)
-    return nodemailer.createTransporter({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      auth: {
-        user: process.env.ETHEREAL_USER || 'test@ethereal.email',
-        pass: process.env.ETHEREAL_PASS || 'test'
-      }
-    });
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
+
+  if (!user || !pass) {
+    console.warn('⚠️ EMAIL_USER ou EMAIL_PASSWORD manquant — emails désactivés');
+    return null;
   }
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass }
+  });
 };
 
 /**
  * Envoyer un email
- * @param {Object} options - Options de l'email
- * @param {string} options.to - Destinataire
- * @param {string} options.subject - Sujet
- * @param {string} options.text - Texte brut (optionnel)
- * @param {string} options.html - HTML (optionnel)
- * @returns {Promise<Object>} Info de l'email envoyé
+ * @param {Object} options
+ * @param {string} options.to       - Destinataire
+ * @param {string} options.subject  - Sujet
+ * @param {string} [options.text]   - Texte brut
+ * @param {string} [options.html]   - HTML
  */
 const sendEmail = async (options) => {
   const transporter = createTransporter();
 
-  const mailOptions = {
-    from: `${process.env.COMPANY_NAME || 'ElijahGod Events'} <${process.env.SMTP_FROM || 'noreply@elijahgod.com'}>`,
-    to: options.to,
-    subject: options.subject,
-    text: options.text,
-    html: options.html || options.text
-  };
+  // Si pas de transporteur configuré, on log et on abandonne silencieusement
+  if (!transporter) {
+    console.warn(`📭 Email non envoyé (pas de config) : "${options.subject}" → ${options.to}`);
+    return null;
+  }
+
+  const from = `ELIJAH'GOD Events <${process.env.EMAIL_USER}>`;
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log('📧 Email envoyé:', {
+    const info = await transporter.sendMail({
+      from,
       to: options.to,
       subject: options.subject,
-      messageId: info.messageId
+      text: options.text,
+      html: options.html || options.text
     });
 
-    // En dev, afficher le lien de prévisualisation Ethereal
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔗 Prévisualiser:', nodemailer.getTestMessageUrl(info));
-    }
-
+    console.log(`📧 Email envoyé → ${options.to} | ${options.subject} | id: ${info.messageId}`);
     return info;
   } catch (error) {
-    console.error('❌ Erreur envoi email:', error);
-    throw error;
+    console.error('❌ Erreur envoi email:', error.message);
+    // Ne pas throw — une erreur email ne doit jamais planter une action métier
+    return null;
   }
 };
 
