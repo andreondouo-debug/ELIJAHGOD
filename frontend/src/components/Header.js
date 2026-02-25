@@ -18,13 +18,16 @@ function Header() {
   const { isAuthenticated, getUserTypeIcon, logout, getDisplayName, userType } = useAuth();
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const menuRef = useRef(null);        // ref mobile
+  const desktopMenuRef = useRef(null); // ref desktop
   const navRef = useRef(null);
 
   // Fermer les menus si clic en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      const insideMobile = menuRef.current && menuRef.current.contains(event.target);
+      const insideDesktop = desktopMenuRef.current && desktopMenuRef.current.contains(event.target);
+      if (!insideMobile && !insideDesktop) {
         setShowAuthMenu(false);
       }
       if (navRef.current && !navRef.current.contains(event.target) &&
@@ -145,7 +148,7 @@ function Header() {
           {/* Actions desktop + bouton hamburger */}
           <div className="header-right">
             {/* Bouton connexion visible sur desktop uniquement */}
-            <div className="header-actions desktop-only" ref={menuRef}>
+            <div className="header-actions desktop-only" ref={desktopMenuRef}>
               <div className="auth-menu-container">
                 <button
                   className={`btn-connexion ${isAuthenticated ? 'connected' : ''}`}
