@@ -455,7 +455,8 @@
     top: 0;
     right: -320px;
     width: 300px;
-    height: 100vh;
+    height: 100vh;     /* fallback navigateurs anciens */
+    height: 100dvh;    /* iOS Safari : exclut la barre Chrome/Safari */
     background: #0a0a0a;
     flex-direction: column;
     align-items: stretch;
@@ -502,7 +503,6 @@
     gap: 0.75rem;
     padding: 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: auto;
   }
 
   .nav-mobile-auth .btn-connexion {
