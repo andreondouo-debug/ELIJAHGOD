@@ -27,9 +27,14 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Autoriser les requêtes sans origine (Postman, curl, etc.)
+    // Autoriser les requêtes sans origine (Postman, curl, mobile apps, etc.)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Autoriser tous les sous-domaines elijahgod.fr et elijahgod*.vercel.app
+    const allowed =
+      allowedOrigins.includes(origin) ||
+      /^https?:\/\/([\w-]+\.)?elijahgod\.fr$/.test(origin) ||
+      /^https:\/\/elijahgod[\w-]*\.vercel\.app$/.test(origin);
+    if (allowed) {
       callback(null, true);
     } else {
       console.warn(`⚠️ Origine bloquée par CORS: ${origin}`);
@@ -39,6 +44,9 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200
 };
+
+// Traitement explicite des requêtes preflight OPTIONS
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Body Parser
