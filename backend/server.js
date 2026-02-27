@@ -141,18 +141,31 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
-// Routes API
-app.use('/api/admin/auth', require('./src/routes/adminAuthRoutes')); // Authentification admin
-app.use('/api/clients', require('./src/routes/clientRoutes'));
-app.use('/api/settings', require('./src/routes/settingsRoutes'));
-app.use('/api/prestations', require('./src/routes/prestationRoutes'));
-app.use('/api/devis', require('./src/routes/devisRoutes'));
-app.use('/api/planning', require('./src/routes/planningRoutes'));
-app.use('/api/prestataires', require('./src/routes/prestataireRoutes'));
-app.use('/api/materiel', require('./src/routes/materielRoutes'));
-app.use('/api/users', require('./src/routes/userRoutes')); // Gestion utilisateurs (admin)
-app.use('/api/temoignages', require('./src/routes/temoignageRoutes')); // Témoignages clients
-app.use('/api/stats', require('./src/routes/statsRoutes')); // 📊 Statistiques admin
+// Routes API — chaque require est isolé pour détecter la route qui plante au démarrage
+const routes = [
+  { path: '/api/admin/auth',  file: './src/routes/adminAuthRoutes' },
+  { path: '/api/clients',     file: './src/routes/clientRoutes' },
+  { path: '/api/settings',    file: './src/routes/settingsRoutes' },
+  { path: '/api/prestations', file: './src/routes/prestationRoutes' },
+  { path: '/api/devis',       file: './src/routes/devisRoutes' },
+  { path: '/api/planning',    file: './src/routes/planningRoutes' },
+  { path: '/api/prestataires',file: './src/routes/prestataireRoutes' },
+  { path: '/api/materiel',    file: './src/routes/materielRoutes' },
+  { path: '/api/users',       file: './src/routes/userRoutes' },
+  { path: '/api/temoignages', file: './src/routes/temoignageRoutes' },
+  { path: '/api/stats',       file: './src/routes/statsRoutes' },
+];
+
+routes.forEach(({ path: routePath, file }) => {
+  try {
+    app.use(routePath, require(file));
+    console.log(`✅ Route chargée : ${routePath}`);
+  } catch (err) {
+    console.error(`❌ ERREUR chargement route ${routePath} (${file}):`, err.message);
+    // La route répond 503 au lieu de crasher tout le process
+    app.use(routePath, (req, res) => res.status(503).json({ message: `Route ${routePath} indisponible`, error: err.message }));
+  }
+});
 
 // Route par défaut
 app.get('/', (req, res) => {
