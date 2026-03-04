@@ -27,6 +27,8 @@ import GestionTemoignages from './pages/GestionTemoignages';
 // Pages Client
 import SignupPage from './pages/SignupPage';
 import ClientLoginPage from './pages/ClientLoginPage';
+import VerifierEmailPage from './pages/VerifierEmailPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ClientDashboard from './pages/ClientDashboard';
 import MesDevisPage from './pages/MesDevisPage';
 import DevisDetailClientPage from './pages/DevisDetailClientPage';
@@ -75,6 +77,8 @@ function App() {
                     {/* Routes Client */}
                     <Route path="/client/inscription" element={<SignupPage />} />
                     <Route path="/client/login" element={<ClientLoginPage />} />
+                    <Route path="/client/verifier-email/:token" element={<VerifierEmailPage />} />
+                    <Route path="/client/reset-password/:token" element={<ResetPasswordPage />} />
                     <Route path="/client/dashboard" element={<ClientDashboard />} />
                     <Route path="/mes-devis" element={<MesDevisPage />} />
                     <Route path="/client/mes-devis" element={<MesDevisPage />} />
