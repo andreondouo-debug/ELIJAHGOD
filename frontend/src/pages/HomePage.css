@@ -2,6 +2,11 @@
   width: 100%;
 }
 
+/* La homepage a ses propres conteneurs pleine largeur — neutraliser le max-width global */
+.home-page .container {
+  max-width: 100%;
+}
+
 /* Hero Section */
 .hero {
   position: relative;

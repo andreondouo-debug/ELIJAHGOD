@@ -94,6 +94,16 @@ function DevisPage() {
     { value: 'autre', label: 'Autre', icon: '✨', description: 'Autre type d\'événement' }
   ];
 
+  // Icônes par catégorie pour les prestations chargées depuis l'API
+  const ICONE_CATEGORIE = {
+    'DJ': '🎧', 'Sonorisation': '🔊', 'Éclairage': '💡', 'Lumière': '💡',
+    'Photographe': '📸', 'Photo': '📸', 'Vidéo': '🎥', 'Photo/Vidéo': '📸',
+    'Groupe de louange': '🎵', 'Louange': '🎵', 'Musique': '🎵',
+    'Animation': '🎤', 'Animateur': '🎤', 'Traiteur': '🍽️',
+    'Décoration': '🌸', 'Décor': '🌸', 'Fleurs': '💐',
+  };
+
+  // Liste de fallback si l'API n'a pas encore répondu
   const prestationsDisponibles = [
     { id: 'dj', nom: 'DJ Animation', icon: '🎧', description: 'Ambiance musicale professionnelle', categorie: 'DJ' },
     { id: 'sono', nom: 'Sonorisation', icon: '🔊', description: 'Matériel audio haute qualité', categorie: 'Sonorisation' },
@@ -102,6 +112,19 @@ function DevisPage() {
     { id: 'louange', nom: 'Groupe de louange', icon: '🎵', description: 'Musique chrétienne live', categorie: 'Groupe de louange' },
     { id: 'traiteur', nom: 'Traiteur', icon: '🍽️', description: 'Service restauration', categorie: 'Traiteur' }
   ];
+
+  // Prestations dynamiques depuis l'API, ou fallback si pas encore chargées
+  const prestationsAffichees = prestationsDetail.length > 0
+    ? prestationsDetail
+        .filter(p => p.disponible !== false)
+        .map(p => ({
+          id: p._id,
+          nom: p.nom,
+          icon: ICONE_CATEGORIE[p.categorie] || '⭐',
+          description: p.courteDescription || (p.description ? p.description.slice(0, 90) : ''),
+          categorie: p.categorie
+        }))
+    : prestationsDisponibles;
 
   // ── Helper : calcul prix selon invités (miroir du backend)
   const getPrixPrestation = (prestationDoc, nbInvites) => {
@@ -561,7 +584,7 @@ function DevisPage() {
               <p className="etape-description">Sélectionnez les prestations qui vous intéressent</p>
               
               <div className="prestations-grid">
-                {prestationsDisponibles.map(prestation => {
+                {prestationsAffichees.map(prestation => {
                   const real = prestationsDetail.find(p =>
                     p.categorie?.toLowerCase() === prestation.categorie?.toLowerCase() ||
                     p.nom?.toLowerCase().includes(prestation.id.toLowerCase())
