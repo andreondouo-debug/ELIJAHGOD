@@ -21,7 +21,6 @@ function MentionsLegalesPage() {
           <h2>1. Éditeur du site</h2>
           <div className="legal-box">
             <p><strong>Dénomination :</strong> ELIJAH'GOD Events</p>
-            <p><strong>Statut :</strong> Auto-entrepreneur / Entreprise individuelle</p>
             <p><strong>Pays :</strong> France</p>
             <p><strong>Email de contact :</strong> <a href="mailto:contact@elijahgod.fr">contact@elijahgod.fr</a></p>
             <p><em>Les informations légales complètes (adresse, SIRET) sont disponibles sur simple demande écrite.</em></p>

@@ -33,7 +33,7 @@ function PolitiqueConfidentialitePage() {
           <h2>1. Responsable du traitement</h2>
           <div className="legal-box">
             <p><strong>ELIJAH'GOD Events</strong></p>
-            <p>Auto-entrepreneur / Entreprise individuelle enregistrée en France</p>
+            <p>Entreprise enregistrée en France</p>
             <p>Email : <a href="mailto:contact@elijahgod.fr">contact@elijahgod.fr</a></p>
           </div>
           <p>

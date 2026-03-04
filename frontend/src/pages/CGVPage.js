@@ -45,7 +45,7 @@ function CGVPage() {
           <h2>Article 1 — Identification des parties</h2>
           <p>Les présentes Conditions Générales de Vente (CGV) régissent les relations contractuelles entre :</p>
           <div className="legal-box">
-            <p><strong>Le Prestataire :</strong> ELIJAH'GOD Events, auto-entrepreneur / entreprise individuelle, dont le siège social est établi en France, ci-après dénommé « le Prestataire ».</p>
+            <p><strong>Le Prestataire :</strong> ELIJAH'GOD Events, dont le siège social est établi en France, ci-après dénommé « le Prestataire ».</p>
             <p><strong>Le Client :</strong> toute personne physique ou morale, particulier ou professionnel, ayant accepté un devis émis par le Prestataire, ci-après dénommée « le Client ».</p>
           </div>
           <p>Toute commande implique l'acceptation pleine et entière des présentes CGV, sans réserve ni restriction.</p>

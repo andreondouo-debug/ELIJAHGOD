@@ -97,7 +97,7 @@
 /* Grille de prestations */
 .prestations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
   gap: var(--spacing-xl);
   margin-bottom: var(--spacing-xl);
   padding-top: 40px; /* espace pour le badge icône flottant */
@@ -380,6 +380,15 @@
 @media (max-width: 768px) {
   .prestations-grid {
     grid-template-columns: 1fr;
+  }
+
+  .prestations-hero {
+    padding: 60px 16px 40px;
+  }
+
+  .filters {
+    padding: var(--spacing-md) 0;
+    justify-content: flex-start;
   }
 
   .prestation-footer {

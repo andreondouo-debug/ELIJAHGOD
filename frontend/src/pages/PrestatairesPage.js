@@ -46,12 +46,12 @@ function PrestatairesPage() {
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.1, rootMargin: '-40px' });
+    }, { threshold: 0.05, rootMargin: '0px' });
     const timer = setTimeout(() => {
       document.querySelectorAll('[data-anim-key]').forEach(el => {
         const key = el.dataset.animKey;
         if (!key || visibleEls.has(key)) return;
-        if (el.getBoundingClientRect().top < window.innerHeight) { markElVisible(key); }
+        if (el.getBoundingClientRect().top < window.innerHeight + 100) { markElVisible(key); }
         else { observer.observe(el); }
       });
     }, 100);

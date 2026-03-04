@@ -90,7 +90,7 @@
 /* Grille de prestataires */
 .prestataires-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: var(--spacing-xl);
   margin-bottom: var(--spacing-xl);
 }
@@ -316,6 +316,14 @@
 @media (max-width: 768px) {
   .prestataires-grid {
     grid-template-columns: 1fr;
+  }
+
+  .prestataires-hero {
+    padding: 60px 16px 40px;
+  }
+
+  .filters-section {
+    padding: 1.25rem;
   }
 
   .filters-categories {
