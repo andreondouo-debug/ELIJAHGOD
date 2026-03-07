@@ -17,9 +17,10 @@ function DevisDetailClientPage() {
   const [devis, setDevis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [submitting, setSubmitting]           = useState(false);
+  const [deleting, setDeleting]               = useState(false);
+  const [downloadingPDF, setDownloadingPDF]   = useState(false);
+  const [downloadingContrat, setDownloadingContrat] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -103,6 +104,29 @@ function DevisDetailClientPage() {
     }
   };
 
+  const telechargerContrat = async () => {
+    setDownloadingContrat(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/devis/${devisId}/contrat`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const url  = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href  = url;
+      const numDoc = devis.numeroContrat || devis.numeroDevis;
+      link.setAttribute('download', `contrat-${numDoc}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Erreur lors du téléchargement du contrat');
+    } finally {
+      setDownloadingContrat(false);
+    }
+  };
+
   const formatDate = (date) => {
     if (!date) return 'Non définie';
     return new Date(date).toLocaleDateString('fr-FR', {
@@ -117,15 +141,21 @@ function DevisDetailClientPage() {
 
   const getStatutInfo = (statut) => {
     const map = {
-      brouillon:   { icon: '📝', label: 'Brouillon',   color: '#95a5a6', desc: 'Votre devis est en cours de rédaction. Soumettez-le pour qu\'il soit examiné.' },
-      envoye:      { icon: '📤', label: 'Envoyé',      color: '#3498db', desc: 'Votre devis a été soumis. Notre équipe va l\'examiner.' },
-      en_attente:  { icon: '⏳', label: 'En attente',  color: '#f39c12', desc: 'Votre devis est en attente de traitement par notre équipe.' },
-      en_etude:    { icon: '🔍', label: 'En étude',    color: '#9b59b6', desc: 'Notre équipe étudie votre demande. Nous vous recontacterons bientôt.' },
-      accepte:     { icon: '✅', label: 'Accepté',     color: '#27ae60', desc: 'Félicitations ! Votre devis a été accepté. Versez l\'acompte pour confirmer.' },
-      refuse:      { icon: '❌', label: 'Refusé',      color: '#e74c3c', desc: 'Votre devis n\'a pas pu être accepté. Contactez-nous pour plus d\'informations.' },
-      annule:      { icon: '🚫', label: 'Annulé',      color: '#7f8c8d', desc: 'Ce devis a été annulé.' },
-      en_cours:    { icon: '🔄', label: 'En cours',    color: '#1abc9c', desc: 'La prestation est en cours de réalisation.' },
-      termine:     { icon: '🎉', label: 'Terminé',     color: '#16a085', desc: 'La prestation a été réalisée avec succès !' }
+      brouillon:          { icon: '📝', label: 'Brouillon',        color: '#95a5a6', desc: 'Votre devis est en cours de rédaction. Soumettez-le pour qu\'il soit examiné.' },
+      soumis:             { icon: '📤', label: 'Soumis',            color: '#3498db', desc: 'Votre devis a été soumis. Notre équipe va l\'examiner.' },
+      envoye:             { icon: '📤', label: 'Envoyé',            color: '#3498db', desc: 'Votre devis a été soumis. Notre équipe va l\'examiner.' },
+      en_attente:         { icon: '⏳', label: 'En attente',        color: '#f39c12', desc: 'Votre devis est en attente de traitement par notre équipe.' },
+      en_etude:           { icon: '🔍', label: 'En étude',          color: '#9b59b6', desc: 'Notre équipe étudie votre demande. Nous vous recontacterons bientôt.' },
+      accepte:            { icon: '✅', label: 'Accepté',           color: '#27ae60', desc: 'Félicitations ! Votre devis a été accepté. Un contrat va vous être envoyé.' },
+      valide_client:      { icon: '✅', label: 'Validé',            color: '#27ae60', desc: 'Votre devis est validé. Le contrat est en cours de préparation.' },
+      devis_final:        { icon: '📌', label: 'Devis final',       color: '#2980b9', desc: 'Le devis final est prêt. Un contrat va être généré.' },
+      transforme_contrat: { icon: '📜', label: 'Contrat généré',    color: '#c9a227', desc: 'Votre contrat est prêt ! Téléchargez-le, signez-le et renvoyez-le.' },
+      contrat_signe:      { icon: '✍️', label: 'Contrat signé',     color: '#27ae60', desc: 'Votre contrat a été signé. La prestation est confirmée !' },
+      valide_final:       { icon: '🏆', label: 'Confirmé',          color: '#16a085', desc: 'Contrat validé par les deux parties. À bientôt pour votre événement !' },
+      refuse:             { icon: '❌', label: 'Refusé',            color: '#e74c3c', desc: 'Votre devis n\'a pas pu être accepté. Contactez-nous pour plus d\'informations.' },
+      annule:             { icon: '🚫', label: 'Annulé',            color: '#7f8c8d', desc: 'Ce devis a été annulé.' },
+      en_cours:           { icon: '🔄', label: 'En cours',          color: '#1abc9c', desc: 'La prestation est en cours de réalisation.' },
+      termine:            { icon: '🎉', label: 'Terminé',           color: '#16a085', desc: 'La prestation a été réalisée avec succès !' }
     };
     return map[statut] || { icon: '❓', label: statut, color: '#95a5a6', desc: '' };
   };
@@ -345,7 +375,23 @@ function DevisDetailClientPage() {
               onClick={telechargerPDF}
               disabled={downloadingPDF}
             >
-              {downloadingPDF ? '⏳ Téléchargement...' : '📄 Télécharger le PDF'}
+              {downloadingPDF ? '⏳ Téléchargement...' : '📄 Télécharger le devis PDF'}
+            </button>
+          )}
+
+          {/* Bouton contrat — visible quand le contrat est prêt */}
+          {['transforme_contrat', 'contrat_signe', 'valide_final'].includes(devis.statut) && (
+            <button
+              className="btn-detail btn-submit"
+              onClick={telechargerContrat}
+              disabled={downloadingContrat}
+              style={{
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #252540 100%)',
+                color: '#c9a227',
+                border: '2px solid #c9a227'
+              }}
+            >
+              {downloadingContrat ? '⏳ Téléchargement...' : '📜 Télécharger mon contrat'}
             </button>
           )}
 

@@ -19,9 +19,11 @@ function DevisDetailAdmin() {
   const [devis, setDevis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [updatingStatut, setUpdatingStatut] = useState(false);
-  const [remiseForm, setRemiseForm] = useState({ type: 'pourcentage', valeur: '', raison: '' });
-  const [applyingRemise, setApplyingRemise] = useState(false);
+  const [updatingStatut, setUpdatingStatut]   = useState(false);
+  const [remiseForm, setRemiseForm]             = useState({ type: 'pourcentage', valeur: '', raison: '' });
+  const [applyingRemise, setApplyingRemise]     = useState(false);
+  const [generatingContrat, setGeneratingContrat] = useState(false);
+  const [transformingContrat, setTransformingContrat] = useState(false);
 
   useEffect(() => {
     if (authLoading) return; // attendre que le contexte soit initialisé
@@ -137,6 +139,51 @@ function DevisDetailAdmin() {
     }
   };
 
+  // Transformer en contrat (change le statut) puis générer le PDF
+  const transformerEtGenererContrat = async () => {
+    if (!window.confirm('Transformer ce devis en contrat et générer le PDF ?')) return;
+    try {
+      setTransformingContrat(true);
+      // 1) Transformer en contrat
+      await axios.post(`${API_URL}/api/devis/admin/${id}/transformer-contrat`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await chargerDevis();
+      // 2) Télécharger le PDF du contrat
+      await telechargerContrat();
+    } catch (err) {
+      console.error('❌ Erreur transformation contrat:', err);
+      alert(err.response?.data?.message || 'Erreur lors de la transformation en contrat');
+    } finally {
+      setTransformingContrat(false);
+    }
+  };
+
+  // Télécharger le PDF du contrat
+  const telechargerContrat = async () => {
+    try {
+      setGeneratingContrat(true);
+      const response = await axios.get(`${API_URL}/api/devis/admin/${id}/contrat`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const url  = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href  = url;
+      const numDoc = devis.numeroContrat || devis.numeroDevis;
+      link.setAttribute('download', `contrat-${numDoc}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('❌ Erreur téléchargement contrat:', err);
+      alert('Erreur lors du téléchargement du contrat PDF');
+    } finally {
+      setGeneratingContrat(false);
+    }
+  };
+
   const supprimerDevis = async () => {
     if (!window.confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce devis ? Cette action est irréversible.')) return;
     
@@ -161,7 +208,15 @@ function DevisDetailAdmin() {
       'refuse': { bg: '#fee2e2', color: '#991b1b', label: '❌ Refusé' },
       'annule': { bg: '#e5e7eb', color: '#374151', label: '🚫 Annulé' },
       'devis_final': { bg: '#e0e7ff', color: '#3730a3', label: '📝 Devis final' },
-      'contrat_signe': { bg: '#dcfce7', color: '#166534', label: '✍️ Contrat signé' }
+      'modifie_admin':           { bg: '#fef3c7', color: '#92400e', label: '✏️ Modifié admin' },
+      'attente_validation_client':{ bg: '#dbeafe', color: '#1e40af', label: '⏳ Attente client' },
+      'valide_client':            { bg: '#d1fae5', color: '#065f46', label: '✅ Validé client' },
+      'entretien_prevu':          { bg: '#e0e7ff', color: '#3730a3', label: '📅 Entretien prévu' },
+      'entretien_effectue':       { bg: '#e0e7ff', color: '#3730a3', label: '📋 Entretien effectué' },
+      'transforme_contrat':       { bg: '#fef9c3', color: '#713f12', label: '📜 Contrat généré' },
+      'contrat_signe':            { bg: '#dcfce7', color: '#166534', label: '✍️ Contrat signé' },
+      'valide_final':             { bg: '#bbf7d0', color: '#14532d', label: '🏆 Validé final' },
+      'expire':                   { bg: '#e5e7eb', color: '#374151', label: '⌛ Expiré' }
     };
     const style = styles[statut] || styles['brouillon'];
     return (
@@ -248,6 +303,67 @@ function DevisDetailAdmin() {
                 <X size={16} /> Refuser
               </button>
             </>
+          )}
+
+          {/* Bouton transformer en contrat — visible quand le devis est validé */}
+          {['valide_client', 'accepte', 'devis_final'].includes(devis.statut) && (
+            <button
+              onClick={transformerEtGenererContrat}
+              disabled={transformingContrat}
+              style={{
+                background: '#c9a227',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 18px',
+                fontWeight: '700',
+                cursor: transformingContrat ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.95rem'
+              }}
+            >
+              📜 {transformingContrat ? 'Génération...' : 'Transformer en contrat & télécharger'}
+            </button>
+          )}
+
+          {/* Bouton télécharger contrat — visible quand le contrat existe déjà */}
+          {['transforme_contrat', 'contrat_signe', 'valide_final'].includes(devis.statut) && (
+            <button
+              onClick={telechargerContrat}
+              disabled={generatingContrat}
+              style={{
+                background: '#1a1a2e',
+                color: '#c9a227',
+                border: '2px solid #c9a227',
+                borderRadius: '8px',
+                padding: '8px 18px',
+                fontWeight: '700',
+                cursor: generatingContrat ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.95rem'
+              }}
+            >
+              📥 {generatingContrat ? 'Téléchargement...' : 'Télécharger contrat PDF'}
+            </button>
+          )}
+
+          {/* Info numéro contrat */}
+          {devis.numeroContrat && (
+            <span style={{
+              background: '#fef9c3',
+              color: '#713f12',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              border: '1px solid #fbbf24'
+            }}>
+              📜 {devis.numeroContrat}
+            </span>
           )}
         </div>
       </div>

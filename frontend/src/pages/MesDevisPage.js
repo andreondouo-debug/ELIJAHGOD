@@ -108,14 +108,23 @@ function MesDevisPage() {
 
   const getStatutBadge = (statut) => {
     const badges = {
-      'brouillon': { icon: '📝', label: 'Brouillon', color: '#95a5a6' },
-      'envoye': { icon: '📤', label: 'Envoyé', color: '#3498db' },
-      'en_attente': { icon: '⏳', label: 'En attente', color: '#f39c12' },
-      'accepte': { icon: '✅', label: 'Accepté', color: '#27ae60' },
-      'refuse': { icon: '❌', label: 'Refusé', color: '#e74c3c' },
-      'annule': { icon: '🚫', label: 'Annulé', color: '#7f8c8d' },
-      'en_cours': { icon: '🔄', label: 'En cours', color: '#9b59b6' },
-      'termine': { icon: '🎉', label: 'Terminé', color: '#16a085' }
+      'brouillon':            { icon: '📝', label: 'Brouillon',        color: '#95a5a6' },
+      'soumis':               { icon: '📤', label: 'Soumis',            color: '#3498db' },
+      'envoye':               { icon: '📤', label: 'Envoyé',            color: '#3498db' },
+      'en_attente':           { icon: '⏳', label: 'En attente',        color: '#f39c12' },
+      'en_etude':             { icon: '🔍', label: 'En étude',          color: '#9b59b6' },
+      'modifie_admin':        { icon: '✏️', label: 'Modifié',           color: '#e67e22' },
+      'attente_validation_client': { icon: '⏳', label: 'À valider',    color: '#f39c12' },
+      'valide_client':        { icon: '✅', label: 'Validé',            color: '#27ae60' },
+      'accepte':              { icon: '✅', label: 'Accepté',           color: '#27ae60' },
+      'devis_final':          { icon: '📌', label: 'Devis final',       color: '#2980b9' },
+      'transforme_contrat':   { icon: '📜', label: 'Contrat généré',    color: '#c9a227' },
+      'contrat_signe':        { icon: '✍️', label: 'Contrat signé',     color: '#27ae60' },
+      'valide_final':         { icon: '🏆', label: 'Confirmé',          color: '#16a085' },
+      'refuse':               { icon: '❌', label: 'Refusé',            color: '#e74c3c' },
+      'annule':               { icon: '🚫', label: 'Annulé',            color: '#7f8c8d' },
+      'en_cours':             { icon: '🔄', label: 'En cours',          color: '#9b59b6' },
+      'termine':              { icon: '🎉', label: 'Terminé',           color: '#16a085' }
     };
     
     const badge = badges[statut] || { icon: '❓', label: statut, color: '#95a5a6' };

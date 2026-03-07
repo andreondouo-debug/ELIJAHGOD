@@ -39,6 +39,10 @@ const settingsSchema = new mongoose.Schema({
       type: String,
       default: "+33 X XX XX XX XX"
     },
+    representant: {
+      type: String,
+      default: "M. ODOUNGA ETOUMBI Randy"
+    },
     adresse: {
       rue: String,
       codePostal: String,

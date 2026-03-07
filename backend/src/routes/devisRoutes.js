@@ -132,4 +132,14 @@ router.post('/admin/:devisId/signer', authAdmin, devisController.signer);
 // @access  Privé (Admin)
 router.get('/admin/:devisId/pdf', authAdmin, devisController.genererPDF);
 
+// @route   GET /api/devis/admin/:devisId/contrat
+// @desc    Admin génère et télécharge le PDF du contrat
+// @access  Privé (Admin)
+router.get('/admin/:devisId/contrat', authAdmin, devisController.genererContratPDF);
+
+// @route   GET /api/devis/:devisId/contrat
+// @desc    Client télécharge le PDF du contrat (statut transforme_contrat+)
+// @access  Privé (Client)
+router.get('/:devisId/contrat', authClient, devisController.genererContratPDFClient);
+
 module.exports = router;

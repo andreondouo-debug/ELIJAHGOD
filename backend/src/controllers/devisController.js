@@ -6,7 +6,8 @@ const Settings = require('../models/Settings');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 const { calculerFraisKilometriques } = require('../utils/distanceService');
-const pdfService = require('../utils/pdfService');
+const pdfService      = require('../utils/pdfService');
+const contractService = require('../utils/contractService');
 const path = require('path');
 
 /**
@@ -1104,6 +1105,23 @@ exports.transformerEnContrat = async (req, res) => {
 
     // Transformer
     const numeroContrat = await devis.transformerEnContrat();
+
+    // Générer automatiquement le PDF du contrat
+    try {
+      const settings = await Settings.findOne() || {};
+      const filename = `contrat-${numeroContrat.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
+      const outputPath = path.join(__dirname, '../../uploads/devis', filename);
+      await contractService.genererContratPDF(devis, outputPath, settings);
+      devis.documents = devis.documents || {};
+      devis.documents.contratPdf = {
+        url: `/uploads/devis/${filename}`,
+        genereLe: new Date(),
+        version: 1
+      };
+    } catch (pdfErr) {
+      console.warn('⚠️ PDF contrat non généré automatiquement:', pdfErr.message);
+    }
+
     await devis.save();
 
     res.json({
@@ -1636,6 +1654,119 @@ exports.actionClient = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'action sur le devis',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
+// GÉNÉRER / TÉLÉCHARGER LE PDF DU CONTRAT (Admin)
+// ============================================
+exports.genererContratPDF = async (req, res) => {
+  try {
+    const { devisId } = req.params;
+
+    const devis = await Devis.findById(devisId)
+      .populate('prestations.prestation')
+      .populate('materiels.materiel');
+
+    if (!devis) {
+      return res.status(404).json({ success: false, message: '❌ Devis non trouvé' });
+    }
+
+    const settings = await Settings.findOne() || {};
+
+    // Le numéro de document à utiliser (contrat ou devis)
+    const numeroDoc = devis.numeroContrat || devis.numeroDevis;
+    const filename  = `contrat-${numeroDoc.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
+    const outputPath = path.join(__dirname, '../../uploads/devis', filename);
+
+    await contractService.genererContratPDF(devis, outputPath, settings);
+
+    // Sauvegarder l'URL du contrat
+    devis.documents = devis.documents || {};
+    devis.documents.contratPdf = {
+      url: `/uploads/devis/${filename}`,
+      genereLe: new Date(),
+      version: (devis.documents?.contratPdf?.version || 0) + 1
+    };
+    await devis.save();
+
+    res.download(outputPath, filename, (err) => {
+      if (err) {
+        console.error('❌ Erreur téléchargement contrat:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: 'Erreur téléchargement', error: err.message });
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur génération contrat PDF:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la génération du contrat',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
+// TÉLÉCHARGER LE PDF DU CONTRAT (Client)
+// ============================================
+exports.genererContratPDFClient = async (req, res) => {
+  try {
+    const { devisId } = req.params;
+
+    const devis = await Devis.findById(devisId)
+      .populate('prestations.prestation')
+      .populate('materiels.materiel');
+
+    if (!devis) {
+      return res.status(404).json({ success: false, message: '❌ Devis non trouvé' });
+    }
+
+    // Vérifier que le client est propriétaire
+    if (req.clientId && devis.clientId.toString() !== req.clientId) {
+      return res.status(403).json({ success: false, message: '❌ Non autorisé' });
+    }
+
+    // Le contrat n'est accessible qu'à partir du statut transforme_contrat
+    const statutsContrat = ['transforme_contrat', 'contrat_signe', 'valide_final'];
+    if (!statutsContrat.includes(devis.statut)) {
+      return res.status(403).json({
+        success: false,
+        message: '❌ Le contrat n\'est pas encore disponible'
+      });
+    }
+
+    const settings = await Settings.findOne() || {};
+
+    const numeroDoc  = devis.numeroContrat || devis.numeroDevis;
+    const filename   = `contrat-${numeroDoc.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
+    const outputPath = path.join(__dirname, '../../uploads/devis', filename);
+
+    await contractService.genererContratPDF(devis, outputPath, settings);
+
+    devis.documents = devis.documents || {};
+    devis.documents.contratPdf = {
+      url: `/uploads/devis/${filename}`,
+      genereLe: new Date(),
+      version: (devis.documents?.contratPdf?.version || 0) + 1
+    };
+    await devis.save();
+
+    res.download(outputPath, filename, (err) => {
+      if (err && !res.headersSent) {
+        res.status(500).json({ success: false, message: 'Erreur téléchargement', error: err.message });
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur génération contrat client:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la génération du contrat',
       error: error.message
     });
   }
