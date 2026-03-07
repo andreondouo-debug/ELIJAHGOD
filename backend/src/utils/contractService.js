@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const { PassThrough } = require('stream');
 
 /**
  * 📜 SERVICE DE GÉNÉRATION DE CONTRAT DE PRESTATION
@@ -32,74 +33,108 @@ const LOGO_PATH = path.join(__dirname, '../../../frontend/public/images/logo.png
 
 class ContractService {
 
+  /**
+   * Crée le PDFDocument avec tout le contenu, prêt à être pipé sur n'importe quel stream.
+   * NE PAS appeler doc.end() ici — c'est fait par l'appelant après avoir connecté le pipe.
+   */
+  _creerDoc(devis, settings) {
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 40, bottom: FOOTER + 20, left: LEFT, right: 45 },
+      info: {
+        Title: `Contrat ${devis.numeroContrat || devis.numeroDevis}`,
+        Author: "ELIJAH'GOD",
+        Subject: 'Contrat de prestation de services',
+      },
+      autoFirstPage: true,
+    });
+
+    // Footer automatique sur chaque page
+    let isAddingFooter = false;
+    const placerFooter = () => {
+      if (isAddingFooter) return;
+      isAddingFooter = true;
+      const fy = PAGE_H - FOOTER;
+      doc.save();
+      doc.moveTo(LEFT, fy).lineTo(RIGHT, fy)
+         .strokeColor(C.gold).lineWidth(0.4).stroke();
+      doc.fontSize(7).fillColor(C.textLight).font('Helvetica');
+      const nomEntreprise = settings?.entreprise?.nom || "ELIJAH'GOD";
+      const emailContact  = settings?.contact?.email || 'contact@elijahgod.com';
+      doc.text(
+        `${nomEntreprise} · Contrat de prestation de services · ${emailContact}`,
+        LEFT, fy + 8, { width: WIDTH, align: 'center', lineBreak: false }
+      );
+      isAddingFooter = false;
+      doc.restore();
+    };
+    doc.on('pageAdded', placerFooter);
+
+    // Construction des sections
+    this._entete(doc, devis, settings);
+    this._partiesContrat(doc, devis, settings);
+    this._objetContrat(doc, devis);
+    this._detailsEvenement(doc, devis);
+    this._materielServices(doc, devis);
+    this._conditionsFinancieres(doc, devis, settings);
+    this._engagementsPrestataire(doc, devis);
+    this._engagementsClient(doc);
+    this._annulation(doc, settings);
+    this._responsabilites(doc);
+    this._procedureReclamation(doc);
+    this._signatures(doc, devis, settings);
+    this._annexePV(doc, devis, settings);
+    placerFooter();
+
+    return doc;
+  }
+
+  /**
+   * Génère le contrat et l'écrit dans un fichier (utile en local).
+   */
   async genererContratPDF(devis, outputPath, settings = {}) {
     return new Promise((resolve, reject) => {
       try {
         const dir = path.dirname(outputPath);
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-        const doc = new PDFDocument({
-          size: 'A4',
-          margins: { top: 40, bottom: FOOTER + 20, left: LEFT, right: 45 },
-          info: {
-            Title: `Contrat ${devis.numeroContrat || devis.numeroDevis}`,
-            Author: "ELIJAH'GOD",
-            Subject: 'Contrat de prestation de services',
-          },
-          autoFirstPage: true,
-        });
-
+        const doc    = this._creerDoc(devis, settings);
         const stream = fs.createWriteStream(outputPath);
         doc.pipe(stream);
-
-        // Footer automatique
-        let isAddingFooter = false;
-        const placerFooter = () => {
-          if (isAddingFooter) return;
-          isAddingFooter = true;
-          const fy = PAGE_H - FOOTER;
-          doc.save();
-          doc.moveTo(LEFT, fy).lineTo(RIGHT, fy)
-             .strokeColor(C.gold).lineWidth(0.4).stroke();
-          doc.fontSize(7).fillColor(C.textLight).font('Helvetica');
-          const nomEntreprise = settings?.entreprise?.nom || "ELIJAH'GOD";
-          const emailContact  = settings?.contact?.email || 'contact@elijahgod.com';
-          doc.text(
-            `${nomEntreprise} · Contrat de prestation de services · ${emailContact}`,
-            LEFT, fy + 8, { width: WIDTH, align: 'center', lineBreak: false }
-          );
-          isAddingFooter = false;
-          doc.restore();
-        };
-        doc.on('pageAdded', placerFooter);
-
-        // ── Construction ───────────────────────────────────────────────────────
-        this._entete(doc, devis, settings);
-        this._partiesContrat(doc, devis, settings);
-        this._objetContrat(doc, devis);
-        this._detailsEvenement(doc, devis);
-        this._materielServices(doc, devis);
-        this._conditionsFinancieres(doc, devis, settings);
-        this._engagementsPrestataire(doc, devis);
-        this._engagementsClient(doc);
-        this._annulation(doc, settings);
-        this._responsabilites(doc);
-        this._procedureReclamation(doc);
-        this._signatures(doc, devis, settings);
-        this._annexePV(doc, devis, settings);
-
-        placerFooter();
         doc.end();
 
         stream.on('finish', () => {
-          console.log('✅ Contrat PDF généré:', outputPath);
+          console.log('✅ Contrat PDF généré (fichier):', outputPath);
           resolve(outputPath);
         });
         stream.on('error', reject);
+      } catch (err) {
+        console.error('❌ Erreur génération contrat (fichier):', err);
+        reject(err);
+      }
+    });
+  }
 
-      } catch (error) {
-        console.error('❌ Erreur génération contrat:', error);
-        reject(error);
+  /**
+   * Génère le contrat en mémoire et retourne un Buffer.
+   * 100% sans accès disque — compatible Render filesystem éphémère.
+   */
+  async genererContratBuffer(devis, settings = {}) {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc     = this._creerDoc(devis, settings);
+        const pass    = new PassThrough();
+        const chunks  = [];
+
+        pass.on('data',  chunk => chunks.push(chunk));
+        pass.on('end',   ()    => resolve(Buffer.concat(chunks)));
+        pass.on('error', reject);
+
+        doc.pipe(pass);
+        doc.end();
+      } catch (err) {
+        console.error('❌ Erreur génération contrat (buffer):', err);
+        reject(err);
       }
     });
   }
@@ -695,23 +730,6 @@ class ContractService {
       style: 'currency', currency: 'EUR',
     }).format(prix || 0);
   }
-
-  /**
-   * Génère le contrat en mémoire et retourne un Buffer
-   * Utile pour les pièces jointes email (sans écrire sur disque)
-   */
-  async genererContratBuffer(devis, settings = {}) {
-    const os   = require('os');
-    const tmp  = require('path');
-    const tmpPath = tmp.join(os.tmpdir(), `contrat-${devis._id || Date.now()}-${Date.now()}.pdf`);
-    try {
-      await this.genererContratPDF(devis, tmpPath, settings);
-      const buffer = fs.readFileSync(tmpPath);
-      try { fs.unlinkSync(tmpPath); } catch (_) {}
-      return buffer;
-    } catch (err) {
-      try { fs.unlinkSync(tmpPath); } catch (_) {}
-      throw err;
-    }
-  }
 }
+
+module.exports = new ContractService();

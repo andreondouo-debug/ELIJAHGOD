@@ -1885,6 +1885,8 @@ exports.genererContratPDFClient = async (req, res) => {
     // Générer en mémoire (compatible Render filesystem éphémère)
     const pdfBuffer = await contractService.genererContratBuffer(devis, settings);
 
+    console.log(`✅ Contrat PDF client généré en mémoire — ${pdfBuffer.length} octets — ${filename}`);
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
@@ -1901,4 +1903,3 @@ exports.genererContratPDFClient = async (req, res) => {
     });
   }
 };
-
