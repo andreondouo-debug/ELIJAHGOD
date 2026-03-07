@@ -29,6 +29,14 @@ const sendEmail = async (options) => {
     }
   };
 
+  // Pièces jointes (format Brevo : { content: base64, name: 'fichier.pdf' })
+  if (options.attachments && options.attachments.length > 0) {
+    payload.attachment = options.attachments.map(a => ({
+      content: a.content, // base64 string
+      name: a.name
+    }));
+  }
+
   try {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',

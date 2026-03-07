@@ -1124,6 +1124,53 @@ exports.transformerEnContrat = async (req, res) => {
 
     await devis.save();
 
+    // ── Email d'invitation à signer ──────────────────────────────────────────
+    try {
+      const clientEmail = devis.client?.email;
+      const clientPrenom = devis.client?.prenom || 'Client';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://elijahgod.fr';
+      const lienSignature = `${frontendUrl}/client/devis/${devis._id}`;
+
+      if (clientEmail) {
+        await sendEmail({
+          to: clientEmail,
+          subject: `📜 Votre contrat ${numeroContrat} est prêt — Signez-le en ligne`,
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+              <div style="background:#1a1a2e;padding:28px 32px;text-align:center">
+                <h1 style="color:#c9a227;margin:0;font-size:1.5rem;letter-spacing:1px">ELIJAH'GOD</h1>
+                <p style="color:#ffffff;margin:8px 0 0;font-size:0.9rem">Prestation DJ & Événementiel</p>
+              </div>
+              <div style="padding:32px">
+                <h2 style="color:#1a1a2e;font-size:1.2rem">Bonjour ${clientPrenom}, votre contrat est prêt !</h2>
+                <p style="color:#444;line-height:1.6">
+                  Votre contrat de prestation <strong style="color:#c9a227">${numeroContrat}</strong> a été généré.
+                  Vous pouvez le <strong>lire intégralement</strong> avant de le signer numériquement en un clic.
+                </p>
+                <div style="background:#fffbf0;border-left:4px solid #c9a227;padding:14px 18px;border-radius:0 8px 8px 0;margin:18px 0">
+                  <p style="margin:0;color:#555;font-size:0.9rem">📅 Événement : <strong>${devis.evenement?.type || 'Prestation'}</strong> — ${devis.evenement?.date ? new Date(devis.evenement.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : ''}</p>
+                  <p style="margin:6px 0 0;color:#555;font-size:0.9rem">💰 Montant TTC : <strong>${devis.montants?.totalTTC?.toFixed(2) || '—'} €</strong></p>
+                </div>
+                <div style="text-align:center;margin:28px 0">
+                  <a href="${lienSignature}"
+                     style="background:#c9a227;color:#1a1a2e;padding:16px 36px;border-radius:8px;text-decoration:none;font-weight:700;font-size:1rem;display:inline-block;letter-spacing:0.5px">
+                    ✍️ Lire et signer mon contrat
+                  </a>
+                </div>
+                <p style="color:#888;font-size:0.82rem;text-align:center">Ce lien vous connecte directement à votre espace client sécurisé.</p>
+              </div>
+              <div style="background:#f8f9fa;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb">
+                <p style="color:#aaa;font-size:0.78rem;margin:0">ELIJAH'GOD — contact@elijahgod.fr — www.elijahgod.fr</p>
+              </div>
+            </div>
+          `
+        });
+        console.log(`📧 Email invitation signature envoyé → ${clientEmail}`);
+      }
+    } catch (emailErr) {
+      console.warn('⚠️ Email invitation signature non envoyé:', emailErr.message);
+    }
+
     res.json({
       success: true,
       message: '✅ Devis transformé en contrat',
@@ -1175,6 +1222,123 @@ exports.signer = async (req, res) => {
     }
 
     await devis.save();
+
+    // ── Email confirmation de signature ──────────────────────────────────────
+    try {
+      const clientEmail = devis.client?.email;
+      const clientPrenom = devis.client?.prenom || 'Client';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://elijahgod.fr';
+
+      if (partie === 'client' && clientEmail) {
+        // Notifier le client que sa signature a bien été reçue
+        await sendEmail({
+          to: clientEmail,
+          subject: `✅ Signature reçue — Contrat ${devis.numeroContrat}`,
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
+              <div style="background:#1a1a2e;padding:24px 32px;text-align:center">
+                <h1 style="color:#c9a227;margin:0">ELIJAH'GOD</h1>
+              </div>
+              <div style="padding:28px">
+                <h2 style="color:#27ae60">✅ Votre signature a été enregistrée !</h2>
+                <p style="color:#444;line-height:1.6">Bonjour ${clientPrenom},<br>Votre signature sur le contrat <strong>${devis.numeroContrat}</strong> a bien été reçue. Notre équipe va maintenant contresigner pour finaliser votre réservation.</p>
+                <p style="color:#888;font-size:0.85rem">Vous recevrez le contrat signé par les deux parties dès que nous aurons apposé notre signature.</p>
+                <a href="${frontendUrl}/client/devis/${devis._id}" style="background:#c9a227;color:#1a1a2e;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;margin-top:16px">Voir mon contrat →</a>
+              </div>
+            </div>
+          `
+        });
+      }
+
+      // Notifier l'admin qu'il doit contresigner
+      if (partie === 'client' && process.env.ADMIN_EMAIL) {
+        await sendEmail({
+          to: process.env.ADMIN_EMAIL,
+          subject: `✍️ Contrat ${devis.numeroContrat} signé par le client — à contresigner`,
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
+              <div style="background:#1a1a2e;padding:24px 32px;text-align:center">
+                <h1 style="color:#c9a227;margin:0">ELIJAH'GOD — Admin</h1>
+              </div>
+              <div style="padding:28px">
+                <h2 style="color:#1a1a2e">✍️ Le client a signé le contrat</h2>
+                <p style="color:#444"><strong>Contrat :</strong> ${devis.numeroContrat}</p>
+                <p style="color:#444"><strong>Client :</strong> ${clientPrenom} ${devis.client?.nom || ''} (${clientEmail})</p>
+                <p style="color:#444"><strong>Signé le :</strong> ${new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</p>
+                <p style="color:#555;margin-top:16px">Il ne reste plus qu'à apposer votre signature pour que le contrat soit définitivement validé.</p>
+                <a href="${frontendUrl}/admin/devis/${devis._id}" style="background:#c9a227;color:#1a1a2e;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;margin-top:12px">Contresigner →</a>
+              </div>
+            </div>
+          `
+        });
+      }
+    } catch (notifErr) {
+      console.warn('⚠️ Email notification signature:', notifErr.message);
+    }
+
+    // ── Si les DEUX parties ont signé → envoyer le PDF final à tous ──────────
+    if (devis.statut === 'valide_final') {
+      try {
+        const settings = await Settings.findOne() || {};
+        const pdfBuffer = await contractService.genererContratBuffer(devis, settings);
+        const base64Pdf = pdfBuffer.toString('base64');
+        const nomFichier = `contrat-${devis.numeroContrat || devis.numeroDevis}.pdf`;
+        const attachment = [{ content: base64Pdf, name: nomFichier }];
+
+        const clientEmail  = devis.client?.email;
+        const clientPrenom = devis.client?.prenom || 'Client';
+        const adminEmail   = process.env.ADMIN_EMAIL;
+
+        const htmlClient = `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
+            <div style="background:#1a1a2e;padding:28px 32px;text-align:center">
+              <h1 style="color:#c9a227;margin:0">ELIJAH'GOD</h1>
+              <p style="color:#fff;margin:6px 0 0;font-size:0.88rem">Prestation DJ & Événementiel</p>
+            </div>
+            <div style="padding:32px">
+              <h2 style="color:#27ae60">🏆 Votre contrat est définitivement signé !</h2>
+              <p style="color:#444;line-height:1.6">Bonjour ${clientPrenom},<br>
+              Le contrat <strong style="color:#c9a227">${devis.numeroContrat}</strong> a été signé par les deux parties. Vous trouverez en pièce jointe <strong>votre exemplaire du contrat signé</strong>.</p>
+              <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin:18px 0">
+                <p style="margin:0;color:#166534">✅ Signature client : <strong>${devis.signatures?.client?.signePar || clientPrenom}</strong></p>
+                <p style="margin:8px 0 0;color:#166534">✅ Signature prestataire : <strong>${devis.signatures?.admin?.signePar || "ELIJAH'GOD"}</strong></p>
+              </div>
+              <p style="color:#555;font-size:0.9rem">Conservez ce document précieusement. En cas de question, n'hésitez pas à nous contacter.</p>
+              <a href="${process.env.FRONTEND_URL || 'https://elijahgod.fr'}/client/devis/${devis._id}" style="background:#c9a227;color:#1a1a2e;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;margin-top:16px">Voir mon espace →</a>
+            </div>
+            <div style="background:#f8f9fa;padding:14px 32px;text-align:center;border-top:1px solid #e5e7eb">
+              <p style="color:#aaa;font-size:0.78rem;margin:0">ELIJAH'GOD — contact@elijahgod.fr — www.elijahgod.fr</p>
+            </div>
+          </div>
+        `;
+
+        const htmlAdmin = `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
+            <div style="background:#1a1a2e;padding:24px 32px;text-align:center">
+              <h1 style="color:#c9a227;margin:0">ELIJAH'GOD — Admin</h1>
+            </div>
+            <div style="padding:28px">
+              <h2 style="color:#16a085">🏆 Contrat ${devis.numeroContrat} — Entièrement signé</h2>
+              <p style="color:#444"><strong>Client :</strong> ${clientPrenom} ${devis.client?.nom || ''} (${clientEmail})</p>
+              <p style="color:#444"><strong>Événement :</strong> ${devis.evenement?.type || '—'} — ${devis.evenement?.date ? new Date(devis.evenement.date).toLocaleDateString('fr-FR') : '—'}</p>
+              <p style="color:#444"><strong>Montant TTC :</strong> ${devis.montants?.totalTTC?.toFixed(2) || '—'} €</p>
+              <p style="color:#555;margin-top:14px">Le contrat signé est en pièce jointe. Une copie a été envoyée au client.</p>
+            </div>
+          </div>
+        `;
+
+        if (clientEmail) {
+          await sendEmail({ to: clientEmail, subject: `🏆 Contrat ${devis.numeroContrat} signé — votre exemplaire`, html: htmlClient, attachments: attachment });
+          console.log(`📧 Contrat PDF envoyé au client → ${clientEmail}`);
+        }
+        if (adminEmail) {
+          await sendEmail({ to: adminEmail, subject: `🏆 Contrat ${devis.numeroContrat} signé — copie admin`, html: htmlAdmin, attachments: attachment });
+          console.log(`📧 Contrat PDF envoyé à l'admin → ${adminEmail}`);
+        }
+      } catch (pdfEmailErr) {
+        console.warn('⚠️ Envoi PDF contrat signé échoué:', pdfEmailErr.message);
+      }
+    }
 
     res.json({
       success: true,

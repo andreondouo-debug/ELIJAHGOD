@@ -695,6 +695,23 @@ class ContractService {
       style: 'currency', currency: 'EUR',
     }).format(prix || 0);
   }
-}
 
-module.exports = new ContractService();
+  /**
+   * Génère le contrat en mémoire et retourne un Buffer
+   * Utile pour les pièces jointes email (sans écrire sur disque)
+   */
+  async genererContratBuffer(devis, settings = {}) {
+    const os   = require('os');
+    const tmp  = require('path');
+    const tmpPath = tmp.join(os.tmpdir(), `contrat-${devis._id || Date.now()}-${Date.now()}.pdf`);
+    try {
+      await this.genererContratPDF(devis, tmpPath, settings);
+      const buffer = fs.readFileSync(tmpPath);
+      try { fs.unlinkSync(tmpPath); } catch (_) {}
+      return buffer;
+    } catch (err) {
+      try { fs.unlinkSync(tmpPath); } catch (_) {}
+      throw err;
+    }
+  }
+}
