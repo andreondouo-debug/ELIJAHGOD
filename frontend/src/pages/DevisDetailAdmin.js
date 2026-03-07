@@ -3,8 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import AdminContext from '../context/AdminContext';
 import { ArrowLeft, Download, Edit, Trash2, Check, X, Calendar, User, Mail, Phone, MapPin, Package, Euro, Tag } from 'lucide-react';
+import SignaturePad from '../components/SignaturePad';
 import './AdminDashboard.css';
 import './MesDevisPage.css';
+import '../components/SignaturePad.css';
 
 import { API_URL } from '../config';
 
@@ -24,6 +26,10 @@ function DevisDetailAdmin() {
   const [applyingRemise, setApplyingRemise]     = useState(false);
   const [generatingContrat, setGeneratingContrat] = useState(false);
   const [transformingContrat, setTransformingContrat] = useState(false);
+  const [showAdminSignPad, setShowAdminSignPad] = useState(false);
+  const [signingAdmin, setSigningAdmin]           = useState(false);
+  const [adminSignFeedback, setAdminSignFeedback] = useState(null);
+  const [adminSignataire, setAdminSignataire]     = useState('M. ODOUNGA ETOUMBI Randy');
 
   useEffect(() => {
     if (authLoading) return; // attendre que le contexte soit initialisé
@@ -196,6 +202,29 @@ function DevisDetailAdmin() {
     } catch (err) {
       console.error('❌ Erreur suppression:', err);
       alert(err.response?.data?.message || 'Erreur lors de la suppression');
+    }
+  };
+
+  const signerContratAdmin = async (signatureData) => {
+    if (!adminSignataire.trim()) {
+      setAdminSignFeedback({ type: 'error', msg: 'Veuillez saisir votre nom.' });
+      return;
+    }
+    setSigningAdmin(true);
+    setAdminSignFeedback(null);
+    try {
+      await axios.post(
+        `${API_URL}/api/devis/admin/${id}/signer`,
+        { signatureData, partie: 'admin', signataire: adminSignataire.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setShowAdminSignPad(false);
+      setAdminSignFeedback({ type: 'success', msg: '✅ Signature enregistrée. Le contrat est maintenant valide (valide_final).' });
+      await chargerDevis();
+    } catch (err) {
+      setAdminSignFeedback({ type: 'error', msg: err.response?.data?.message || 'Erreur lors de la signature.' });
+    } finally {
+      setSigningAdmin(false);
     }
   };
 
@@ -596,6 +625,84 @@ function DevisDetailAdmin() {
           Le client recevra un email de notification. Les montants (totalTTC, acompte) seront recalculés automatiquement.
         </p>
       </div>
+
+      {/* Section signature admin */}
+      {['transforme_contrat', 'contrat_signe'].includes(devis?.statut) && (
+        <div className="card signature-section" style={{ marginTop: '2rem' }}>
+          <h3>✍️ Signature prestataire</h3>
+          {devis.statut === 'transforme_contrat' && (
+            <p className="sig-desc" style={{ color: '#888' }}>
+              ⏳ En attente de la signature du client avant votre signature.
+            </p>
+          )}
+          {devis.statut === 'contrat_signe' && (
+            <>
+              <p className="sig-desc">
+                Le client a signé. Apposez votre signature pour finaliser le contrat (statut → <strong>valide_final</strong>).
+              </p>
+              {adminSignFeedback && (
+                <div className={`sig-feedback ${adminSignFeedback.type}`}>{adminSignFeedback.msg}</div>
+              )}
+              {devis.signatures?.admin?.dateSignature ? (
+                <div className="sig-signed-badge">
+                  ✅ Signé le {new Date(devis.signatures.admin.dateSignature).toLocaleDateString('fr-FR')}
+                  {devis.signatures.admin.signePar && <> par <strong>{devis.signatures.admin.signePar}</strong></>}
+                </div>
+              ) : !showAdminSignPad ? (
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={() => setShowAdminSignPad(true)}
+                  style={{ marginTop: '8px' }}
+                >
+                  ✍️ Signer le contrat (prestataire)
+                </button>
+              ) : (
+                <>
+                  <label className="sig-input-label" style={{ marginTop: '12px' }}>Nom du signataire *</label>
+                  <input
+                    type="text"
+                    className="sig-input"
+                    value={adminSignataire}
+                    onChange={e => setAdminSignataire(e.target.value)}
+                    placeholder="Prénom Nom"
+                  />
+                  {signingAdmin ? (
+                    <p style={{ color: '#555', textAlign: 'center' }}>⏳ Enregistrement...</p>
+                  ) : (
+                    <SignaturePad
+                      label="Signature du prestataire"
+                      onConfirm={signerContratAdmin}
+                      onCancel={() => setShowAdminSignPad(false)}
+                    />
+                  )}
+                </>
+              )}
+            </>
+          )}
+          {/* Rappel signature client */}
+          {devis.signatures?.client?.dateSignature && (
+            <div style={{ marginTop: '14px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #86efac', fontSize: '0.88rem', color: '#166534' }}>
+              ✍️ Client a signé le {new Date(devis.signatures.client.dateSignature).toLocaleDateString('fr-FR')}
+              {devis.signatures.client.signePar && <> ({devis.signatures.client.signePar})</>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {devis?.statut === 'valide_final' && (
+        <div className="card" style={{ marginTop: '2rem', border: '2px solid #27ae60' }}>
+          <h3 style={{ color: '#27ae60', margin: '0 0 10px' }}>🏆 Contrat entièrement signé</h3>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            {devis.signatures?.client?.dateSignature && (
+              <div className="sig-signed-badge">✅ Client : {new Date(devis.signatures.client.dateSignature).toLocaleDateString('fr-FR')}</div>
+            )}
+            {devis.signatures?.admin?.dateSignature && (
+              <div className="sig-signed-badge">✅ Prestataire : {new Date(devis.signatures.admin.dateSignature).toLocaleDateString('fr-FR')}</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Notes */}
       {devis.notes && (

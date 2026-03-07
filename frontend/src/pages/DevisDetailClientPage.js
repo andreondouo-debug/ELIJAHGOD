@@ -3,7 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { ClientContext } from '../context/ClientContext';
 import { API_URL } from '../config';
+import SignaturePad from '../components/SignaturePad';
 import './DevisDetailClientPage.css';
+import '../components/SignaturePad.css';
 
 /**
  * 📋 PAGE DÉTAIL D'UN DEVIS — VUE CLIENT
@@ -21,6 +23,15 @@ function DevisDetailClientPage() {
   const [deleting, setDeleting]               = useState(false);
   const [downloadingPDF, setDownloadingPDF]   = useState(false);
   const [downloadingContrat, setDownloadingContrat] = useState(false);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [signing, setSigning]                   = useState(false);
+  const [signFeedback, setSignFeedback]         = useState(null); // { type: 'success'|'error', msg }
+  const [signataire, setSignataire]             = useState('');
+  const [consentements, setConsentements]       = useState({
+    cgv: false,
+    traitementDonnees: false,
+    annulation: false
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -101,6 +112,48 @@ function DevisDetailClientPage() {
       alert('Erreur lors du téléchargement du PDF');
     } finally {
       setDownloadingPDF(false);
+    }
+  };
+
+  /* ── Initialiser le nom du signataire depuis le profil client ── */
+  useEffect(() => {
+    if (devis && !signataire) {
+      const prenom = devis.client?.prenom || '';
+      const nom    = devis.client?.nom    || '';
+      setSignataire(`${prenom} ${nom}`.trim());
+    }
+  }, [devis]);
+
+  const signerContrat = async (signatureData) => {
+    // Vérifier consentements
+    if (!consentements.cgv || !consentements.traitementDonnees || !consentements.annulation) {
+      setSignFeedback({ type: 'error', msg: 'Vous devez accepter toutes les conditions avant de signer.' });
+      return;
+    }
+    if (!signataire.trim()) {
+      setSignFeedback({ type: 'error', msg: 'Veuillez saisir votre nom complet.' });
+      return;
+    }
+    setSigning(true);
+    setSignFeedback(null);
+    try {
+      await axios.post(
+        `${API_URL}/api/devis/${devisId}/signer`,
+        {
+          signatureData,
+          partie: 'client',
+          signataire: signataire.trim(),
+          consentement: consentements
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setShowSignaturePad(false);
+      setSignFeedback({ type: 'success', msg: '✅ Votre signature a bien été enregistrée ! Le prestataire va maintenant valider le contrat.' });
+      await chargerDevis();
+    } catch (err) {
+      setSignFeedback({ type: 'error', msg: err.response?.data?.message || 'Erreur lors de la signature. Réessayez.' });
+    } finally {
+      setSigning(false);
     }
   };
 
@@ -320,6 +373,94 @@ function DevisDetailClientPage() {
             </div>
           )}
         </div>
+
+        {/* ── SECTION SIGNATURE NUMÉRIQUE ── */}
+        {devis.statut === 'transforme_contrat' && (
+          <div className="detail-card detail-full-width signature-section">
+            <h3>✍️ Signature numérique du contrat</h3>
+            <p className="sig-desc">
+              Votre contrat est prêt. Lisez-le attentivement, puis signez-le ci-dessous pour confirmer votre commande.
+              Vous pouvez aussi le télécharger avant de signer.
+            </p>
+
+            {signFeedback && (
+              <div className={`sig-feedback ${signFeedback.type}`}>{signFeedback.msg}</div>
+            )}
+
+            {!showSignaturePad ? (
+              <button
+                type="button"
+                className="btn-detail btn-submit"
+                onClick={() => setShowSignaturePad(true)}
+                style={{ background: 'linear-gradient(135deg, #c9a227, #e2b93b)', color: '#1a1a2e', border: 'none' }}
+              >
+                ✍️ Signer le contrat
+              </button>
+            ) : (
+              <>
+                {/* Nom signataire */}
+                <label className="sig-input-label">Votre nom complet *</label>
+                <input
+                  type="text"
+                  className="sig-input"
+                  value={signataire}
+                  onChange={e => setSignataire(e.target.value)}
+                  placeholder="Prénom Nom"
+                />
+
+                {/* Consentements */}
+                <div className="sig-consents">
+                  <label className="sig-consent-item">
+                    <input
+                      type="checkbox"
+                      checked={consentements.cgv}
+                      onChange={e => setConsentements(p => ({ ...p, cgv: e.target.checked }))}
+                    />
+                    J'ai lu et j'accepte les{' '}
+                    <a href="/cgv" target="_blank" rel="noreferrer">conditions générales de vente</a>.
+                  </label>
+                  <label className="sig-consent-item">
+                    <input
+                      type="checkbox"
+                      checked={consentements.traitementDonnees}
+                      onChange={e => setConsentements(p => ({ ...p, traitementDonnees: e.target.checked }))}
+                    />
+                    J'accepte le traitement de mes données personnelles conformément à la politique de confidentialité.
+                  </label>
+                  <label className="sig-consent-item">
+                    <input
+                      type="checkbox"
+                      checked={consentements.annulation}
+                      onChange={e => setConsentements(p => ({ ...p, annulation: e.target.checked }))}
+                    />
+                    J'ai pris connaissance des conditions d'annulation décrites dans le contrat.
+                  </label>
+                </div>
+
+                {signing ? (
+                  <p style={{ color: '#555', textAlign: 'center' }}>⏳ Enregistrement de la signature...</p>
+                ) : (
+                  <SignaturePad
+                    label="Tracez votre signature dans le cadre ci-dessous"
+                    onConfirm={signerContrat}
+                    onCancel={() => setShowSignaturePad(false)}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Badge signature déjà effectuée */}
+        {['contrat_signe', 'valide_final'].includes(devis.statut) && devis.signatures?.client?.dateSignature && (
+          <div className="detail-card detail-full-width" style={{ padding: '20px 28px' }}>
+            <h3 style={{ margin: '0 0 10px', color: '#1a1a2e' }}>✍️ Signature</h3>
+            <div className="sig-signed-badge">
+              ✅ Contrat signé le {new Date(devis.signatures.client.dateSignature).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              {devis.signatures.client.signePar && <> par <strong>{devis.signatures.client.signePar}</strong></>}
+            </div>
+          </div>
+        )}
 
         {/* ── PRESTATIONS ── */}
         {devis.prestations && devis.prestations.length > 0 && (
