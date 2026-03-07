@@ -1106,21 +1106,8 @@ exports.transformerEnContrat = async (req, res) => {
     // Transformer
     const numeroContrat = await devis.transformerEnContrat();
 
-    // Générer automatiquement le PDF du contrat
-    try {
-      const settings = await Settings.findOne() || {};
-      const filename = `contrat-${numeroContrat.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
-      const outputPath = path.join(__dirname, '../../uploads/devis', filename);
-      await contractService.genererContratPDF(devis, outputPath, settings);
-      devis.documents = devis.documents || {};
-      devis.documents.contratPdf = {
-        url: `/uploads/devis/${filename}`,
-        genereLe: new Date(),
-        version: 1
-      };
-    } catch (pdfErr) {
-      console.warn('⚠️ PDF contrat non généré automatiquement:', pdfErr.message);
-    }
+    // Marquer la date de transformation (le PDF est généré à la demande, en mémoire)
+    devis.documents = devis.documents || {};
 
     await devis.save();
 
@@ -1839,31 +1826,18 @@ exports.genererContratPDF = async (req, res) => {
     }
 
     const settings = await Settings.findOne() || {};
-
-    // Le numéro de document à utiliser (contrat ou devis)
     const numeroDoc = devis.numeroContrat || devis.numeroDevis;
     const filename  = `contrat-${numeroDoc.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
-    const outputPath = path.join(__dirname, '../../uploads/devis', filename);
 
-    await contractService.genererContratPDF(devis, outputPath, settings);
+    // Générer en mémoire (compatible Render filesystem éphémère)
+    const pdfBuffer = await contractService.genererContratBuffer(devis, settings);
 
-    // Sauvegarder l'URL du contrat
-    devis.documents = devis.documents || {};
-    devis.documents.contratPdf = {
-      url: `/uploads/devis/${filename}`,
-      genereLe: new Date(),
-      version: (devis.documents?.contratPdf?.version || 0) + 1
-    };
-    await devis.save();
-
-    res.download(outputPath, filename, (err) => {
-      if (err) {
-        console.error('❌ Erreur téléchargement contrat:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ success: false, message: 'Erreur téléchargement', error: err.message });
-        }
-      }
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': pdfBuffer.length
     });
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('❌ Erreur génération contrat PDF:', error);
@@ -1905,26 +1879,18 @@ exports.genererContratPDFClient = async (req, res) => {
     }
 
     const settings = await Settings.findOne() || {};
+    const numeroDoc = devis.numeroContrat || devis.numeroDevis;
+    const filename  = `contrat-${numeroDoc.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
 
-    const numeroDoc  = devis.numeroContrat || devis.numeroDevis;
-    const filename   = `contrat-${numeroDoc.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
-    const outputPath = path.join(__dirname, '../../uploads/devis', filename);
+    // Générer en mémoire (compatible Render filesystem éphémère)
+    const pdfBuffer = await contractService.genererContratBuffer(devis, settings);
 
-    await contractService.genererContratPDF(devis, outputPath, settings);
-
-    devis.documents = devis.documents || {};
-    devis.documents.contratPdf = {
-      url: `/uploads/devis/${filename}`,
-      genereLe: new Date(),
-      version: (devis.documents?.contratPdf?.version || 0) + 1
-    };
-    await devis.save();
-
-    res.download(outputPath, filename, (err) => {
-      if (err && !res.headersSent) {
-        res.status(500).json({ success: false, message: 'Erreur téléchargement', error: err.message });
-      }
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': pdfBuffer.length
     });
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('❌ Erreur génération contrat client:', error);
