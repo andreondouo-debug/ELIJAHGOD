@@ -4,6 +4,7 @@ import axios from 'axios';
 import AdminContext from '../context/AdminContext';
 import { ArrowLeft, Download, Edit, Trash2, Check, X, Calendar, User, Mail, Phone, MapPin, Package, Euro, Tag } from 'lucide-react';
 import SignaturePad from '../components/SignaturePad';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import './AdminDashboard.css';
 import './MesDevisPage.css';
 import '../components/SignaturePad.css';
@@ -27,6 +28,7 @@ function DevisDetailAdmin() {
   const [generatingContrat, setGeneratingContrat] = useState(false);
   const [transformingContrat, setTransformingContrat] = useState(false);
   const [showAdminSignPad, setShowAdminSignPad] = useState(false);
+  useBodyScrollLock(showAdminSignPad);
   const [signingAdmin, setSigningAdmin]           = useState(false);
   const [adminSignFeedback, setAdminSignFeedback] = useState(null);
   const [adminSignataire, setAdminSignataire]     = useState('M. ODOUNGA ETOUMBI Randy');

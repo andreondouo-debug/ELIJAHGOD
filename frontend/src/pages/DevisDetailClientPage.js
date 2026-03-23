@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ClientContext } from '../context/ClientContext';
 import { API_URL } from '../config';
 import SignaturePad from '../components/SignaturePad';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import './DevisDetailClientPage.css';
 import '../components/SignaturePad.css';
 
@@ -24,6 +25,7 @@ function DevisDetailClientPage() {
   const [downloadingPDF, setDownloadingPDF]   = useState(false);
   const [downloadingContrat, setDownloadingContrat] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
+  useBodyScrollLock(showSignaturePad);
   const [signing, setSigning]                   = useState(false);
   const [signFeedback, setSignFeedback]         = useState(null); // { type: 'success'|'error', msg }
   const [signataire, setSignataire]             = useState('');

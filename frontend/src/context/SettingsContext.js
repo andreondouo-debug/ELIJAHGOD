@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -39,13 +39,15 @@ const setCache = (data) => {
 
 export const SettingsProvider = ({ children }) => {
   // Initialiser depuis le cache immédiatement pour éviter les flash/attentes
-  const cached = getCache();
-  const [settings, setSettings] = useState(cached || null);
-  const [loading, setLoading] = useState(!cached); // pas de spinner si cache dispo
+  const cachedRef = useRef(getCache());
+  const [settings, setSettings] = useState(cachedRef.current || null);
+  const [loading, setLoading] = useState(!cachedRef.current);
   const [error, setError] = useState(null);
 
-  // Appliquer les couleurs du cache immédiatement
-  if (cached) applyColors(cached);
+  // Appliquer les couleurs du cache une seule fois au montage
+  useEffect(() => {
+    if (cachedRef.current) applyColors(cachedRef.current);
+  }, []);
 
   // Charger les paramètres au démarrage
   useEffect(() => {
@@ -53,9 +55,8 @@ export const SettingsProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
-      // Si pas de cache, afficher le spinner
       if (!getCache()) setLoading(true);
       const response = await axios.get(`${API_URL}/api/settings`);
       const data = response.data.data;
@@ -66,23 +67,20 @@ export const SettingsProvider = ({ children }) => {
     } catch (err) {
       console.error('❌ Erreur chargement paramètres:', err);
       setError(err.message);
-      // Garder le cache si disponible, sinon valeurs par défaut
-      if (!settings) {
-        setSettings({
-          entreprise: { nom: "ELIJAH'GOD", slogan: "Prestations événementielles" },
-          contact: { email: "contact@elijahgod.com", telephone: "+33 X XX XX XX XX" }
-        });
-      }
+      setSettings(prev => prev || {
+        entreprise: { nom: "ELIJAH'GOD", slogan: "Prestations événementielles" },
+        contact: { email: "contact@elijahgod.com", telephone: "+33 X XX XX XX XX" }
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const refreshSettings = () => {
+  const refreshSettings = useCallback(() => {
     loadSettings();
-  };
+  }, [loadSettings]);
 
-  const updateSettings = async (newSettings) => {
+  const updateSettings = useCallback(async (newSettings) => {
     try {
       const response = await axios.put(`${API_URL}/api/settings`, newSettings);
       const data = response.data.data;
@@ -94,10 +92,14 @@ export const SettingsProvider = ({ children }) => {
       console.error('❌ Erreur mise à jour paramètres:', error);
       throw error;
     }
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    settings, loading, error, refreshSettings, updateSettings
+  }), [settings, loading, error, refreshSettings, updateSettings]);
 
   return (
-    <SettingsContext.Provider value={{ settings, loading, error, refreshSettings, updateSettings }}>
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );

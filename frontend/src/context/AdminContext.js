@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -138,7 +138,7 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  const value = useMemo(() => ({
     admin,
     token,
     loading,
@@ -151,7 +151,7 @@ export const AdminProvider = ({ children }) => {
     createAdmin,
     listAdmins,
     toggleAdminStatus
-  };
+  }), [admin, token, loading]);
 
   return (
     <AdminContext.Provider value={value}>

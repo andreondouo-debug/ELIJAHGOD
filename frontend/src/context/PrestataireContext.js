@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -145,7 +145,7 @@ export function PrestataireProvider({ children }) {
     return chargerProfil();
   };
 
-  const value = {
+  const value = useMemo(() => ({
     prestataire,
     token,
     isAuthenticated,
@@ -157,7 +157,7 @@ export function PrestataireProvider({ children }) {
     mettreAJourProfil,
     uploadMedia,
     refreshProfil
-  };
+  }), [prestataire, token, isAuthenticated, loading]);
 
   return (
     <PrestataireContext.Provider value={value}>

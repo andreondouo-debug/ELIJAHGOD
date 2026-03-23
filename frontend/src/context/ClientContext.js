@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -167,7 +167,7 @@ export function ClientProvider({ children }) {
     }
   };
 
-  const value = {
+  const value = useMemo(() => ({
     client,
     token,
     isAuthenticated,
@@ -182,7 +182,7 @@ export function ClientProvider({ children }) {
     requestPasswordReset,
     resetPassword,
     API_URL
-  };
+  }), [client, token, isAuthenticated, loading, signup, login, chargerProfil, refreshClient, updateProfil, changePassword, requestPasswordReset, resetPassword]);
 
   return (
     <ClientContext.Provider value={value}>

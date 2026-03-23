@@ -6,15 +6,11 @@ import {
   Phone, Sparkles
 } from 'lucide-react';
 import { SettingsContext } from '../context/SettingsContext';
-import { ClientContext } from '../context/ClientContext';
-import { PrestataireContext } from '../context/PrestataireContext';
 import useAuth from '../hooks/useAuth';
 import './Header.css';
 
 function Header() {
   const { settings } = useContext(SettingsContext);
-  useContext(ClientContext);
-  useContext(PrestataireContext);
   const { isAuthenticated, getUserTypeIcon, logout, getDisplayName, userType } = useAuth();
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

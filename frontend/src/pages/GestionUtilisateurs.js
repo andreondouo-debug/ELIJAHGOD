@@ -4,6 +4,7 @@ import axios from 'axios';
 import './GestionPrestationsAdmin.css'; // Réutilise les styles existants
 import { SettingsContext } from '../context/SettingsContext';
 import { API_URL } from '../config';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const DEFAULT_CATEGORIES = [
   'DJ', 'Photographe', 'Vidéaste', 'Animateur', 'Groupe de louange',
@@ -29,6 +30,7 @@ function GestionUtilisateurs() {
 
   // Modale édition
   const [isEditing, setIsEditing] = useState(false);
+  useBodyScrollLock(isEditing);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({
     nomEntreprise: '', categorie: '', description: '',

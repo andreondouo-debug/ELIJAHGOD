@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './GestionPrestationsAdmin.css';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_URL } from '../config';
 
@@ -30,6 +31,9 @@ const GestionPrestationsAdmin = () => {
   const [isAddingPrestataire, setIsAddingPrestataire] = useState(false);
   const [isAddingTarif, setIsAddingTarif] = useState(false);
   const [isAddingPhoto, setIsAddingPhoto] = useState(false);
+
+  // Bloquer le scroll du body quand un modal est ouvert
+  useBodyScrollLock(isCreatingPrestation || isEditingPrestation);
 
   // Édition prestation
   const [editPrestation, setEditPrestation] = useState({

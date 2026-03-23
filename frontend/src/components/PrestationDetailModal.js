@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './PrestationDetailModal.css';
 import axios from 'axios';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_URL } from '../config';
 
@@ -13,6 +14,7 @@ import { API_URL } from '../config';
  * - Grille tarifaire selon nombre d'invités
  */
 const PrestationDetailModal = ({ prestation, nombreInvites, onClose, onSelect, selectedPrestataire }) => {
+  useBodyScrollLock(true);
   const [activeTab, setActiveTab] = useState('apercu'); // apercu, prestataires, tarifs
   const [prestataireChoisi, setPrestataireChoisi] = useState(selectedPrestataire || null);
   const [prestatairesDetails, setPrestatairesDetails] = useState([]);
