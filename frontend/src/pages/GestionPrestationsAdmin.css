@@ -1135,3 +1135,96 @@
 .galerie-item:hover .galerie-item-overlay {
   opacity: 1;
 }
+
+/* ============================================
+   ONGLET CONTENU - INCLUS / NON INCLUS
+   ============================================ */
+
+/* Tab modifié (point indicateur) */
+.details-tabs .tab.tab-modified {
+  color: #fd7e14;
+  border-bottom-color: #fd7e14;
+  background: rgba(253, 126, 20, 0.08);
+}
+
+.contenu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .contenu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contenu-section {
+  background: #f8f9fa;
+  border-radius: 14px;
+  padding: 1.5rem;
+  border: 2px solid transparent;
+}
+
+.contenu-inclus {
+  border-color: rgba(40, 167, 69, 0.25);
+}
+
+.contenu-non-inclus {
+  border-color: rgba(220, 53, 69, 0.25);
+}
+
+.contenu-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: #333;
+}
+
+.contenu-inclus .contenu-section-title {
+  color: #28a745;
+}
+
+.contenu-non-inclus .contenu-section-title {
+  color: #dc3545;
+}
+
+.inclus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.inclus-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inclus-item .form-input {
+  flex: 1;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: 1.5px solid #dee2e6;
+  transition: border-color 0.2s;
+}
+
+.inclus-item .form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.contenu-non-inclus .inclus-item .form-input:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
+}
+
+.btn-non-inclus {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.btn-non-inclus:hover {
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important;
+}

@@ -17,7 +17,12 @@ const GestionPrestationsAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [activeTab, setActiveTab] = useState('prestataires'); // prestataires, tarifs, galerie
+  const [activeTab, setActiveTab] = useState('prestataires'); // prestataires, tarifs, galerie, contenu
+
+  // États contenu (inclus / non inclus)
+  const [editInclus, setEditInclus] = useState([]);
+  const [editNonInclus, setEditNonInclus] = useState([]);
+  const [contentModified, setContentModified] = useState(false);
 
   // États pour les modales
   const [isCreatingPrestation, setIsCreatingPrestation] = useState(false);
@@ -96,7 +101,37 @@ const GestionPrestationsAdmin = () => {
 
   const handleSelectPrestation = (prestation) => {
     setSelectedPrestation(prestation);
+    setEditInclus([...(prestation.inclus || [])]);
+    setEditNonInclus([...(prestation.nonInclus || [])]);
+    setContentModified(false);
     setActiveTab('prestataires');
+  };
+
+  // SAUVEGARDE CONTENU (inclus / non inclus)
+  const handleSaveContenu = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const { data } = await axios.put(
+        `${API_URL}/api/prestations/${selectedPrestation._id}`,
+        {
+          inclus: editInclus.filter(i => i.trim() !== ''),
+          nonInclus: editNonInclus.filter(i => i.trim() !== '')
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessage({ type: 'success', text: '✅ Contenu mis à jour !' });
+      setContentModified(false);
+      setSelectedPrestation(data.data);
+      setEditInclus([...(data.data.inclus || [])]);
+      setEditNonInclus([...(data.data.nonInclus || [])]);
+      await fetchPrestations();
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde contenu:', error);
+      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde du contenu' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   // CRÉATION D'UNE NOUVELLE PRESTATION
@@ -824,6 +859,12 @@ const GestionPrestationsAdmin = () => {
                 >
                   📸 Galerie ({selectedPrestation.galerie?.length || 0})
                 </button>
+                <button
+                  className={`tab ${activeTab === 'contenu' ? 'active' : ''}${contentModified ? ' tab-modified' : ''}`}
+                  onClick={() => setActiveTab('contenu')}
+                >
+                  📝 Contenu {contentModified ? '●' : `(${(selectedPrestation.inclus?.length || 0) + (selectedPrestation.nonInclus?.length || 0)})`}
+                </button>
               </div>
 
               {/* CONTENU DES TABS */}
@@ -1015,6 +1056,108 @@ const GestionPrestationsAdmin = () => {
                           </tbody>
                         </table>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB CONTENU (inclus / non inclus) */}
+                {activeTab === 'contenu' && (
+                  <div className="tab-content">
+                    <div className="tab-header">
+                      <h3>Contenu de la prestation</h3>
+                      {contentModified && (
+                        <button className="btn-primary" onClick={handleSaveContenu} disabled={saving}>
+                          {saving ? '⏳ Sauvegarde...' : '💾 Enregistrer les modifications'}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="contenu-grid">
+                      {/* CE QUI EST INCLUS */}
+                      <div className="contenu-section contenu-inclus">
+                        <h4 className="contenu-section-title">✅ Ce qui est inclus</h4>
+                        <div className="inclus-list">
+                          {editInclus.map((item, idx) => (
+                            <div key={idx} className="inclus-item">
+                              <input
+                                type="text"
+                                value={item}
+                                placeholder="Ex: Matériel professionnel inclus"
+                                className="form-input"
+                                onChange={(e) => {
+                                  const updated = [...editInclus];
+                                  updated[idx] = e.target.value;
+                                  setEditInclus(updated);
+                                  setContentModified(true);
+                                }}
+                              />
+                              <button
+                                className="btn-remove-small"
+                                title="Supprimer"
+                                onClick={() => {
+                                  setEditInclus(editInclus.filter((_, i) => i !== idx));
+                                  setContentModified(true);
+                                }}
+                              >✕</button>
+                            </div>
+                          ))}
+                          {editInclus.length === 0 && (
+                            <p className="empty-message">Aucun élément inclus. Cliquez ➕ pour en ajouter.</p>
+                          )}
+                          <button
+                            className="btn-add-caracteristique"
+                            onClick={() => {
+                              setEditInclus([...editInclus, '']);
+                              setContentModified(true);
+                            }}
+                          >
+                            ➕ Ajouter un élément inclus
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* CE QUI N'EST PAS INCLUS */}
+                      <div className="contenu-section contenu-non-inclus">
+                        <h4 className="contenu-section-title">❌ Ce qui n'est pas inclus</h4>
+                        <div className="inclus-list">
+                          {editNonInclus.map((item, idx) => (
+                            <div key={idx} className="inclus-item">
+                              <input
+                                type="text"
+                                value={item}
+                                placeholder="Ex: Transport non inclus"
+                                className="form-input"
+                                onChange={(e) => {
+                                  const updated = [...editNonInclus];
+                                  updated[idx] = e.target.value;
+                                  setEditNonInclus(updated);
+                                  setContentModified(true);
+                                }}
+                              />
+                              <button
+                                className="btn-remove-small"
+                                title="Supprimer"
+                                onClick={() => {
+                                  setEditNonInclus(editNonInclus.filter((_, i) => i !== idx));
+                                  setContentModified(true);
+                                }}
+                              >✕</button>
+                            </div>
+                          ))}
+                          {editNonInclus.length === 0 && (
+                            <p className="empty-message">Aucun élément non inclus. Cliquez ➕ pour en ajouter.</p>
+                          )}
+                          <button
+                            className="btn-add-caracteristique btn-non-inclus"
+                            onClick={() => {
+                              setEditNonInclus([...editNonInclus, '']);
+                              setContentModified(true);
+                            }}
+                          >
+                            ➕ Ajouter un élément non inclus
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -1,6 +1,7 @@
+/* eslint-disable no-unused-vars */
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
+const fs          = require('fs');
+const path        = require('path');
 const { PassThrough } = require('stream');
 
 /**
