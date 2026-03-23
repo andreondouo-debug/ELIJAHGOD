@@ -113,7 +113,7 @@ class PDFService {
   _check(doc, needed) {
     if (doc.y + needed > PAGE_H - FOOTER - 15) {
       // Ne pas ajouter de page si on est déjà en haut d'une page fraîche
-      if (doc.y <= 60) return;
+      if (doc.y <= 80) return;
       doc.addPage();
     }
   }
@@ -412,7 +412,7 @@ class PDFService {
 
   // ── CONDITIONS & SIGNATURES ──────────────────────────────────────────────────
   _ajouterConditions(doc, devis) {
-    this._check(doc, 115);
+    this._check(doc, 170);
     const y = doc.y + 14;
 
     doc.rect(LEFT, y, WIDTH, 2).fill(C.gold);
@@ -429,9 +429,8 @@ class PDFService {
     doc.fontSize(8).fillColor(C.textMid).font('Helvetica');
     lignes.forEach((l, i) => doc.text(l, LEFT + 6, y + 20 + i * 13));
 
-    // Signatures
+    // Signatures (espace garanti par le _check(170) initial)
     const sigY = doc.y + 22;
-    this._check(doc, 55);
     doc.rect(LEFT, sigY, WIDTH * 0.44, 38).stroke();
     doc.rect(LEFT + WIDTH * 0.56, sigY, WIDTH * 0.44, 38).stroke();
     doc.fontSize(7.5).fillColor(C.textLight).font('Helvetica')

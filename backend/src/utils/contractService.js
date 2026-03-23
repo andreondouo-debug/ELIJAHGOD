@@ -146,7 +146,7 @@ class ContractService {
   _check(doc, needed) {
     if (doc.y + needed > PAGE_H - FOOTER - 20) {
       // Ne pas ajouter de page si on est déjà en haut d'une page fraîche
-      if (doc.y <= 60) return;
+      if (doc.y <= 80) return;
       doc.addPage();
     }
   }
@@ -586,23 +586,22 @@ class ContractService {
 
   // ── ANNEXE A — PV d'acceptation ───────────────────────────────────────────────
   _annexePV(doc, devis, settings) {
-    // Nouvelle page pour l'annexe, sauf si on est déjà sur une page vierge
-    if (doc.y > 100) {
-      doc.addPage();
-    }
+    // Vérifier l'espace pour l'en-tête de l'annexe (évite les pages vides)
+    this._check(doc, 100);
 
-    // Entête annexe
-    doc.rect(0, 0, 595, 80).fill(C.navy);
+    // En-tête annexe — positionné relativement pour éviter les pages vides
+    const headerY = doc.y <= 50 ? 0 : doc.y;
+    doc.rect(0, headerY, 595, 80).fill(C.navy);
     doc.fontSize(14).fillColor(C.gold).font('Helvetica-Bold')
-       .text("ANNEXE A — PROCÈS-VERBAL D'ACCEPTATION", LEFT, 28, { lineBreak: false });
+       .text("ANNEXE A — PROCÈS-VERBAL D'ACCEPTATION", LEFT, headerY + 28, { lineBreak: false });
     const nomEntreprise = settings?.entreprise?.nom || "ELIJAH'GOD";
     const dateEv = devis.evenement?.date
       ? new Date(devis.evenement.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : '—';
     doc.fontSize(8.5).fillColor(C.white).font('Helvetica')
-       .text(`Prestation ${nomEntreprise} — Événement du ${dateEv}`, LEFT, 50, { lineBreak: false });
+       .text(`Prestation ${nomEntreprise} — Événement du ${dateEv}`, LEFT, headerY + 50, { lineBreak: false });
 
-    doc.y = 96;
+    doc.y = headerY + 96;
 
     // Description
     doc.fontSize(8.5).fillColor(C.textMid).font('Helvetica')
