@@ -40,7 +40,7 @@ class PDFService {
 
         const doc = new PDFDocument({
           size: 'A4',
-          margins: { top: 45, bottom: FOOTER + 20, left: LEFT, right: 45 },
+          margins: { top: 45, bottom: 0, left: LEFT, right: 45 },
           info: {
             Title: `Devis ${devis.numeroDevis}`,
             Author: "ELIJAH'GOD",

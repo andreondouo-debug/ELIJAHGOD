@@ -41,7 +41,7 @@ class ContractService {
   _creerDoc(devis, settings) {
     const doc = new PDFDocument({
       size: 'A4',
-      margins: { top: 40, bottom: FOOTER + 20, left: LEFT, right: 45 },
+      margins: { top: 40, bottom: 0, left: LEFT, right: 45 },
       info: {
         Title: `Contrat ${devis.numeroContrat || devis.numeroDevis}`,
         Author: "ELIJAH'GOD",
@@ -586,22 +586,23 @@ class ContractService {
 
   // ── ANNEXE A — PV d'acceptation ───────────────────────────────────────────────
   _annexePV(doc, devis, settings) {
-    // Vérifier l'espace pour l'en-tête de l'annexe (évite les pages vides)
-    this._check(doc, 100);
+    // Nouvelle page pour l'annexe, sauf si on est déjà sur une page vierge
+    if (doc.y > 100) {
+      doc.addPage();
+    }
 
-    // En-tête annexe — positionné relativement pour éviter les pages vides
-    const headerY = doc.y <= 50 ? 0 : doc.y;
-    doc.rect(0, headerY, 595, 80).fill(C.navy);
+    // Entête annexe
+    doc.rect(0, 0, 595, 80).fill(C.navy);
     doc.fontSize(14).fillColor(C.gold).font('Helvetica-Bold')
-       .text("ANNEXE A — PROCÈS-VERBAL D'ACCEPTATION", LEFT, headerY + 28, { lineBreak: false });
+       .text("ANNEXE A — PROCÈS-VERBAL D'ACCEPTATION", LEFT, 28, { lineBreak: false });
     const nomEntreprise = settings?.entreprise?.nom || "ELIJAH'GOD";
     const dateEv = devis.evenement?.date
       ? new Date(devis.evenement.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : '—';
     doc.fontSize(8.5).fillColor(C.white).font('Helvetica')
-       .text(`Prestation ${nomEntreprise} — Événement du ${dateEv}`, LEFT, headerY + 50, { lineBreak: false });
+       .text(`Prestation ${nomEntreprise} — Événement du ${dateEv}`, LEFT, 50, { lineBreak: false });
 
-    doc.y = headerY + 96;
+    doc.y = 96;
 
     // Description
     doc.fontSize(8.5).fillColor(C.textMid).font('Helvetica')
