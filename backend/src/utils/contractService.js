@@ -55,6 +55,7 @@ class ContractService {
     const placerFooter = () => {
       if (isAddingFooter) return;
       isAddingFooter = true;
+      const savedY = doc.y; // Sauvegarder la position du curseur
       const fy = PAGE_H - FOOTER;
       doc.save();
       doc.moveTo(LEFT, fy).lineTo(RIGHT, fy)
@@ -68,6 +69,7 @@ class ContractService {
       );
       isAddingFooter = false;
       doc.restore();
+      doc.y = savedY; // Restaurer la position du curseur
     };
     doc.on('pageAdded', placerFooter);
 
@@ -142,7 +144,11 @@ class ContractService {
 
   // ── Contrôle espace ─────────────────────────────────────────────────────────
   _check(doc, needed) {
-    if (doc.y + needed > PAGE_H - FOOTER - 20) doc.addPage();
+    if (doc.y + needed > PAGE_H - FOOTER - 20) {
+      // Ne pas ajouter de page si on est déjà en haut d'une page fraîche
+      if (doc.y <= 60) return;
+      doc.addPage();
+    }
   }
 
   // ── Titre de section ────────────────────────────────────────────────────────
@@ -580,7 +586,10 @@ class ContractService {
 
   // ── ANNEXE A — PV d'acceptation ───────────────────────────────────────────────
   _annexePV(doc, devis, settings) {
-    doc.addPage();
+    // Nouvelle page pour l'annexe, sauf si on est déjà sur une page vierge
+    if (doc.y > 100) {
+      doc.addPage();
+    }
 
     // Entête annexe
     doc.rect(0, 0, 595, 80).fill(C.navy);

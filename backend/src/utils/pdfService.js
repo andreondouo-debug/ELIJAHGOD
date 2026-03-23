@@ -58,12 +58,12 @@ class PDFService {
           if (isAddingFooter) return; // Éviter la boucle infinie
           isAddingFooter = true;
           
+          const savedY = doc.y; // Sauvegarder la position du curseur
           const fy = PAGE_H - FOOTER;
           doc.save();
           doc.moveTo(LEFT, fy).lineTo(RIGHT, fy)
              .strokeColor(C.gold).lineWidth(0.4).stroke();
           doc.fontSize(7).fillColor(C.textLight).font('Helvetica');
-          // Utiliser des coordonnées fixes pour éviter l'ajout de pages
           const footerText = settings?.entreprise?.nom 
             ? `${settings.entreprise.nom} · DJ & Sonorisation Événementielle · ${settings?.contact?.email || 'contact@elijahgod.com'}`
             : "ELIJAH'GOD · DJ & Sonorisation Événementielle · contact@elijahgod.com";
@@ -71,9 +71,10 @@ class PDFService {
           doc.text(footerText, LEFT, footerY, { 
             width: WIDTH, 
             align: 'center',
-            lineBreak: false // Empêcher les sauts de ligne automatiques
+            lineBreak: false
           });
           doc.restore();
+          doc.y = savedY; // Restaurer la position du curseur
           
           isAddingFooter = false;
         };
@@ -111,6 +112,8 @@ class PDFService {
   // ── Vérification espace page ────────────────────────────────────────────────
   _check(doc, needed) {
     if (doc.y + needed > PAGE_H - FOOTER - 15) {
+      // Ne pas ajouter de page si on est déjà en haut d'une page fraîche
+      if (doc.y <= 60) return;
       doc.addPage();
     }
   }
