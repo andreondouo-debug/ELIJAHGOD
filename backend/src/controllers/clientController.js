@@ -121,9 +121,8 @@ exports.connexion = async (req, res) => {
       });
     }
 
-    // Mettre à jour la dernière connexion
-    client.derniereConnexion = new Date();
-    await client.save();
+    // Mettre à jour la dernière connexion (sans revalider ni re-hasher)
+    await Client.findByIdAndUpdate(client._id, { derniereConnexion: new Date() });
 
     // Générer le JWT
     const token = jwt.sign(
