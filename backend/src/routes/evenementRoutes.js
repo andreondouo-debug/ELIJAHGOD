@@ -60,11 +60,13 @@ router.post('/ical-token', authAdminOuPrestataire, evenementController.genererIc
 router.get('/feed/:token', evenementController.feedIcal); // ← pas d'auth, le token est dans l'URL
 
 // Programme (étapes)
+router.put('/:id/programme/reorder', authAdminOuPrestataire, evenementController.reorderProgramme);
 router.post('/:id/programme', authAdminOuPrestataire, evenementController.ajouterEtape);
 router.put('/:id/programme/:etapeId', authAdminOuPrestataire, evenementController.majEtape);
 router.delete('/:id/programme/:etapeId', authAdminOuPrestataire, evenementController.supprimerEtape);
 
 // Todos
+router.put('/:id/todos/reorder', authAdminOuPrestataire, evenementController.reorderTodos);
 router.post('/:id/todos', authAdminOuPrestataire, evenementController.ajouterTodo);
 router.put('/:id/todos/:todoId', authAdminOuPrestataire, evenementController.majTodo);
 router.delete('/:id/todos/:todoId', authAdminOuPrestataire, evenementController.supprimerTodo);

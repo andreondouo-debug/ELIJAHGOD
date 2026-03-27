@@ -598,6 +598,64 @@ exports.changerStatut = async (req, res) => {
   }
 };
 
+// ==============================
+// RÉORDONNER PROGRAMME & TODOS
+// ==============================
+
+// @desc    Réordonner les étapes du programme
+// @route   PUT /api/evenements/:id/programme/reorder
+exports.reorderProgramme = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
+    const { ordreIds } = req.body; // Array d'IDs dans le nouvel ordre
+    if (!Array.isArray(ordreIds)) return res.status(400).json({ success: false, message: 'ordreIds requis (array)' });
+
+    ordreIds.forEach((id, index) => {
+      const etape = evenement.programme.id(id);
+      if (etape) etape.ordre = index;
+    });
+    evenement.programme.sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur reorderProgramme:', error);
+    res.status(500).json({ success: false, message: 'Erreur' });
+  }
+};
+
+// @desc    Réordonner les todos
+// @route   PUT /api/evenements/:id/todos/reorder
+exports.reorderTodos = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
+    const { ordreIds } = req.body;
+    if (!Array.isArray(ordreIds)) return res.status(400).json({ success: false, message: 'ordreIds requis (array)' });
+
+    ordreIds.forEach((id, index) => {
+      const todo = evenement.todos.id(id);
+      if (todo) todo.ordre = index;
+    });
+    evenement.todos.sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur reorderTodos:', error);
+    res.status(500).json({ success: false, message: 'Erreur' });
+  }
+};
+
 // ===========================================
 // 📤 EXPORT iCAL (.ics)
 // ===========================================

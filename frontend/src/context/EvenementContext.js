@@ -136,6 +136,16 @@ export function EvenementProvider({ children }) {
     }
   };
 
+  const reorderProgramme = async (evenementId, ordreIds) => {
+    try {
+      const res = await axios.put(`${API_URL}/api/evenements/${evenementId}/programme/reorder`, { ordreIds }, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true, data: res.data.data };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
   // ==============================
   // TODOS
   // ==============================
@@ -165,6 +175,16 @@ export function EvenementProvider({ children }) {
       const res = await axios.delete(`${API_URL}/api/evenements/${evenementId}/todos/${todoId}`, headers());
       if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
       return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
+  const reorderTodos = async (evenementId, ordreIds) => {
+    try {
+      const res = await axios.put(`${API_URL}/api/evenements/${evenementId}/todos/reorder`, { ordreIds }, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true, data: res.data.data };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Erreur' };
     }
@@ -275,8 +295,8 @@ export function EvenementProvider({ children }) {
     evenements, evenementActif, loading, error,
     chargerEvenements, chargerEvenement, creerEvenement,
     majEvenement, supprimerEvenement, changerStatut,
-    ajouterEtape, majEtape, supprimerEtape,
-    ajouterTodo, majTodo, supprimerTodo,
+    ajouterEtape, majEtape, supprimerEtape, reorderProgramme,
+    ajouterTodo, majTodo, supprimerTodo, reorderTodos,
     ajouterOutil, majOutil, supprimerOutil,
     lierPrestation, delierPrestation,
     rechercherPrestataires, ajouterCollaborateur, majCollaborateur, supprimerCollaborateur,

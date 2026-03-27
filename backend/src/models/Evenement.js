@@ -17,7 +17,8 @@ const todoItemSchema = new mongoose.Schema({
   assigneA: {
     prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire' },
     nom: String
-  }
+  },
+  ordre: { type: Number, default: 0 }
 }, { _id: true });
 
 const etapeProgrammeSchema = new mongoose.Schema({

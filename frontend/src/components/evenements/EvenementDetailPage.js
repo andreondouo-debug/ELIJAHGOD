@@ -33,7 +33,8 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
     ajouterTodo, majTodo, supprimerTodo,
     ajouterOutil, majOutil, supprimerOutil, supprimerEvenement,
     lierPrestation, delierPrestation,
-    rechercherPrestataires, ajouterCollaborateur, majCollaborateur, supprimerCollaborateur
+    rechercherPrestataires, ajouterCollaborateur, majCollaborateur, supprimerCollaborateur,
+    reorderProgramme, reorderTodos
   } = useContext(EvenementContext);
 
   const [newTodo, setNewTodo] = useState('');
@@ -60,6 +61,14 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   // Todo assignation
   const [newTodoAssigne, setNewTodoAssigne] = useState('');
   const [newTodoAssigneId, setNewTodoAssigneId] = useState('');
+
+  // Édition étape
+  const [editingEtapeId, setEditingEtapeId] = useState(null);
+  const [editEtape, setEditEtape] = useState({});
+
+  // Édition todo
+  const [editingTodoId, setEditingTodoId] = useState(null);
+  const [editTodo, setEditTodo] = useState({});
 
   // Charger les prestations disponibles
   useEffect(() => {
@@ -186,6 +195,50 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
 
   const handleDeleteEtape = async (etapeId) => {
     await supprimerEtape(evt._id, etapeId);
+  };
+
+  // Édition inline étape
+  const startEditEtape = (etape) => {
+    setEditingEtapeId(etape._id);
+    setEditEtape({ titre: etape.titre, type: etape.type, heureDebut: etape.heureDebut || '', heureFin: etape.heureFin || '', description: etape.description || '', responsable: etape.responsable || '' });
+  };
+  const cancelEditEtape = () => { setEditingEtapeId(null); setEditEtape({}); };
+  const saveEditEtape = async () => {
+    if (!editEtape.titre?.trim()) return;
+    await majEtape(evt._id, editingEtapeId, editEtape);
+    setEditingEtapeId(null);
+    setEditEtape({});
+  };
+
+  // Réordonner étapes
+  const moveEtape = async (index, direction) => {
+    const programme = [...(evt.programme || [])];
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= programme.length) return;
+    [programme[index], programme[newIndex]] = [programme[newIndex], programme[index]];
+    await reorderProgramme(evt._id, programme.map(e => e._id));
+  };
+
+  // Édition inline todo
+  const startEditTodo = (todo) => {
+    setEditingTodoId(todo._id);
+    setEditTodo({ texte: todo.texte, priorite: todo.priorite || 'normale', assigneA: todo.assigneA || null });
+  };
+  const cancelEditTodo = () => { setEditingTodoId(null); setEditTodo({}); };
+  const saveEditTodo = async () => {
+    if (!editTodo.texte?.trim()) return;
+    await majTodo(evt._id, editingTodoId, editTodo);
+    setEditingTodoId(null);
+    setEditTodo({});
+  };
+
+  // Réordonner todos
+  const moveTodo = async (index, direction) => {
+    const todos = [...(evt.todos || [])];
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= todos.length) return;
+    [todos[index], todos[newIndex]] = [todos[newIndex], todos[index]];
+    await reorderTodos(evt._id, todos.map(t => t._id));
   };
 
   const handleStatutChange = async (statut) => {
@@ -384,7 +437,22 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                 <div className="evt-form-row">
                   <div className="evt-form-group">
                     <label className="evt-form-label">Responsable</label>
-                    <input className="evt-form-input" value={newEtape.responsable} onChange={e => setNewEtape(p => ({ ...p, responsable: e.target.value }))} placeholder="Nom du responsable" />
+                    <select className="evt-form-select" value={newEtape.responsable} onChange={e => {
+                      const val = e.target.value;
+                      if (val === '__externe__') {
+                        const nom = prompt('Nom du responsable externe :');
+                        if (nom) setNewEtape(p => ({ ...p, responsable: nom }));
+                      } else {
+                        setNewEtape(p => ({ ...p, responsable: val }));
+                      }
+                    }}>
+                      <option value="">— Aucun —</option>
+                      {evt.creePar?.nom && <option value={evt.creePar.nom}>{evt.creePar.nom} (propriétaire)</option>}
+                      {evt.collaborateurs?.map(c => (
+                        <option key={c.prestataireId} value={c.nom}>{c.nom}</option>
+                      ))}
+                      <option value="__externe__">+ Externe...</option>
+                    </select>
                   </div>
                   <div className="evt-form-group">
                     <label className="evt-form-label">Description</label>
@@ -401,29 +469,98 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
               </div>
             ) : (
               <div className="evt-timeline">
-                {evt.programme.map((etape) => (
+                {evt.programme.map((etape, idx) => (
                   <div key={etape._id} className="evt-timeline-item">
                     <div className={`evt-timeline-dot ${etape.type} ${etape.statut === 'termine' ? 'termine' : ''}`} />
-                    <div className="evt-timeline-header">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span className="evt-timeline-title">{etape.titre}</span>
-                        <span className={`evt-timeline-type-badge ${etape.type}`}>
-                          {ETAPES_TYPES.find(t => t.value === etape.type)?.icon} {etape.type.replace('_', ' ')}
-                        </span>
+
+                    {editingEtapeId === etape._id ? (
+                      /* ── Mode édition ── */
+                      <div style={{ flex: 1, background: 'rgba(212,175,55,0.05)', border: '1px solid var(--evt-border)', borderRadius: 'var(--evt-radius-sm)', padding: '0.8rem' }}>
+                        <div className="evt-form-row">
+                          <div className="evt-form-group">
+                            <label className="evt-form-label">Titre</label>
+                            <input className="evt-form-input" value={editEtape.titre} onChange={e => setEditEtape(p => ({ ...p, titre: e.target.value }))} />
+                          </div>
+                          <div className="evt-form-group">
+                            <label className="evt-form-label">Type</label>
+                            <select className="evt-form-select" value={editEtape.type} onChange={e => setEditEtape(p => ({ ...p, type: e.target.value }))}>
+                              {ETAPES_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="evt-form-row">
+                          <div className="evt-form-group">
+                            <label className="evt-form-label">Début</label>
+                            <input className="evt-form-input" type="time" value={editEtape.heureDebut} onChange={e => setEditEtape(p => ({ ...p, heureDebut: e.target.value }))} />
+                          </div>
+                          <div className="evt-form-group">
+                            <label className="evt-form-label">Fin</label>
+                            <input className="evt-form-input" type="time" value={editEtape.heureFin} onChange={e => setEditEtape(p => ({ ...p, heureFin: e.target.value }))} />
+                          </div>
+                        </div>
+                        <div className="evt-form-row">
+                          <div className="evt-form-group">
+                            <label className="evt-form-label">Responsable</label>
+                            <select className="evt-form-select" value={editEtape.responsable} onChange={e => {
+                              const val = e.target.value;
+                              if (val === '__externe__') {
+                                const nom = prompt('Nom du responsable externe :');
+                                if (nom) setEditEtape(p => ({ ...p, responsable: nom }));
+                              } else {
+                                setEditEtape(p => ({ ...p, responsable: val }));
+                              }
+                            }}>
+                              <option value="">— Aucun —</option>
+                              {evt.creePar?.nom && <option value={evt.creePar.nom}>{evt.creePar.nom} (propriétaire)</option>}
+                              {evt.collaborateurs?.map(c => (
+                                <option key={c.prestataireId} value={c.nom}>{c.nom}</option>
+                              ))}
+                              <option value="__externe__">+ Externe...</option>
+                            </select>
+                          </div>
+                          <div className="evt-form-group">
+                            <label className="evt-form-label">Description</label>
+                            <input className="evt-form-input" value={editEtape.description} onChange={e => setEditEtape(p => ({ ...p, description: e.target.value }))} />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+                          <button className="evt-btn-primary" onClick={saveEditEtape} style={{ fontSize: '0.8rem' }}>✅ Enregistrer</button>
+                          <button className="evt-btn-secondary" onClick={cancelEditEtape} style={{ fontSize: '0.8rem' }}>✕ Annuler</button>
+                        </div>
                       </div>
-                      <span className="evt-timeline-time">{etape.heureDebut}{etape.heureFin ? ` – ${etape.heureFin}` : ''}</span>
-                    </div>
-                    {etape.description && <div className="evt-timeline-desc">{etape.description}</div>}
-                    <div className="evt-timeline-actions">
-                      <button
-                        className={`evt-step-status ${etape.statut || 'a_faire'}`}
-                        onClick={() => handleCycleEtapeStatut(etape)}
-                        title="Cliquer pour changer le statut"
-                      >
-                        {etape.statut === 'termine' ? '✅' : etape.statut === 'en_cours' ? '▶️' : '⬜'} {(etape.statut || 'a_faire').replace('_', ' ')}
-                      </button>
-                      <button className="evt-btn-icon" onClick={() => handleDeleteEtape(etape._id)} title="Supprimer" style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}>✕</button>
-                    </div>
+                    ) : (
+                      /* ── Mode lecture ── */
+                      <>
+                        <div style={{ flex: 1 }}>
+                          <div className="evt-timeline-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span className="evt-timeline-title">{etape.titre}</span>
+                              <span className={`evt-timeline-type-badge ${etape.type}`}>
+                                {ETAPES_TYPES.find(t => t.value === etape.type)?.icon} {etape.type.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <span className="evt-timeline-time">{etape.heureDebut}{etape.heureFin ? ` – ${etape.heureFin}` : ''}</span>
+                          </div>
+                          {etape.description && <div className="evt-timeline-desc">{etape.description}</div>}
+                          {etape.responsable && <div style={{ fontSize: '0.78rem', color: 'var(--evt-gold)', marginTop: '0.2rem' }}>👤 {etape.responsable}</div>}
+                          <div className="evt-timeline-actions">
+                            <button
+                              className={`evt-step-status ${etape.statut || 'a_faire'}`}
+                              onClick={() => handleCycleEtapeStatut(etape)}
+                              title="Cliquer pour changer le statut"
+                            >
+                              {etape.statut === 'termine' ? '✅' : etape.statut === 'en_cours' ? '▶️' : '⬜'} {(etape.statut || 'a_faire').replace('_', ' ')}
+                            </button>
+                            <button className="evt-btn-icon" onClick={() => startEditEtape(etape)} title="Modifier" style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}>✏️</button>
+                            <button className="evt-btn-icon" onClick={() => moveEtape(idx, -1)} title="Monter" disabled={idx === 0}
+                              style={{ width: '28px', height: '28px', fontSize: '0.75rem', opacity: idx === 0 ? 0.3 : 1 }}>▲</button>
+                            <button className="evt-btn-icon" onClick={() => moveEtape(idx, 1)} title="Descendre" disabled={idx === evt.programme.length - 1}
+                              style={{ width: '28px', height: '28px', fontSize: '0.75rem', opacity: idx === evt.programme.length - 1 ? 0.3 : 1 }}>▼</button>
+                            <button className="evt-btn-icon" onClick={() => handleDeleteEtape(etape._id)} title="Supprimer" style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}>✕</button>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -450,21 +587,67 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
 
             {/* Liste */}
             <ul className="evt-todo-list">
-              {evt.todos?.map(todo => (
+              {evt.todos?.map((todo, idx) => (
                 <li key={todo._id} className="evt-todo-item">
-                  <div className={`evt-todo-checkbox ${todo.fait ? 'done' : ''}`} onClick={() => handleToggleTodo(todo)}>
-                    {todo.fait && '✓'}
-                  </div>
-                  <div className="evt-todo-body">
-                    <div className={`evt-todo-text ${todo.fait ? 'done' : ''}`}>{todo.texte}</div>
-                    <div className="evt-todo-meta">
-                      <span className={`evt-todo-priority ${todo.priorite || 'normale'}`}>{todo.priorite || 'normale'}</span>
-                      {todo.categorie && todo.categorie !== 'general' && <span>📁 {todo.categorie}</span>}
-                      {todo.assigneA?.nom && <span style={{ color: 'var(--evt-gold)', fontSize: '0.75rem' }}>👤 {todo.assigneA.nom}</span>}
-                      {todo.completeLe && <span>✓ {new Date(todo.completeLe).toLocaleDateString('fr-FR')}</span>}
+                  {editingTodoId === todo._id ? (
+                    /* ── Mode édition todo ── */
+                    <div style={{ flex: 1, background: 'rgba(212,175,55,0.05)', border: '1px solid var(--evt-border)', borderRadius: 'var(--evt-radius-sm)', padding: '0.6rem' }}>
+                      <input className="evt-form-input" value={editTodo.texte} onChange={e => setEditTodo(p => ({ ...p, texte: e.target.value }))}
+                        style={{ marginBottom: '0.4rem' }} />
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <select className="evt-form-select" value={editTodo.priorite} onChange={e => setEditTodo(p => ({ ...p, priorite: e.target.value }))}
+                          style={{ width: 'auto', minWidth: '100px', fontSize: '0.8rem' }}>
+                          {PRIORITES.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                        <select className="evt-form-select" value={editTodo.assigneA?.prestataireId || editTodo.assigneA?.nom || ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val === '__externe__') {
+                              const nom = prompt('Nom du prestataire externe :');
+                              if (nom) setEditTodo(p => ({ ...p, assigneA: { nom } }));
+                            } else if (val) {
+                              const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
+                              if (collab) setEditTodo(p => ({ ...p, assigneA: { prestataireId: collab.prestataireId, nom: collab.nom } }));
+                            } else {
+                              setEditTodo(p => ({ ...p, assigneA: null }));
+                            }
+                          }}
+                          style={{ width: 'auto', minWidth: '120px', fontSize: '0.8rem' }}>
+                          <option value="">Non assigné</option>
+                          {evt.collaborateurs?.map(c => (
+                            <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
+                          ))}
+                          <option value="__externe__">+ Externe...</option>
+                        </select>
+                        <button className="evt-btn-primary" onClick={saveEditTodo} style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }}>✅</button>
+                        <button className="evt-btn-secondary" onClick={cancelEditTodo} style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }}>✕</button>
+                      </div>
                     </div>
-                  </div>
-                  <button className="evt-btn-icon" onClick={() => handleDeleteTodo(todo._id)} style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}>✕</button>
+                  ) : (
+                    /* ── Mode lecture todo ── */
+                    <>
+                      <div className={`evt-todo-checkbox ${todo.fait ? 'done' : ''}`} onClick={() => handleToggleTodo(todo)}>
+                        {todo.fait && '✓'}
+                      </div>
+                      <div className="evt-todo-body" style={{ flex: 1 }}>
+                        <div className={`evt-todo-text ${todo.fait ? 'done' : ''}`}>{todo.texte}</div>
+                        <div className="evt-todo-meta">
+                          <span className={`evt-todo-priority ${todo.priorite || 'normale'}`}>{todo.priorite || 'normale'}</span>
+                          {todo.categorie && todo.categorie !== 'general' && <span>📁 {todo.categorie}</span>}
+                          {todo.assigneA?.nom && <span style={{ color: 'var(--evt-gold)', fontSize: '0.75rem' }}>👤 {todo.assigneA.nom}</span>}
+                          {todo.completeLe && <span>✓ {new Date(todo.completeLe).toLocaleDateString('fr-FR')}</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.15rem', alignItems: 'center' }}>
+                        <button className="evt-btn-icon" onClick={() => startEditTodo(todo)} title="Modifier" style={{ width: '26px', height: '26px', fontSize: '0.7rem' }}>✏️</button>
+                        <button className="evt-btn-icon" onClick={() => moveTodo(idx, -1)} title="Monter" disabled={idx === 0}
+                          style={{ width: '26px', height: '26px', fontSize: '0.7rem', opacity: idx === 0 ? 0.3 : 1 }}>▲</button>
+                        <button className="evt-btn-icon" onClick={() => moveTodo(idx, 1)} title="Descendre" disabled={idx === (evt.todos?.length || 0) - 1}
+                          style={{ width: '26px', height: '26px', fontSize: '0.7rem', opacity: idx === (evt.todos?.length || 0) - 1 ? 0.3 : 1 }}>▼</button>
+                        <button className="evt-btn-icon" onClick={() => handleDeleteTodo(todo._id)} style={{ width: '26px', height: '26px', fontSize: '0.7rem' }}>✕</button>
+                      </div>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
