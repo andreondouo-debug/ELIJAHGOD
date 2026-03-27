@@ -236,9 +236,28 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
         <div className="evt-section">
           <div className="evt-section-header">
             <h3>📋 Programme de l'événement</h3>
-            <button className="evt-btn-secondary" onClick={() => setShowAddEtape(!showAddEtape)} style={{ fontSize: '0.8rem' }}>
-              {showAddEtape ? '✕ Annuler' : '➕ Ajouter'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <button className="evt-sync-btn ical" onClick={async () => {
+                try {
+                  const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
+                  const res = await fetch(`${API_URL}/api/evenements/${evt._id}/programme-pdf`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  const blob = await res.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `programme-${evt.titre.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                } catch (e) { console.error('Erreur PDF programme:', e); }
+              }} style={{ fontSize: '0.78rem' }} title="Télécharger le programme en PDF">
+                🖨️ Imprimer PDF
+              </button>
+              <button className="evt-btn-secondary" onClick={() => setShowAddEtape(!showAddEtape)} style={{ fontSize: '0.8rem' }}>
+                {showAddEtape ? '✕ Annuler' : '➕ Ajouter'}
+              </button>
+            </div>
           </div>
           <div className="evt-section-body">
             {showAddEtape && (

@@ -74,4 +74,7 @@ router.delete('/:id/outils/:outilId', authAdminOuPrestataire, evenementControlle
 // Rappels email
 router.put('/rappels/config', authAdminOuPrestataire, evenementController.majRappelsConfig);
 
+// Export PDF programme
+router.get('/:id/programme-pdf', authAdminOuPrestataire, evenementController.exportProgrammePDF);
+
 module.exports = router;

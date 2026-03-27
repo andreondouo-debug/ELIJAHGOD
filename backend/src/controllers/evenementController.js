@@ -1,5 +1,7 @@
 const Evenement = require('../models/Evenement');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+const pdfService = require('../utils/pdfService');
 
 /**
  * 📅 CONTROLLER ÉVÉNEMENTS / AGENDA
@@ -651,5 +653,45 @@ exports.majRappelsConfig = async (req, res) => {
   } catch (error) {
     console.error('❌ Erreur majRappelsConfig:', error);
     res.status(500).json({ success: false, message: 'Erreur mise à jour rappels' });
+  }
+};
+
+// ===========================================
+// 📄 EXPORT PDF PROGRAMME
+// ===========================================
+
+// @desc    Générer le PDF du programme d'un événement
+// @route   GET /api/evenements/:id/programme-pdf
+exports.exportProgrammePDF = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) {
+      return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+    }
+
+    // Récupérer les settings pour l'en-tête
+    let settings = {};
+    try {
+      const Settings = require('../models/Settings');
+      settings = await Settings.findOne() || {};
+    } catch (e) { /* pas de settings */ }
+
+    const safeTitle = evenement.titre.replace(/[^a-zA-Z0-9à-ü]/gi, '_');
+    const filename = `programme-${safeTitle}.pdf`;
+    const outputPath = path.join(__dirname, '../../uploads/programmes', filename);
+
+    await pdfService.genererProgrammePDF(evenement, outputPath, settings);
+
+    res.download(outputPath, filename, (err) => {
+      if (err) {
+        console.error('❌ Erreur téléchargement PDF programme:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: 'Erreur téléchargement' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur exportProgrammePDF:', error);
+    res.status(500).json({ success: false, message: 'Erreur génération PDF programme' });
   }
 };

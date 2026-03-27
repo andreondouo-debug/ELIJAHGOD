@@ -440,6 +440,307 @@ class PDFService {
     doc.y = sigY + 48;
   }
 
+  // ==========================================================================
+  // 📋 PROGRAMME ÉVÉNEMENT — PDF
+  // ==========================================================================
+
+  async genererProgrammePDF(evt, outputPath, settings = {}) {
+    return new Promise((resolve, reject) => {
+      try {
+        const dir = path.dirname(outputPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+        const doc = new PDFDocument({
+          size: 'A4',
+          margins: { top: 45, bottom: 0, left: LEFT, right: 45 },
+          info: {
+            Title: `Programme - ${evt.titre}`,
+            Author: "ELIJAH'GOD",
+            Subject: 'Programme événementiel',
+          },
+          autoFirstPage: true,
+        });
+
+        const stream = fs.createWriteStream(outputPath);
+        doc.pipe(stream);
+
+        // Pied de page
+        let isAddingFooter = false;
+        const placerFooter = () => {
+          if (isAddingFooter) return;
+          isAddingFooter = true;
+          const savedY = doc.y;
+          const fy = PAGE_H - FOOTER;
+          doc.save();
+          doc.moveTo(LEFT, fy).lineTo(RIGHT, fy)
+             .strokeColor(C.gold).lineWidth(0.4).stroke();
+          doc.fontSize(7).fillColor(C.textLight).font('Helvetica');
+          const footerText = settings?.entreprise?.nom
+            ? `${settings.entreprise.nom} · Programme événementiel · ${settings?.contact?.email || 'contact@elijahgod.com'}`
+            : "ELIJAH'GOD · Programme événementiel · contact@elijahgod.com";
+          doc.text(footerText, LEFT, fy + 8, { width: WIDTH, align: 'center', lineBreak: false });
+          doc.restore();
+          doc.y = savedY;
+          isAddingFooter = false;
+        };
+        doc.on('pageAdded', placerFooter);
+
+        // ── EN-TÊTE ──
+        this._progEntete(doc, evt, settings);
+
+        // ── INFOS ÉVÉNEMENT ──
+        this._progInfosEvenement(doc, evt);
+
+        // ── PROGRAMME / TIMELINE ──
+        this._progTableauEtapes(doc, evt);
+
+        // ── BOÎTE À OUTILS ──
+        if (evt.boiteAOutils?.length > 0) {
+          this._progTableauOutils(doc, evt);
+        }
+
+        // ── TODO LIST ──
+        if (evt.todos?.length > 0) {
+          this._progTableauTodos(doc, evt);
+        }
+
+        // ── NOTES ──
+        if (evt.notes) {
+          this._progNotes(doc, evt);
+        }
+
+        placerFooter();
+        doc.end();
+
+        stream.on('finish', () => {
+          console.log('✅ PDF programme généré:', outputPath);
+          resolve(outputPath);
+        });
+        stream.on('error', reject);
+      } catch (error) {
+        console.error('❌ Erreur génération PDF programme:', error);
+        reject(error);
+      }
+    });
+  }
+
+  // ── En-tête programme ──
+  _progEntete(doc, evt, settings = {}) {
+    // Bande marine
+    doc.rect(0, 0, 595, 108).fill(C.navy);
+
+    // Logo
+    let nomX = LEFT;
+    if (fs.existsSync(LOGO_PATH)) {
+      try {
+        doc.image(LOGO_PATH, LEFT, 24, { height: 62 });
+        nomX = LEFT + 75;
+      } catch (e) { /* logo introuvable */ }
+    }
+
+    // Nom & sous-titre
+    const nomEntreprise = settings?.entreprise?.nom || "ELIJAH'GOD";
+    const slogan = settings?.entreprise?.slogan || 'DJ · Sonorisation · Animation Événementielle';
+    doc.fontSize(21).fillColor(C.white).font('Helvetica-Bold')
+       .text(nomEntreprise, nomX, 30, { lineBreak: false });
+    doc.fontSize(8.5).fillColor(C.gold).font('Helvetica')
+       .text(slogan, nomX, 56, { lineBreak: false });
+
+    // Coordonnées à droite
+    const email = settings?.contact?.email || 'contact@elijahgod.com';
+    const telephone = settings?.contact?.telephone || '+33 X XX XX XX XX';
+    doc.fontSize(8).fillColor(C.white).font('Helvetica')
+       .text(email, LEFT, 28, { width: WIDTH, align: 'right', lineBreak: false })
+       .text(telephone, LEFT, 41, { width: WIDTH, align: 'right', lineBreak: false });
+
+    // Bande titre PROGRAMME
+    doc.rect(0, 108, 595, 40).fill(C.navyLight);
+    doc.fontSize(18).fillColor(C.gold).font('Helvetica-Bold')
+       .text('PROGRAMME', LEFT, 117, { lineBreak: false });
+    doc.fontSize(8.5).fillColor(C.white).font('Helvetica')
+       .text(evt.titre, LEFT, 118, { width: WIDTH - 5, align: 'right', lineBreak: false });
+    const dateStr = `Date : ${this._formaterDate(evt.dateDebut)}`;
+    doc.fontSize(7.5).fillColor(C.gold)
+       .text(dateStr, LEFT, 130, { width: WIDTH, align: 'right', lineBreak: false });
+
+    doc.y = 162;
+  }
+
+  // ── Infos événement ──
+  _progInfosEvenement(doc, evt) {
+    this._check(doc, 90);
+    const y = doc.y + 8;
+    const bW = WIDTH;
+
+    doc.rect(LEFT, y, bW, 76).fill(C.bgSection);
+    doc.rect(LEFT, y, 3, 76).fill(C.gold);
+
+    doc.fontSize(7.5).fillColor(C.gold).font('Helvetica-Bold')
+       .text('DÉTAILS ÉVÉNEMENT', LEFT + 10, y + 8);
+
+    const col2 = LEFT + WIDTH / 2;
+    doc.fontSize(8.5).fillColor(C.textMid).font('Helvetica');
+
+    // Type
+    if (evt.type) {
+      doc.fillColor(C.text).font('Helvetica-Bold')
+         .text('Type :', LEFT + 10, y + 24, { continued: true })
+         .font('Helvetica').fillColor(C.textMid).text(`  ${evt.type}`);
+    }
+
+    // Date
+    const dateEvt = this._formaterDate(evt.dateDebut);
+    doc.fillColor(C.text).font('Helvetica-Bold')
+       .text('Date :', col2, y + 24, { lineBreak: false, continued: true })
+       .font('Helvetica').fillColor(C.textMid).text(`  ${dateEvt}`);
+
+    // Horaires
+    doc.fillColor(C.text).font('Helvetica-Bold')
+       .text('Horaires :', LEFT + 10, y + 38, { continued: true })
+       .font('Helvetica').fillColor(C.textMid)
+       .text(`  ${evt.heureDebut || ''} – ${evt.heureFin || ''}`);
+
+    // Statut
+    doc.fillColor(C.text).font('Helvetica-Bold')
+       .text('Statut :', col2, y + 38, { lineBreak: false, continued: true })
+       .font('Helvetica').fillColor(C.textMid).text(`  ${(evt.statut || '').replace('_', ' ')}`);
+
+    // Lieu
+    const lieu = evt.lieu ? [evt.lieu.nom, evt.lieu.adresse, evt.lieu.ville].filter(Boolean).join(', ') : '';
+    if (lieu) {
+      doc.fillColor(C.text).font('Helvetica-Bold')
+         .text('Lieu :', LEFT + 10, y + 51, { continued: true })
+         .font('Helvetica').fillColor(C.textMid).text(`  ${lieu}`);
+    }
+
+    // Invités
+    if (evt.nbInvites) {
+      doc.fillColor(C.text).font('Helvetica-Bold')
+         .text('Invités :', col2, y + 51, { lineBreak: false, continued: true })
+         .font('Helvetica').fillColor(C.textMid).text(`  ${evt.nbInvites}`);
+    }
+
+    doc.y = y + 88;
+  }
+
+  // ── Tableau des étapes ──
+  _progTableauEtapes(doc, evt) {
+    const programme = (evt.programme || []).sort((a, b) => {
+      if (a.heureDebut && b.heureDebut) return a.heureDebut.localeCompare(b.heureDebut);
+      return (a.ordre || 0) - (b.ordre || 0);
+    });
+
+    const TYPES_ICONS = {
+      transport: '🚛', installation: '🔧', mise_en_place: '📐',
+      prestation: '🎵', rangement: '📦', autre: '📌'
+    };
+
+    const cols = [
+      { label: 'Horaire',     key: 'horaire',     x: 5,   w: 80,  align: 'center' },
+      { label: 'Type',        key: 'type',        x: 90,  w: 80,  align: 'center' },
+      { label: 'Étape',       key: 'titre',       x: 175, w: 170 },
+      { label: 'Responsable', key: 'responsable', x: 350, w: 80 },
+      { label: 'Statut',      key: 'statut',      x: 435, w: 65,  align: 'center' },
+    ];
+    this._tableauEntetes(doc, 'Programme de l\'événement', cols);
+
+    if (programme.length === 0) {
+      this._check(doc, 30);
+      doc.fontSize(9).fillColor(C.textLight).font('Helvetica')
+         .text('Aucune étape définie', LEFT + 5, doc.y + 8);
+      doc.y += 30;
+    } else {
+      programme.forEach((etape, i) => {
+        const horaire = etape.heureDebut
+          ? `${etape.heureDebut}${etape.heureFin ? ' – ' + etape.heureFin : ''}`
+          : '—';
+        const typeLabel = `${TYPES_ICONS[etape.type] || '📌'} ${(etape.type || 'autre').replace('_', ' ')}`;
+        const statutLabel = etape.statut === 'termine' ? '✅ Terminé'
+          : etape.statut === 'en_cours' ? '▶️ En cours'
+          : '⬜ À faire';
+
+        this._tableauLigne(doc, cols, {
+          horaire,
+          type: typeLabel,
+          titre: etape.titre,
+          responsable: etape.responsable || '—',
+          statut: statutLabel,
+        }, i % 2 === 1);
+
+        // Description sous la ligne
+        if (etape.description) {
+          this._check(doc, 18);
+          const descY = doc.y;
+          doc.rect(LEFT, descY, WIDTH, 16).fill('#f5f4f0');
+          doc.fontSize(7.5).fillColor(C.textMid).font('Helvetica')
+             .text(`→ ${etape.description}`, LEFT + 15, descY + 4, { width: WIDTH - 25 });
+          doc.y = descY + 16;
+        }
+      });
+    }
+  }
+
+  // ── Tableau boîte à outils ──
+  _progTableauOutils(doc, evt) {
+    const cols = [
+      { label: 'Matériel / Outil',  key: 'nom',       x: 5,   w: 200 },
+      { label: 'Catégorie',         key: 'categorie', x: 210, w: 120, align: 'center' },
+      { label: 'Quantité',          key: 'quantite',  x: 335, w: 70,  align: 'center' },
+      { label: 'Vérifié',           key: 'verifie',   x: 410, w: 90,  align: 'center' },
+    ];
+    this._tableauEntetes(doc, 'Boîte à outils', cols);
+
+    evt.boiteAOutils.forEach((outil, i) => {
+      this._tableauLigne(doc, cols, {
+        nom: outil.nom,
+        categorie: outil.categorie || '—',
+        quantite: outil.quantite || 1,
+        verifie: outil.verifie ? '✅ Oui' : '⬜ Non',
+      }, i % 2 === 1);
+    });
+  }
+
+  // ── Tableau todos ──
+  _progTableauTodos(doc, evt) {
+    const cols = [
+      { label: 'Tâche',    key: 'texte',    x: 5,   w: 280 },
+      { label: 'Priorité', key: 'priorite', x: 290, w: 100, align: 'center' },
+      { label: 'Statut',   key: 'statut',   x: 395, w: 100, align: 'center' },
+    ];
+    this._tableauEntetes(doc, 'Liste des tâches', cols);
+
+    const totalTodos = evt.todos.length;
+    const todosFaits = evt.todos.filter(t => t.fait).length;
+
+    evt.todos.forEach((todo, i) => {
+      this._tableauLigne(doc, cols, {
+        texte: todo.texte,
+        priorite: todo.priorite || 'normale',
+        statut: todo.fait ? '✅ Fait' : '⬜ À faire',
+      }, i % 2 === 1);
+    });
+
+    // Barre progression
+    this._check(doc, 30);
+    const barY = doc.y + 4;
+    doc.rect(LEFT, barY, WIDTH, 22).fill(C.goldLight);
+    doc.fontSize(8.5).fillColor(C.navy).font('Helvetica-Bold')
+       .text(`Progression : ${todosFaits}/${totalTodos} tâche(s) complétée(s) — ${totalTodos > 0 ? Math.round((todosFaits / totalTodos) * 100) : 0}%`, LEFT + 8, barY + 6);
+    doc.y = barY + 22;
+  }
+
+  // ── Notes ──
+  _progNotes(doc, evt) {
+    this._check(doc, 60);
+    const y = doc.y + 14;
+    doc.rect(LEFT, y, WIDTH, 2).fill(C.gold);
+    doc.fontSize(9).fillColor(C.gold).font('Helvetica-Bold')
+       .text('NOTES', LEFT, y + 7);
+    doc.fontSize(8.5).fillColor(C.textMid).font('Helvetica')
+       .text(evt.notes, LEFT + 6, y + 22, { width: WIDTH - 12 });
+    doc.y += 20;
+  }
+
   // ── HELPERS ──────────────────────────────────────────────────────────────────
   _formaterDate(date) {
     if (!date) return '';
