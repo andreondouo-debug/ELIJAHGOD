@@ -40,7 +40,7 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const [newTodo, setNewTodo] = useState('');
   const [newTodoPriorite, setNewTodoPriorite] = useState('normale');
   const [newOutil, setNewOutil] = useState({ nom: '', categorie: '', quantite: 1 });
-  const [newEtape, setNewEtape] = useState({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '', responsable: '' });
+  const [newEtape, setNewEtape] = useState({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '', responsables: [] });
   const [showAddEtape, setShowAddEtape] = useState(false);
   const [showAddOutil, setShowAddOutil] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -59,9 +59,8 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const [searchingCollab, setSearchingCollab] = useState(false);
   const searchTimerRef = useRef(null);
 
-  // Todo assignation
-  const [newTodoAssigne, setNewTodoAssigne] = useState('');
-  const [newTodoAssigneId, setNewTodoAssigneId] = useState('');
+  // Todo assignation multiple
+  const [newTodoAssignes, setNewTodoAssignes] = useState([]);
 
   // Édition étape
   const [editingEtapeId, setEditingEtapeId] = useState(null);
@@ -157,15 +156,13 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const handleAddTodo = async () => {
     if (!newTodo.trim()) return;
     const todoData = { texte: newTodo, priorite: newTodoPriorite };
-    if (newTodoAssigne) {
-      todoData.assigneA = { nom: newTodoAssigne };
-      if (newTodoAssigneId) todoData.assigneA.prestataireId = newTodoAssigneId;
+    if (newTodoAssignes.length > 0) {
+      todoData.assignesA = newTodoAssignes;
     }
     await ajouterTodo(evt._id, todoData);
     setNewTodo('');
     setNewTodoPriorite('normale');
-    setNewTodoAssigne('');
-    setNewTodoAssigneId('');
+    setNewTodoAssignes([]);
   };
 
   const handleToggleTodo = async (todo) => {
@@ -194,7 +191,7 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const handleAddEtape = async () => {
     if (!newEtape.titre.trim()) return;
     await ajouterEtape(evt._id, { ...newEtape, ordre: (evt.programme?.length || 0) });
-    setNewEtape({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '', responsable: '' });
+    setNewEtape({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '', responsables: [] });
     setShowAddEtape(false);
   };
 
@@ -212,12 +209,13 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   // Édition inline étape
   const startEditEtape = (etape) => {
     setEditingEtapeId(etape._id);
-    setEditEtape({ titre: etape.titre, type: etape.type, heureDebut: etape.heureDebut || '', heureFin: etape.heureFin || '', description: etape.description || '', responsable: etape.responsable || '' });
+    const resps = etape.responsables?.length > 0 ? etape.responsables : (etape.responsable ? [{ nom: etape.responsable }] : []);
+    setEditEtape({ titre: etape.titre, type: etape.type, heureDebut: etape.heureDebut || '', heureFin: etape.heureFin || '', description: etape.description || '', responsables: resps });
   };
   const cancelEditEtape = () => { setEditingEtapeId(null); setEditEtape({}); };
   const saveEditEtape = async () => {
     if (!editEtape.titre?.trim()) return;
-    await majEtape(evt._id, editingEtapeId, editEtape);
+    await majEtape(evt._id, editingEtapeId, { ...editEtape, responsable: null });
     setEditingEtapeId(null);
     setEditEtape({});
   };
@@ -234,12 +232,13 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   // Édition inline todo
   const startEditTodo = (todo) => {
     setEditingTodoId(todo._id);
-    setEditTodo({ texte: todo.texte, priorite: todo.priorite || 'normale', assigneA: todo.assigneA || null });
+    const assigns = todo.assignesA?.length > 0 ? todo.assignesA : (todo.assigneA?.nom ? [todo.assigneA] : []);
+    setEditTodo({ texte: todo.texte, priorite: todo.priorite || 'normale', assignesA: assigns });
   };
   const cancelEditTodo = () => { setEditingTodoId(null); setEditTodo({}); };
   const saveEditTodo = async () => {
     if (!editTodo.texte?.trim()) return;
-    await majTodo(evt._id, editingTodoId, editTodo);
+    await majTodo(evt._id, editingTodoId, { ...editTodo, assigneA: null });
     setEditingTodoId(null);
     setEditTodo({});
   };
@@ -448,20 +447,37 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                 </div>
                 <div className="evt-form-row">
                   <div className="evt-form-group">
-                    <label className="evt-form-label">Responsable</label>
-                    <select className="evt-form-select" value={newEtape.responsable} onChange={e => {
+                    <label className="evt-form-label">Responsables</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.3rem' }}>
+                      {(newEtape.responsables || []).map((r, i) => (
+                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', background: 'rgba(212,175,55,0.15)', color: 'var(--evt-gold)', borderRadius: '12px', padding: '0.15rem 0.5rem', fontSize: '0.78rem' }}>
+                          👤 {r.nom}
+                          <span onClick={() => setNewEtape(p => ({ ...p, responsables: p.responsables.filter((_, idx) => idx !== i) }))} style={{ cursor: 'pointer', marginLeft: '0.2rem', fontWeight: 700 }}>✕</span>
+                        </span>
+                      ))}
+                    </div>
+                    <select className="evt-form-select" value="" onChange={e => {
                       const val = e.target.value;
+                      if (!val) return;
                       if (val === '__externe__') {
                         const nom = prompt('Nom du responsable externe :');
-                        if (nom) setNewEtape(p => ({ ...p, responsable: nom }));
+                        if (nom) setNewEtape(p => ({ ...p, responsables: [...(p.responsables || []), { nom }] }));
                       } else {
-                        setNewEtape(p => ({ ...p, responsable: val }));
+                        const already = (newEtape.responsables || []).some(r => r.nom === val || r.prestataireId === val);
+                        if (!already) {
+                          const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
+                          if (collab) {
+                            setNewEtape(p => ({ ...p, responsables: [...(p.responsables || []), { prestataireId: collab.prestataireId, nom: collab.nom }] }));
+                          } else if (val === evt.creePar?.nom) {
+                            setNewEtape(p => ({ ...p, responsables: [...(p.responsables || []), { nom: val }] }));
+                          }
+                        }
                       }
                     }}>
-                      <option value="">— Aucun —</option>
+                      <option value="">+ Ajouter un responsable...</option>
                       {evt.creePar?.nom && <option value={evt.creePar.nom}>{evt.creePar.nom} (propriétaire)</option>}
                       {evt.collaborateurs?.map(c => (
-                        <option key={c.prestataireId} value={c.nom}>{c.nom}</option>
+                        <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
                       ))}
                       <option value="__externe__">+ Externe...</option>
                     </select>
@@ -512,20 +528,37 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                         </div>
                         <div className="evt-form-row">
                           <div className="evt-form-group">
-                            <label className="evt-form-label">Responsable</label>
-                            <select className="evt-form-select" value={editEtape.responsable} onChange={e => {
+                            <label className="evt-form-label">Responsables</label>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.3rem' }}>
+                              {(editEtape.responsables || []).map((r, i) => (
+                                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', background: 'rgba(212,175,55,0.15)', color: 'var(--evt-gold)', borderRadius: '12px', padding: '0.15rem 0.5rem', fontSize: '0.78rem' }}>
+                                  👤 {r.nom}
+                                  <span onClick={() => setEditEtape(p => ({ ...p, responsables: p.responsables.filter((_, idx) => idx !== i) }))} style={{ cursor: 'pointer', marginLeft: '0.2rem', fontWeight: 700 }}>✕</span>
+                                </span>
+                              ))}
+                            </div>
+                            <select className="evt-form-select" value="" onChange={e => {
                               const val = e.target.value;
+                              if (!val) return;
                               if (val === '__externe__') {
                                 const nom = prompt('Nom du responsable externe :');
-                                if (nom) setEditEtape(p => ({ ...p, responsable: nom }));
+                                if (nom) setEditEtape(p => ({ ...p, responsables: [...(p.responsables || []), { nom }] }));
                               } else {
-                                setEditEtape(p => ({ ...p, responsable: val }));
+                                const already = (editEtape.responsables || []).some(r => r.nom === val || r.prestataireId === val);
+                                if (!already) {
+                                  const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
+                                  if (collab) {
+                                    setEditEtape(p => ({ ...p, responsables: [...(p.responsables || []), { prestataireId: collab.prestataireId, nom: collab.nom }] }));
+                                  } else if (val === evt.creePar?.nom) {
+                                    setEditEtape(p => ({ ...p, responsables: [...(p.responsables || []), { nom: val }] }));
+                                  }
+                                }
                               }
                             }}>
-                              <option value="">— Aucun —</option>
+                              <option value="">+ Ajouter un responsable...</option>
                               {evt.creePar?.nom && <option value={evt.creePar.nom}>{evt.creePar.nom} (propriétaire)</option>}
                               {evt.collaborateurs?.map(c => (
-                                <option key={c.prestataireId} value={c.nom}>{c.nom}</option>
+                                <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
                               ))}
                               <option value="__externe__">+ Externe...</option>
                             </select>
@@ -554,7 +587,13 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                             <span className="evt-timeline-time">{etape.heureDebut}{etape.heureFin ? ` – ${etape.heureFin}` : ''}</span>
                           </div>
                           {etape.description && <div className="evt-timeline-desc">{etape.description}</div>}
-                          {etape.responsable && <div style={{ fontSize: '0.78rem', color: 'var(--evt-gold)', marginTop: '0.2rem' }}>👤 {etape.responsable}</div>}
+                          {(etape.responsables?.length > 0 || etape.responsable) && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.2rem' }}>
+                              {(etape.responsables?.length > 0 ? etape.responsables : [{ nom: etape.responsable }]).map((r, i) => (
+                                <span key={i} style={{ fontSize: '0.78rem', color: 'var(--evt-gold)' }}>👤 {r.nom}</span>
+                              ))}
+                            </div>
+                          )}
                           <div className="evt-timeline-actions">
                             <button
                               className={`evt-step-status ${etape.statut || 'a_faire'}`}
@@ -611,26 +650,36 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                           style={{ width: 'auto', minWidth: '100px', fontSize: '0.8rem' }}>
                           {PRIORITES.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
-                        <select className="evt-form-select" value={editTodo.assigneA?.prestataireId || editTodo.assigneA?.nom || ''}
-                          onChange={e => {
+                        <div style={{ flex: 1, minWidth: '150px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem', marginBottom: '0.3rem' }}>
+                            {(editTodo.assignesA || []).map((a, i) => (
+                              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.15rem', background: 'rgba(212,175,55,0.15)', color: 'var(--evt-gold)', borderRadius: '10px', padding: '0.1rem 0.4rem', fontSize: '0.72rem' }}>
+                                👤 {a.nom}
+                                <span onClick={() => setEditTodo(p => ({ ...p, assignesA: p.assignesA.filter((_, idx) => idx !== i) }))} style={{ cursor: 'pointer', fontWeight: 700 }}>✕</span>
+                              </span>
+                            ))}
+                          </div>
+                          <select className="evt-form-select" value="" onChange={e => {
                             const val = e.target.value;
+                            if (!val) return;
                             if (val === '__externe__') {
                               const nom = prompt('Nom du prestataire externe :');
-                              if (nom) setEditTodo(p => ({ ...p, assigneA: { nom } }));
-                            } else if (val) {
-                              const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
-                              if (collab) setEditTodo(p => ({ ...p, assigneA: { prestataireId: collab.prestataireId, nom: collab.nom } }));
+                              if (nom) setEditTodo(p => ({ ...p, assignesA: [...(p.assignesA || []), { nom }] }));
                             } else {
-                              setEditTodo(p => ({ ...p, assigneA: null }));
+                              const already = (editTodo.assignesA || []).some(a => a.prestataireId === val);
+                              if (!already) {
+                                const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
+                                if (collab) setEditTodo(p => ({ ...p, assignesA: [...(p.assignesA || []), { prestataireId: collab.prestataireId, nom: collab.nom }] }));
+                              }
                             }
-                          }}
-                          style={{ width: 'auto', minWidth: '120px', fontSize: '0.8rem' }}>
-                          <option value="">Non assigné</option>
-                          {evt.collaborateurs?.map(c => (
-                            <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
-                          ))}
-                          <option value="__externe__">+ Externe...</option>
-                        </select>
+                          }} style={{ width: '100%', fontSize: '0.8rem' }}>
+                            <option value="">+ Assigner...</option>
+                            {evt.collaborateurs?.map(c => (
+                              <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
+                            ))}
+                            <option value="__externe__">+ Externe...</option>
+                          </select>
+                        </div>
                         <button className="evt-btn-primary" onClick={saveEditTodo} style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }}>✅</button>
                         <button className="evt-btn-secondary" onClick={cancelEditTodo} style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }}>✕</button>
                       </div>
@@ -646,7 +695,11 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                         <div className="evt-todo-meta">
                           <span className={`evt-todo-priority ${todo.priorite || 'normale'}`}>{todo.priorite || 'normale'}</span>
                           {todo.categorie && todo.categorie !== 'general' && <span>📁 {todo.categorie}</span>}
-                          {todo.assigneA?.nom && <span style={{ color: 'var(--evt-gold)', fontSize: '0.75rem' }}>👤 {todo.assigneA.nom}</span>}
+                          {(todo.assignesA?.length > 0 || todo.assigneA?.nom) && (
+                            (todo.assignesA?.length > 0 ? todo.assignesA : [todo.assigneA]).map((a, i) => (
+                              <span key={i} style={{ color: 'var(--evt-gold)', fontSize: '0.75rem' }}>👤 {a.nom}</span>
+                            ))
+                          )}
                           {todo.completeLe && <span>✓ {new Date(todo.completeLe).toLocaleDateString('fr-FR')}</span>}
                         </div>
                       </div>
@@ -671,34 +724,44 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
             )}
 
             {/* Ajout rapide */}
-            <div className="evt-todo-add">
-              <input value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Nouvelle tâche..."
-                onKeyDown={e => { if (e.key === 'Enter') handleAddTodo(); }} />
-              <select className="evt-form-select" value={newTodoPriorite} onChange={e => setNewTodoPriorite(e.target.value)}
-                style={{ width: 'auto', minWidth: '110px' }}>
-                {PRIORITES.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-              <select className="evt-form-select" value={newTodoAssigne}
-                onChange={e => {
+            <div className="evt-todo-add" style={{ flexDirection: 'column', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', width: '100%' }}>
+                <input value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="Nouvelle tâche..."
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddTodo(); }} style={{ flex: 1 }} />
+                <select className="evt-form-select" value={newTodoPriorite} onChange={e => setNewTodoPriorite(e.target.value)}
+                  style={{ width: 'auto', minWidth: '110px' }}>
+                  {PRIORITES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <button className="evt-btn-primary" onClick={handleAddTodo} style={{ padding: '0.6rem 1rem' }}>➕</button>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center' }}>
+                {newTodoAssignes.map((a, i) => (
+                  <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.15rem', background: 'rgba(212,175,55,0.15)', color: 'var(--evt-gold)', borderRadius: '10px', padding: '0.1rem 0.4rem', fontSize: '0.75rem' }}>
+                    👤 {a.nom}
+                    <span onClick={() => setNewTodoAssignes(p => p.filter((_, idx) => idx !== i))} style={{ cursor: 'pointer', fontWeight: 700 }}>✕</span>
+                  </span>
+                ))}
+                <select className="evt-form-select" value="" onChange={e => {
                   const val = e.target.value;
+                  if (!val) return;
                   if (val === '__externe__') {
                     const nom = prompt('Nom du prestataire externe :');
-                    if (nom) { setNewTodoAssigne(nom); setNewTodoAssigneId(''); }
-                  } else if (val) {
-                    const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
-                    if (collab) { setNewTodoAssigne(collab.nom); setNewTodoAssigneId(collab.prestataireId); }
+                    if (nom) setNewTodoAssignes(p => [...p, { nom }]);
                   } else {
-                    setNewTodoAssigne(''); setNewTodoAssigneId('');
+                    const already = newTodoAssignes.some(a => a.prestataireId === val);
+                    if (!already) {
+                      const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
+                      if (collab) setNewTodoAssignes(p => [...p, { prestataireId: collab.prestataireId, nom: collab.nom }]);
+                    }
                   }
-                }}
-                style={{ width: 'auto', minWidth: '130px' }}>
-                <option value="">Non assigné</option>
-                {evt.collaborateurs?.map(c => (
-                  <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
-                ))}
-                <option value="__externe__">+ Externe...</option>
-              </select>
-              <button className="evt-btn-primary" onClick={handleAddTodo} style={{ padding: '0.6rem 1rem' }}>➕</button>
+                }} style={{ width: 'auto', minWidth: '130px', fontSize: '0.82rem' }}>
+                  <option value="">+ Assigner...</option>
+                  {evt.collaborateurs?.map(c => (
+                    <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
+                  ))}
+                  <option value="__externe__">+ Externe...</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

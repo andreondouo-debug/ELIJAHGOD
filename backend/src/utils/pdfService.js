@@ -742,7 +742,7 @@ class PDFService {
           horaire,
           type: '     ' + typeLabel,
           titre: etape.titre,
-          responsable: etape.responsable || '—',
+          responsable: (etape.responsables?.length > 0 ? etape.responsables.map(r => r.nom).join(', ') : etape.responsable) || '—',
           statut: statutLabel,
         }, i % 2 === 1, etape.statut === 'termine');
 

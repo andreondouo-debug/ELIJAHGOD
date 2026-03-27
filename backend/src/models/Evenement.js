@@ -13,11 +13,16 @@ const todoItemSchema = new mongoose.Schema({
   dateEcheance: Date,
   completePar: String,
   completeLe: Date,
-  // Assignation à un prestataire
+  // Assignation (legacy single)
   assigneA: {
     prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire' },
     nom: String
   },
+  // Assignation multiple
+  assignesA: [{
+    prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire' },
+    nom: String
+  }],
   ordre: { type: Number, default: 0 }
 }, { _id: true });
 
@@ -31,7 +36,12 @@ const etapeProgrammeSchema = new mongoose.Schema({
   heureDebut: String,
   heureFin: String,
   description: String,
-  responsable: String,
+  responsable: String, // legacy single
+  // Responsables multiples
+  responsables: [{
+    prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire' },
+    nom: String
+  }],
   statut: { type: String, enum: ['a_faire', 'en_cours', 'termine'], default: 'a_faire' },
   notes: String,
   ordre: { type: Number, default: 0 }
