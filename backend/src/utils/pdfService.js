@@ -27,8 +27,10 @@ const WIDTH  = RIGHT - LEFT;
 const FOOTER = 55;        // hauteur réservée pied de page
 const PAGE_H = 842;       // A4
 
-// Logo
-const LOGO_PATH = path.join(__dirname, '../../../frontend/public/images/logo.png');
+// Logo — priorité : assets backend > frontend public
+const LOGO_PATH = fs.existsSync(path.join(__dirname, '../assets/logo.png'))
+  ? path.join(__dirname, '../assets/logo.png')
+  : path.join(__dirname, '../../../frontend/public/images/logo.png');
 
 class PDFService {
 
@@ -263,6 +265,37 @@ class PDFService {
       doc.fontSize(8.5).fillColor(col.color || C.text)
          .font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
          .text(val, LEFT + col.x, y + 5, { width: col.w, align: col.align || 'left' });
+    });
+    doc.moveTo(LEFT, y + rowH).lineTo(RIGHT, y + rowH)
+       .strokeColor('#e0ddd0').lineWidth(0.3).stroke();
+    doc.y = y + rowH;
+  }
+
+  // Ligne avec case à cocher imprimable
+  _tableauLigneAvecCase(doc, cols, data, isOdd, isChecked) {
+    const rowH = 22;
+    this._check(doc, rowH + 4);
+    const y = doc.y;
+    doc.rect(LEFT, y, WIDTH, rowH).fill(isOdd ? C.bgAlt : C.white);
+
+    cols.forEach(col => {
+      if (col.key === 'check') {
+        // Case à cocher : carré vide ou coché
+        const bx = LEFT + col.x + 3;
+        const by = y + 5;
+        doc.rect(bx, by, 11, 11).lineWidth(0.8).strokeColor(C.navy).stroke();
+        if (isChecked) {
+          doc.save();
+          doc.moveTo(bx + 2, by + 6).lineTo(bx + 4.5, by + 9).lineTo(bx + 9, by + 2)
+             .lineWidth(1.5).strokeColor(C.gold).stroke();
+          doc.restore();
+        }
+      } else {
+        const val = data[col.key] !== undefined ? String(data[col.key]) : '';
+        doc.fontSize(8.5).fillColor(col.color || C.text)
+           .font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
+           .text(val, LEFT + col.x, y + 5, { width: col.w, align: col.align || 'left' });
+      }
     });
     doc.moveTo(LEFT, y + rowH).lineTo(RIGHT, y + rowH)
        .strokeColor('#e0ddd0').lineWidth(0.3).stroke();
@@ -636,11 +669,12 @@ class PDFService {
     };
 
     const cols = [
-      { label: 'Horaire',     key: 'horaire',     x: 5,   w: 80,  align: 'center' },
-      { label: 'Type',        key: 'type',        x: 90,  w: 80,  align: 'center' },
-      { label: 'Étape',       key: 'titre',       x: 175, w: 170 },
-      { label: 'Responsable', key: 'responsable', x: 350, w: 80 },
-      { label: 'Statut',      key: 'statut',      x: 435, w: 65,  align: 'center' },
+      { label: '',          key: 'check',       x: 3,   w: 18,  align: 'center' },
+      { label: 'Horaire',     key: 'horaire',     x: 22,  w: 75 },
+      { label: 'Type',        key: 'type',        x: 100, w: 75 },
+      { label: 'Étape',       key: 'titre',       x: 178, w: 155 },
+      { label: 'Responsable', key: 'responsable', x: 338, w: 90 },
+      { label: 'Statut',      key: 'statut',      x: 433, w: 67 },
     ];
     this._tableauEntetes(doc, 'Programme de l\'événement', cols);
 
@@ -655,17 +689,18 @@ class PDFService {
           ? `${etape.heureDebut}${etape.heureFin ? ' – ' + etape.heureFin : ''}`
           : '—';
         const typeLabel = `${TYPES_ICONS[etape.type] || '📌'} ${(etape.type || 'autre').replace('_', ' ')}`;
-        const statutLabel = etape.statut === 'termine' ? '✅ Terminé'
-          : etape.statut === 'en_cours' ? '▶️ En cours'
-          : '⬜ À faire';
+        const statutLabel = etape.statut === 'termine' ? 'Terminé'
+          : etape.statut === 'en_cours' ? 'En cours'
+          : 'À faire';
 
-        this._tableauLigne(doc, cols, {
+        this._tableauLigneAvecCase(doc, cols, {
+          check: '',
           horaire,
           type: typeLabel,
           titre: etape.titre,
           responsable: etape.responsable || '—',
           statut: statutLabel,
-        }, i % 2 === 1);
+        }, i % 2 === 1, etape.statut === 'termine');
 
         // Description sous la ligne
         if (etape.description) {
@@ -673,7 +708,7 @@ class PDFService {
           const descY = doc.y;
           doc.rect(LEFT, descY, WIDTH, 16).fill('#f5f4f0');
           doc.fontSize(7.5).fillColor(C.textMid).font('Helvetica')
-             .text(`→ ${etape.description}`, LEFT + 15, descY + 4, { width: WIDTH - 25 });
+             .text(`→ ${etape.description}`, LEFT + 25, descY + 4, { width: WIDTH - 35 });
           doc.y = descY + 16;
         }
       });
@@ -683,41 +718,51 @@ class PDFService {
   // ── Tableau boîte à outils ──
   _progTableauOutils(doc, evt) {
     const cols = [
-      { label: 'Matériel / Outil',  key: 'nom',       x: 5,   w: 200 },
-      { label: 'Catégorie',         key: 'categorie', x: 210, w: 120, align: 'center' },
-      { label: 'Quantité',          key: 'quantite',  x: 335, w: 70,  align: 'center' },
-      { label: 'Vérifié',           key: 'verifie',   x: 410, w: 90,  align: 'center' },
+      { label: '',                   key: 'check',     x: 3,   w: 18,  align: 'center' },
+      { label: 'Matériel / Outil',  key: 'nom',       x: 24,  w: 190 },
+      { label: 'Catégorie',         key: 'categorie', x: 218, w: 110 },
+      { label: 'Quantité',          key: 'quantite',  x: 333, w: 70,  align: 'center' },
+      { label: 'Vérifié',           key: 'verifie',   x: 408, w: 90 },
     ];
     this._tableauEntetes(doc, 'Boîte à outils', cols);
 
     evt.boiteAOutils.forEach((outil, i) => {
-      this._tableauLigne(doc, cols, {
+      this._tableauLigneAvecCase(doc, cols, {
+        check: '',
         nom: outil.nom,
         categorie: outil.categorie || '—',
         quantite: outil.quantite || 1,
-        verifie: outil.verifie ? '✅ Oui' : '⬜ Non',
-      }, i % 2 === 1);
+        verifie: outil.verifie ? 'Oui' : 'Non',
+      }, i % 2 === 1, outil.verifie);
     });
   }
 
   // ── Tableau todos ──
   _progTableauTodos(doc, evt) {
     const cols = [
-      { label: 'Tâche',    key: 'texte',    x: 5,   w: 280 },
-      { label: 'Priorité', key: 'priorite', x: 290, w: 100, align: 'center' },
-      { label: 'Statut',   key: 'statut',   x: 395, w: 100, align: 'center' },
+      { label: '',        key: 'check',    x: 3,   w: 18,  align: 'center' },
+      { label: 'Tâche',    key: 'texte',    x: 24,  w: 270 },
+      { label: 'Priorité', key: 'priorite', x: 298, w: 90 },
+      { label: 'Statut',   key: 'statut',   x: 393, w: 105 },
     ];
     this._tableauEntetes(doc, 'Liste des tâches', cols);
 
-    const totalTodos = evt.todos.length;
-    const todosFaits = evt.todos.filter(t => t.fait).length;
+    // Trier : urgente > haute > normale > basse
+    const PRIO_ORDRE = { urgente: 0, haute: 1, normale: 2, basse: 3 };
+    const todosTries = [...evt.todos].sort((a, b) => {
+      return (PRIO_ORDRE[a.priorite] ?? 2) - (PRIO_ORDRE[b.priorite] ?? 2);
+    });
 
-    evt.todos.forEach((todo, i) => {
-      this._tableauLigne(doc, cols, {
+    const totalTodos = todosTries.length;
+    const todosFaits = todosTries.filter(t => t.fait).length;
+
+    todosTries.forEach((todo, i) => {
+      this._tableauLigneAvecCase(doc, cols, {
+        check: '',
         texte: todo.texte,
-        priorite: todo.priorite || 'normale',
-        statut: todo.fait ? '✅ Fait' : '⬜ À faire',
-      }, i % 2 === 1);
+        priorite: (todo.priorite || 'normale').toUpperCase(),
+        statut: todo.fait ? 'Fait' : 'À faire',
+      }, i % 2 === 1, todo.fait);
     });
 
     // Barre progression
