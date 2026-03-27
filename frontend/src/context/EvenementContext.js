@@ -228,6 +228,49 @@ export function EvenementProvider({ children }) {
     }
   };
 
+  // ==============================
+  // COLLABORATEURS
+  // ==============================
+
+  const rechercherPrestataires = async (query) => {
+    try {
+      const res = await axios.get(`${API_URL}/api/evenements/prestataires/recherche?q=${encodeURIComponent(query)}`, headers());
+      return res.data.data;
+    } catch (err) {
+      return [];
+    }
+  };
+
+  const ajouterCollaborateur = async (evenementId, prestataireId, role) => {
+    try {
+      const res = await axios.post(`${API_URL}/api/evenements/${evenementId}/collaborateurs`, { prestataireId, role }, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true, data: res.data.data };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
+  const majCollaborateur = async (evenementId, prestataireId, role) => {
+    try {
+      const res = await axios.put(`${API_URL}/api/evenements/${evenementId}/collaborateurs/${prestataireId}`, { role }, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true, data: res.data.data };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
+  const supprimerCollaborateur = async (evenementId, prestataireId) => {
+    try {
+      const res = await axios.delete(`${API_URL}/api/evenements/${evenementId}/collaborateurs/${prestataireId}`, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
   const value = useMemo(() => ({
     evenements, evenementActif, loading, error,
     chargerEvenements, chargerEvenement, creerEvenement,
@@ -236,6 +279,7 @@ export function EvenementProvider({ children }) {
     ajouterTodo, majTodo, supprimerTodo,
     ajouterOutil, majOutil, supprimerOutil,
     lierPrestation, delierPrestation,
+    rechercherPrestataires, ajouterCollaborateur, majCollaborateur, supprimerCollaborateur,
     setEvenementActif
   }), [evenements, evenementActif, loading, error, chargerEvenements, chargerEvenement]);
 

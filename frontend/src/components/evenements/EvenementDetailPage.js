@@ -32,7 +32,8 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
     changerStatut, ajouterEtape, majEtape, supprimerEtape,
     ajouterTodo, majTodo, supprimerTodo,
     ajouterOutil, majOutil, supprimerOutil, supprimerEvenement,
-    lierPrestation, delierPrestation
+    lierPrestation, delierPrestation,
+    rechercherPrestataires, ajouterCollaborateur, majCollaborateur, supprimerCollaborateur
   } = useContext(EvenementContext);
 
   const [newTodo, setNewTodo] = useState('');
@@ -48,6 +49,17 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const [prestationsDisponibles, setPrestationsDisponibles] = useState([]);
   const [searchPrestation, setSearchPrestation] = useState('');
   const [loadingPrestations, setLoadingPrestations] = useState(false);
+
+  // Collaborateurs
+  const [showAddCollab, setShowAddCollab] = useState(false);
+  const [searchCollab, setSearchCollab] = useState('');
+  const [collabResults, setCollabResults] = useState([]);
+  const [collabRole, setCollabRole] = useState('consultation');
+  const [searchingCollab, setSearchingCollab] = useState(false);
+
+  // Todo assignation
+  const [newTodoAssigne, setNewTodoAssigne] = useState('');
+  const [newTodoAssigneId, setNewTodoAssigneId] = useState('');
 
   // Charger les prestations disponibles
   useEffect(() => {
@@ -76,6 +88,44 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
     await delierPrestation(evt._id, prestationId);
   };
 
+  // Recherche collaborateurs
+  const handleSearchCollab = async (q) => {
+    setSearchCollab(q);
+    if (q.length < 2) { setCollabResults([]); return; }
+    setSearchingCollab(true);
+    const results = await rechercherPrestataires(q);
+    setCollabResults(results);
+    setSearchingCollab(false);
+  };
+
+  const handleAddCollab = async (prestataire) => {
+    await ajouterCollaborateur(evt._id, prestataire._id, collabRole);
+    setSearchCollab('');
+    setCollabResults([]);
+  };
+
+  const handleRemoveCollab = async (prestataireId) => {
+    await supprimerCollaborateur(evt._id, prestataireId);
+  };
+
+  const handleChangeCollabRole = async (prestataireId, role) => {
+    await majCollaborateur(evt._id, prestataireId, role);
+  };
+
+  // Déterminer si l'utilisateur est le propriétaire
+  const currentPrestataireId = (() => {
+    try {
+      const token = localStorage.getItem('prestataireToken');
+      if (!token) return null;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.prestataireId || null;
+    } catch { return null; }
+  })();
+  const isAdmin = !!localStorage.getItem('adminToken');
+  const isOwner = isAdmin || (evt?.creePar?.type === 'prestataire' && evt?.creePar?.id === currentPrestataireId);
+  const isCollabModif = evt?.collaborateurs?.some(c => c.prestataireId === currentPrestataireId && c.role === 'modification');
+  const canEdit = isOwner || isCollabModif || isAdmin;
+
   if (!evt) return <div className="evt-empty"><p>Aucun événement sélectionné</p></div>;
 
   // Calcul progression todos
@@ -85,9 +135,16 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
 
   const handleAddTodo = async () => {
     if (!newTodo.trim()) return;
-    await ajouterTodo(evt._id, { texte: newTodo, priorite: newTodoPriorite });
+    const todoData = { texte: newTodo, priorite: newTodoPriorite };
+    if (newTodoAssigne) {
+      todoData.assigneA = { nom: newTodoAssigne };
+      if (newTodoAssigneId) todoData.assigneA.prestataireId = newTodoAssigneId;
+    }
+    await ajouterTodo(evt._id, todoData);
     setNewTodo('');
     setNewTodoPriorite('normale');
+    setNewTodoAssigne('');
+    setNewTodoAssigneId('');
   };
 
   const handleToggleTodo = async (todo) => {
@@ -403,6 +460,7 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                     <div className="evt-todo-meta">
                       <span className={`evt-todo-priority ${todo.priorite || 'normale'}`}>{todo.priorite || 'normale'}</span>
                       {todo.categorie && todo.categorie !== 'general' && <span>📁 {todo.categorie}</span>}
+                      {todo.assigneA?.nom && <span style={{ color: 'var(--evt-gold)', fontSize: '0.75rem' }}>👤 {todo.assigneA.nom}</span>}
                       {todo.completeLe && <span>✓ {new Date(todo.completeLe).toLocaleDateString('fr-FR')}</span>}
                     </div>
                   </div>
@@ -424,6 +482,26 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
               <select className="evt-form-select" value={newTodoPriorite} onChange={e => setNewTodoPriorite(e.target.value)}
                 style={{ width: 'auto', minWidth: '110px' }}>
                 {PRIORITES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select className="evt-form-select" value={newTodoAssigne}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === '__externe__') {
+                    const nom = prompt('Nom du prestataire externe :');
+                    if (nom) { setNewTodoAssigne(nom); setNewTodoAssigneId(''); }
+                  } else if (val) {
+                    const collab = evt.collaborateurs?.find(c => c.prestataireId === val);
+                    if (collab) { setNewTodoAssigne(collab.nom); setNewTodoAssigneId(collab.prestataireId); }
+                  } else {
+                    setNewTodoAssigne(''); setNewTodoAssigneId('');
+                  }
+                }}
+                style={{ width: 'auto', minWidth: '130px' }}>
+                <option value="">Non assigné</option>
+                {evt.collaborateurs?.map(c => (
+                  <option key={c.prestataireId} value={c.prestataireId}>{c.nom}</option>
+                ))}
+                <option value="__externe__">+ Externe...</option>
               </select>
               <button className="evt-btn-primary" onClick={handleAddTodo} style={{ padding: '0.6rem 1rem' }}>➕</button>
             </div>
@@ -600,6 +678,94 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
             </div>
           </div>
         )}
+
+        {/* 👥 Collaborateurs */}
+        <div className="evt-section">
+          <div className="evt-section-header">
+            <h3>👥 Collaborateurs</h3>
+            {isOwner && (
+              <button className="evt-btn-secondary" onClick={() => setShowAddCollab(!showAddCollab)} style={{ fontSize: '0.8rem' }}>
+                {showAddCollab ? '✕' : '➕ Inviter'}
+              </button>
+            )}
+          </div>
+          <div className="evt-section-body">
+            {/* Formulaire d'ajout */}
+            {showAddCollab && isOwner && (
+              <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid var(--evt-border)', borderRadius: 'var(--evt-radius-sm)', padding: '0.8rem', marginBottom: '0.8rem' }}>
+                <input
+                  className="evt-form-input"
+                  value={searchCollab}
+                  onChange={e => handleSearchCollab(e.target.value)}
+                  placeholder="🔍 Rechercher un prestataire..."
+                  style={{ marginBottom: '0.5rem' }}
+                />
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--evt-text-dim)' }}>Rôle :</label>
+                  <select className="evt-form-select" value={collabRole} onChange={e => setCollabRole(e.target.value)}
+                    style={{ width: 'auto', minWidth: '130px', fontSize: '0.82rem' }}>
+                    <option value="consultation">👁️ Consultation</option>
+                    <option value="modification">✏️ Modification</option>
+                  </select>
+                </div>
+                {searchingCollab && <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem' }}>Recherche...</p>}
+                {collabResults.length > 0 && (
+                  <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                    {collabResults
+                      .filter(p => {
+                        const dejaCollab = evt.collaborateurs?.some(c => c.prestataireId === p._id);
+                        const estProprio = evt.creePar?.id === p._id;
+                        return !dejaCollab && !estProprio;
+                      })
+                      .map(p => (
+                        <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.3rem', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.84rem' }}>
+                          <div>
+                            <span style={{ fontWeight: 600 }}>{p.nomEntreprise || p.contact?.nom || 'Prestataire'}</span>
+                            {p.contact?.email && <span style={{ marginLeft: '0.5rem', color: 'var(--evt-text-dim)', fontSize: '0.75rem' }}>{p.contact.email}</span>}
+                          </div>
+                          <button className="evt-btn-primary" onClick={() => handleAddCollab(p)}
+                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>➕</button>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Liste des collaborateurs */}
+            {(!evt.collaborateurs || evt.collaborateurs.length === 0) ? (
+              <div className="evt-section-empty" style={{ padding: '1.5rem' }}>
+                <p>👥 Aucun collaborateur</p>
+                <p style={{ fontSize: '0.78rem', marginTop: '0.3rem' }}>Invitez des prestataires pour collaborer sur cet événement.</p>
+              </div>
+            ) : (
+              evt.collaborateurs.map((c) => (
+                <div key={c.prestataireId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{c.nom}</span>
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', padding: '0.15rem 0.4rem', borderRadius: '8px',
+                      background: c.role === 'modification' ? 'rgba(76,175,80,0.15)' : 'rgba(100,149,237,0.15)',
+                      color: c.role === 'modification' ? '#66bb6a' : '#64a0e8' }}>
+                      {c.role === 'modification' ? '✏️ Modification' : '👁️ Consultation'}
+                    </span>
+                  </div>
+                  {isOwner && (
+                    <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                      <select className="evt-form-select" value={c.role} onChange={e => handleChangeCollabRole(c.prestataireId, e.target.value)}
+                        style={{ width: 'auto', fontSize: '0.72rem', padding: '0.2rem 0.4rem' }}>
+                        <option value="consultation">Consultation</option>
+                        <option value="modification">Modification</option>
+                      </select>
+                      <button className="evt-btn-icon" onClick={() => handleRemoveCollab(c.prestataireId)}
+                        style={{ width: '24px', height: '24px', fontSize: '0.65rem' }}>✕</button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

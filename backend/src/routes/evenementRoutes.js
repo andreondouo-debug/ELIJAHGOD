@@ -38,6 +38,9 @@ const authAdminOuPrestataire = async (req, res, next) => {
  * 📅 ROUTES ÉVÉNEMENTS / AGENDA
  */
 
+// Recherche prestataires (avant les routes :id pour éviter conflit)
+router.get('/prestataires/recherche', authAdminOuPrestataire, evenementController.rechercherPrestataires);
+
 // CRUD principal
 router.post('/', authAdminOuPrestataire, evenementController.creerEvenement);
 router.get('/', authAdminOuPrestataire, evenementController.listerEvenements);
@@ -74,6 +77,11 @@ router.delete('/:id/outils/:outilId', authAdminOuPrestataire, evenementControlle
 // Prestations liées
 router.post('/:id/prestations', authAdminOuPrestataire, evenementController.lierPrestation);
 router.delete('/:id/prestations/:prestationId', authAdminOuPrestataire, evenementController.delierPrestation);
+
+// Collaborateurs
+router.post('/:id/collaborateurs', authAdminOuPrestataire, evenementController.ajouterCollaborateur);
+router.put('/:id/collaborateurs/:prestataireId', authAdminOuPrestataire, evenementController.majCollaborateur);
+router.delete('/:id/collaborateurs/:prestataireId', authAdminOuPrestataire, evenementController.supprimerCollaborateur);
 
 // Rappels email
 router.put('/rappels/config', authAdminOuPrestataire, evenementController.majRappelsConfig);

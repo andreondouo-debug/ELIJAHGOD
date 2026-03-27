@@ -1,7 +1,42 @@
 const Evenement = require('../models/Evenement');
+const Prestataire = require('../models/Prestataire');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const pdfService = require('../utils/pdfService');
+
+// Helper: vérifie si un prestataire est collaborateur et retourne son rôle
+function getRoleCollaborateur(evenement, prestataireId) {
+  if (!prestataireId || !evenement.collaborateurs) return null;
+  const collab = evenement.collaborateurs.find(
+    c => c.prestataireId.toString() === prestataireId
+  );
+  return collab ? collab.role : null;
+}
+
+// Helper: vérifie l'accès prestataire (propriétaire ou collaborateur)
+function verifierAcces(evenement, req, niveauRequis) {
+  // Admin a toujours accès
+  if (req.adminId) return { autorise: true, role: 'admin' };
+  if (!req.prestataireId) return { autorise: false };
+
+  // Propriétaire
+  if (evenement.creePar.type === 'prestataire' && evenement.creePar.id.toString() === req.prestataireId) {
+    return { autorise: true, role: 'proprietaire' };
+  }
+
+  // Collaborateur
+  const roleCollab = getRoleCollaborateur(evenement, req.prestataireId);
+  if (!roleCollab) return { autorise: false };
+
+  if (niveauRequis === 'consultation') {
+    return { autorise: true, role: roleCollab };
+  }
+  if (niveauRequis === 'modification' && roleCollab === 'modification') {
+    return { autorise: true, role: roleCollab };
+  }
+
+  return { autorise: false, role: roleCollab };
+}
 
 /**
  * 📅 CONTROLLER ÉVÉNEMENTS / AGENDA
@@ -52,10 +87,12 @@ exports.listerEvenements = async (req, res) => {
     const { mois, annee, statut, type } = req.query;
     let filtre = {};
 
-    // Admin voit tout, prestataire voit les siens
+    // Admin voit tout, prestataire voit les siens + ceux où il est collaborateur
     if (req.prestataireId && !req.adminId) {
-      filtre['creePar.type'] = 'prestataire';
-      filtre['creePar.id'] = req.prestataireId;
+      filtre.$or = [
+        { 'creePar.type': 'prestataire', 'creePar.id': req.prestataireId },
+        { 'collaborateurs.prestataireId': req.prestataireId }
+      ];
     }
 
     if (statut) filtre.statut = statut;
@@ -86,11 +123,10 @@ exports.getEvenement = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Événement non trouvé' });
     }
 
-    // Vérifier l'accès prestataire
-    if (req.prestataireId && !req.adminId) {
-      if (evenement.creePar.type !== 'prestataire' || evenement.creePar.id.toString() !== req.prestataireId) {
-        return res.status(403).json({ success: false, message: 'Accès non autorisé' });
-      }
+    // Vérifier l'accès prestataire (propriétaire ou collaborateur)
+    const acces = verifierAcces(evenement, req, 'consultation');
+    if (!acces.autorise) {
+      return res.status(403).json({ success: false, message: 'Accès non autorisé' });
     }
 
     res.json({ success: true, data: evenement });
@@ -110,11 +146,10 @@ exports.majEvenement = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Événement non trouvé' });
     }
 
-    // Vérifier l'accès
-    if (req.prestataireId && !req.adminId) {
-      if (evenement.creePar.type !== 'prestataire' || evenement.creePar.id.toString() !== req.prestataireId) {
-        return res.status(403).json({ success: false, message: 'Accès non autorisé' });
-      }
+    // Vérifier l'accès (propriétaire ou collaborateur modification)
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) {
+      return res.status(403).json({ success: false, message: 'Accès non autorisé' });
     }
 
     evenement = await Evenement.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -136,9 +171,10 @@ exports.supprimerEvenement = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Événement non trouvé' });
     }
 
+    // Seul le propriétaire ou l'admin peut supprimer
     if (req.prestataireId && !req.adminId) {
       if (evenement.creePar.type !== 'prestataire' || evenement.creePar.id.toString() !== req.prestataireId) {
-        return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+        return res.status(403).json({ success: false, message: 'Seul le propriétaire peut supprimer' });
       }
     }
 
@@ -161,6 +197,9 @@ exports.ajouterEtape = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
     evenement.programme.push(req.body);
     evenement.programme.sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
     await evenement.save();
@@ -178,6 +217,9 @@ exports.majEtape = async (req, res) => {
   try {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
 
     const etape = evenement.programme.id(req.params.etapeId);
     if (!etape) return res.status(404).json({ success: false, message: 'Étape non trouvée' });
@@ -198,6 +240,9 @@ exports.supprimerEtape = async (req, res) => {
   try {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
 
     evenement.programme.pull({ _id: req.params.etapeId });
     await evenement.save();
@@ -220,6 +265,9 @@ exports.ajouterTodo = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
     evenement.todos.push(req.body);
     await evenement.save();
 
@@ -236,6 +284,9 @@ exports.majTodo = async (req, res) => {
   try {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
 
     const todo = evenement.todos.id(req.params.todoId);
     if (!todo) return res.status(404).json({ success: false, message: 'Todo non trouvé' });
@@ -260,6 +311,9 @@ exports.supprimerTodo = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
     evenement.todos.pull({ _id: req.params.todoId });
     await evenement.save();
 
@@ -281,6 +335,9 @@ exports.ajouterOutil = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
     evenement.boiteAOutils.push(req.body);
     await evenement.save();
 
@@ -297,6 +354,9 @@ exports.majOutil = async (req, res) => {
   try {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
 
     const outil = evenement.boiteAOutils.id(req.params.outilId);
     if (!outil) return res.status(404).json({ success: false, message: 'Outil non trouvé' });
@@ -318,6 +378,9 @@ exports.supprimerOutil = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
     evenement.boiteAOutils.pull({ _id: req.params.outilId });
     await evenement.save();
 
@@ -334,6 +397,9 @@ exports.lierPrestation = async (req, res) => {
   try {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
 
     const { prestationId, nom, prestataire, prestataireId } = req.body;
     if (!prestationId || !nom) {
@@ -363,6 +429,9 @@ exports.delierPrestation = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
+    const acces = verifierAcces(evenement, req, 'modification');
+    if (!acces.autorise) return res.status(403).json({ success: false, message: 'Accès non autorisé' });
+
     evenement.prestationsLiees = evenement.prestationsLiees.filter(
       p => p.prestationId?.toString() !== req.params.prestationId
     );
@@ -372,6 +441,141 @@ exports.delierPrestation = async (req, res) => {
   } catch (error) {
     console.error('❌ Erreur delierPrestation:', error);
     res.status(500).json({ success: false, message: 'Erreur' });
+  }
+};
+
+// ==============================
+// GESTION DES COLLABORATEURS
+// ==============================
+
+// @desc    Rechercher des prestataires pour ajout comme collaborateur
+// @route   GET /api/evenements/prestataires/recherche?q=...
+exports.rechercherPrestataires = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const prestataires = await Prestataire.find({
+      $or: [
+        { nomEntreprise: regex },
+        { 'contact.email': regex },
+        { 'contact.nom': regex }
+      ]
+    }).select('_id nomEntreprise contact.email contact.nom logo').limit(10);
+
+    res.json({ success: true, data: prestataires });
+  } catch (error) {
+    console.error('❌ Erreur rechercherPrestataires:', error);
+    res.status(500).json({ success: false, message: 'Erreur recherche' });
+  }
+};
+
+// @desc    Ajouter un collaborateur à un événement
+// @route   POST /api/evenements/:id/collaborateurs
+exports.ajouterCollaborateur = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    // Seul le propriétaire ou l'admin peut ajouter des collaborateurs
+    if (req.prestataireId && !req.adminId) {
+      if (evenement.creePar.type !== 'prestataire' || evenement.creePar.id.toString() !== req.prestataireId) {
+        return res.status(403).json({ success: false, message: 'Seul le propriétaire peut gérer les collaborateurs' });
+      }
+    }
+
+    const { prestataireId, role } = req.body;
+    if (!prestataireId) {
+      return res.status(400).json({ success: false, message: 'prestataireId requis' });
+    }
+
+    // Vérifier que le prestataire existe
+    const prestataire = await Prestataire.findById(prestataireId).select('nomEntreprise contact.nom');
+    if (!prestataire) {
+      return res.status(404).json({ success: false, message: 'Prestataire non trouvé' });
+    }
+
+    // Ne pas ajouter le propriétaire comme collaborateur
+    if (evenement.creePar.type === 'prestataire' && evenement.creePar.id.toString() === prestataireId) {
+      return res.status(400).json({ success: false, message: 'Le propriétaire ne peut pas être collaborateur' });
+    }
+
+    // Éviter les doublons
+    const dejaCollab = evenement.collaborateurs.some(c => c.prestataireId.toString() === prestataireId);
+    if (dejaCollab) {
+      return res.status(400).json({ success: false, message: 'Ce prestataire est déjà collaborateur' });
+    }
+
+    const nom = prestataire.nomEntreprise || prestataire.contact?.nom || 'Prestataire';
+    evenement.collaborateurs.push({
+      prestataireId,
+      nom,
+      role: role || 'consultation'
+    });
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur ajouterCollaborateur:', error);
+    res.status(500).json({ success: false, message: 'Erreur ajout collaborateur' });
+  }
+};
+
+// @desc    Modifier le rôle d'un collaborateur
+// @route   PUT /api/evenements/:id/collaborateurs/:prestataireId
+exports.majCollaborateur = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    // Seul le propriétaire ou l'admin
+    if (req.prestataireId && !req.adminId) {
+      if (evenement.creePar.type !== 'prestataire' || evenement.creePar.id.toString() !== req.prestataireId) {
+        return res.status(403).json({ success: false, message: 'Seul le propriétaire peut gérer les collaborateurs' });
+      }
+    }
+
+    const collab = evenement.collaborateurs.find(c => c.prestataireId.toString() === req.params.prestataireId);
+    if (!collab) {
+      return res.status(404).json({ success: false, message: 'Collaborateur non trouvé' });
+    }
+
+    if (req.body.role) collab.role = req.body.role;
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur majCollaborateur:', error);
+    res.status(500).json({ success: false, message: 'Erreur modification collaborateur' });
+  }
+};
+
+// @desc    Supprimer un collaborateur
+// @route   DELETE /api/evenements/:id/collaborateurs/:prestataireId
+exports.supprimerCollaborateur = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    // Seul le propriétaire ou l'admin
+    if (req.prestataireId && !req.adminId) {
+      if (evenement.creePar.type !== 'prestataire' || evenement.creePar.id.toString() !== req.prestataireId) {
+        return res.status(403).json({ success: false, message: 'Seul le propriétaire peut gérer les collaborateurs' });
+      }
+    }
+
+    evenement.collaborateurs = evenement.collaborateurs.filter(
+      c => c.prestataireId.toString() !== req.params.prestataireId
+    );
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur supprimerCollaborateur:', error);
+    res.status(500).json({ success: false, message: 'Erreur suppression collaborateur' });
   }
 };
 
@@ -509,7 +713,10 @@ exports.exportIcalAll = async (req, res) => {
   try {
     let filtre = {};
     if (req.prestataireId) {
-      filtre['creePar.id'] = req.prestataireId;
+      filtre.$or = [
+        { 'creePar.id': req.prestataireId },
+        { 'collaborateurs.prestataireId': req.prestataireId }
+      ];
     }
 
     const evenements = await Evenement.find(filtre).sort({ dateDebut: 1 });
@@ -607,7 +814,10 @@ exports.feedIcal = async (req, res) => {
 
     let filtre = {};
     if (decoded.type === 'prestataire' && decoded.prestataireId) {
-      filtre['creePar.id'] = decoded.prestataireId;
+      filtre.$or = [
+        { 'creePar.id': decoded.prestataireId },
+        { 'collaborateurs.prestataireId': decoded.prestataireId }
+      ];
     }
 
     const evenements = await Evenement.find(filtre).sort({ dateDebut: 1 });

@@ -12,7 +12,12 @@ const todoItemSchema = new mongoose.Schema({
   categorie: { type: String, default: 'general' },
   dateEcheance: Date,
   completePar: String,
-  completeLe: Date
+  completeLe: Date,
+  // Assignation à un prestataire
+  assigneA: {
+    prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire' },
+    nom: String
+  }
 }, { _id: true });
 
 const etapeProgrammeSchema = new mongoose.Schema({
@@ -107,6 +112,14 @@ const evenementSchema = new mongoose.Schema({
     prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire' }
   }],
 
+  // Collaborateurs (prestataires invités)
+  collaborateurs: [{
+    prestataireId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prestataire', required: true },
+    nom: { type: String, required: true },
+    role: { type: String, enum: ['consultation', 'modification'], default: 'consultation' },
+    ajouteLe: { type: Date, default: Date.now }
+  }],
+
   // Programme de l'événement (étapes)
   programme: [etapeProgrammeSchema],
 
@@ -155,5 +168,6 @@ const evenementSchema = new mongoose.Schema({
 // Index composé pour recherche rapide
 evenementSchema.index({ dateDebut: 1, statut: 1 });
 evenementSchema.index({ 'creePar.type': 1, 'creePar.id': 1 });
+evenementSchema.index({ 'collaborateurs.prestataireId': 1 });
 
 module.exports = mongoose.model('Evenement', evenementSchema);
