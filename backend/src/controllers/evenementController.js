@@ -366,7 +366,26 @@ function escapeICalText(text) {
   return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 }
 
-function genererICS(evt) {
+// Génère les lignes VALARM pour les rappels ICS
+function genererVALARM(rappelJours, nombreRappels) {
+  const jours = parseInt(rappelJours) || 1;
+  const nb = Math.min(parseInt(nombreRappels) || 1, 5);
+  const alarms = [];
+  for (let i = 0; i < nb; i++) {
+    // Espacement: rappel principal = jours, puis jours*2, jours*3...
+    const delai = jours * (i + 1);
+    alarms.push(
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:Rappel ELIJAH'GOD - ${delai} jour(s) avant`,
+      `TRIGGER:-P${delai}D`,
+      'END:VALARM'
+    );
+  }
+  return alarms;
+}
+
+function genererICS(evt, options = {}) {
   const uid = `evt-${evt._id}@elijahgod`;
   const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const dtstart = formatICalDate(evt.dateDebut, evt.heureDebut);
@@ -404,6 +423,11 @@ function genererICS(evt) {
   if (description) lines.push(`DESCRIPTION:${escapeICalText(description)}`);
   if (location) lines.push(`LOCATION:${escapeICalText(location)}`);
 
+  // Rappels
+  const rappelJours = options.rappelJours || 1;
+  const nombreRappels = options.nombreRappels || 1;
+  lines.push(...genererVALARM(rappelJours, nombreRappels));
+
   lines.push('END:VEVENT', 'END:VCALENDAR');
   return lines.join('\r\n');
 }
@@ -415,7 +439,10 @@ exports.exportIcal = async (req, res) => {
     const evenement = await Evenement.findById(req.params.id);
     if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
 
-    const ics = genererICS(evenement);
+    const ics = genererICS(evenement, {
+      rappelJours: req.query.rappelJours,
+      nombreRappels: req.query.nombreRappels,
+    });
     const filename = `evenement-${evenement.titre.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
 
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
@@ -452,6 +479,9 @@ exports.exportIcalAll = async (req, res) => {
         location = parts.join(', ');
       }
 
+      const rappelJours = parseInt(req.query.rappelJours) || 1;
+      const nombreRappels = parseInt(req.query.nombreRappels) || 1;
+
       const lines = [
         'BEGIN:VEVENT',
         `UID:${uid}`,
@@ -462,6 +492,7 @@ exports.exportIcalAll = async (req, res) => {
       ];
       if (location) lines.push(`LOCATION:${escapeICalText(location)}`);
       if (evt.description) lines.push(`DESCRIPTION:${escapeICalText(evt.description)}`);
+      lines.push(...genererVALARM(rappelJours, nombreRappels));
       lines.push('END:VEVENT');
       return lines.join('\r\n');
     });
@@ -556,6 +587,7 @@ exports.feedIcal = async (req, res) => {
       ];
       if (location) lines.push(`LOCATION:${escapeICalText(location)}`);
       if (evt.description) lines.push(`DESCRIPTION:${escapeICalText(evt.description)}`);
+      lines.push(...genererVALARM(1, 1));
       lines.push('END:VEVENT');
       return lines.join('\r\n');
     });

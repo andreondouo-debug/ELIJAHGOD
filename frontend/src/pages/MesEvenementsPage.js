@@ -204,7 +204,10 @@ function MesEvenementsPage() {
           <button className="evt-sync-btn ical" onClick={async () => {
             try {
               const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
-              const res = await fetch(`${API_URL}/api/evenements/export/ical-all`, {
+              const evtSettings = JSON.parse(localStorage.getItem('evenement_settings') || '{}');
+              const rappelJours = evtSettings.rappelAutoJours || 1;
+              const nombreRappels = evtSettings.nombreRappels || 1;
+              const res = await fetch(`${API_URL}/api/evenements/export/ical-all?rappelJours=${rappelJours}&nombreRappels=${nombreRappels}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               const blob = await res.blob();

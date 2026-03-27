@@ -1229,6 +1229,20 @@
   max-width: 800px;
 }
 
+.evt-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.evt-settings-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .evt-settings-group {
   background: var(--evt-card);
   border: 1px solid var(--evt-border);
@@ -1462,9 +1476,19 @@
     font-size: 0.75rem;
   }
   .evt-calendar-day-event {
-    display: none;
+    font-size: 0;
+    padding: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin: 1px auto;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
   }
   .evt-calendar-day-more {
+    font-size: 0;
     display: none;
   }
   .evt-calendar-day.today {
@@ -1696,10 +1720,36 @@
   }
 
   /* ── Settings ── */
+  .evt-settings-header {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: stretch;
+  }
+  .evt-settings-header h2 {
+    font-size: 1.05rem;
+    text-align: center;
+  }
+  .evt-settings-header-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .evt-settings-header-actions .evt-btn-secondary,
+  .evt-settings-header-actions .evt-btn-primary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.82rem;
+    padding: 0.6rem 1rem;
+    box-sizing: border-box;
+  }
   .evt-settings-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+  .evt-settings-row .evt-form-select {
+    width: 100% !important;
+    min-width: 0 !important;
   }
   .evt-settings-group-title {
     font-size: 0.9rem;
@@ -1740,6 +1790,10 @@
   }
   .evt-calendar-day-number {
     font-size: 0.68rem;
+  }
+  .evt-calendar-day-event {
+    width: 5px;
+    height: 5px;
   }
   .evt-calendar-nav h2 {
     font-size: 0.88rem;

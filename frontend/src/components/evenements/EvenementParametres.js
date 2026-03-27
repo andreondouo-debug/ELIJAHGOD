@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS = {
   afficherWeekends: true,
   couleurParDefaut: '#667eea',
   rappelAutoJours: 1,
+  nombreRappels: 1,
   afficherTodosDansCalendrier: true,
   afficherCommandesDansListe: true,
   typesEtapesActifs: ['transport', 'installation', 'mise_en_place', 'prestation', 'rangement', 'autre'],
@@ -74,9 +75,9 @@ function EvenementParametres() {
 
   return (
     <div className="evt-settings">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>⚙️ Paramétrage des événements</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="evt-settings-header">
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#ffffff' }}>⚙️ Paramétrage des événements</h2>
+        <div className="evt-settings-header-actions">
           <button className="evt-btn-secondary" onClick={handleReset}>🔄 Réinitialiser</button>
           <button className="evt-btn-primary" onClick={handleSave}>
             {saved ? '✅ Sauvegardé !' : '💾 Enregistrer'}
@@ -223,7 +224,7 @@ function EvenementParametres() {
           <div className="evt-settings-row">
             <div>
               <div className="evt-settings-row-label">Rappels automatiques</div>
-              <div className="evt-settings-row-desc">Recevoir un rappel avant chaque événement</div>
+              <div className="evt-settings-row-desc">Les rappels sont intégrés au fichier ICS exporté. En ajoutant le calendrier ICS à votre application (Google Calendar, Apple Calendar…), vous recevrez des alertes automatiques avant chaque événement.</div>
             </div>
             <button className={`evt-toggle ${settings.notificationsRappel ? 'active' : ''}`} onClick={() => handleChange('notificationsRappel', !settings.notificationsRappel)} />
           </div>
@@ -231,13 +232,28 @@ function EvenementParametres() {
           <div className="evt-settings-row">
             <div>
               <div className="evt-settings-row-label">Délai de rappel</div>
-              <div className="evt-settings-row-desc">Nombre de jours avant l'événement</div>
+              <div className="evt-settings-row-desc">Nombre de jours avant l'événement pour le premier rappel</div>
             </div>
             <select className="evt-form-select" value={settings.rappelAutoJours} onChange={e => handleChange('rappelAutoJours', parseInt(e.target.value))} style={{ width: 'auto', minWidth: '100px' }}>
               <option value={1}>1 jour</option>
               <option value={2}>2 jours</option>
               <option value={3}>3 jours</option>
               <option value={7}>7 jours</option>
+              <option value={14}>14 jours</option>
+              <option value={30}>30 jours</option>
+            </select>
+          </div>
+
+          <div className="evt-settings-row">
+            <div>
+              <div className="evt-settings-row-label">Nombre de rappels</div>
+              <div className="evt-settings-row-desc">Combien de rappels envoyer avant la date de l'événement</div>
+            </div>
+            <select className="evt-form-select" value={settings.nombreRappels} onChange={e => handleChange('nombreRappels', parseInt(e.target.value))} style={{ width: 'auto', minWidth: '100px' }}>
+              <option value={1}>1 rappel</option>
+              <option value={2}>2 rappels</option>
+              <option value={3}>3 rappels</option>
+              <option value={5}>5 rappels</option>
             </select>
           </div>
         </div>

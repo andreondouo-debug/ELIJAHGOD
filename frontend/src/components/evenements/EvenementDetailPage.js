@@ -146,7 +146,10 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const telechargerICS = async () => {
     try {
       const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
-      const res = await fetch(`${API_URL}/api/evenements/${evt._id}/ical`, {
+      const evtSettings = JSON.parse(localStorage.getItem('evenement_settings') || '{}');
+      const rappelJours = evtSettings.rappelAutoJours || 1;
+      const nombreRappels = evtSettings.nombreRappels || 1;
+      const res = await fetch(`${API_URL}/api/evenements/${evt._id}/ical?rappelJours=${rappelJours}&nombreRappels=${nombreRappels}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const blob = await res.blob();
