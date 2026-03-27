@@ -74,6 +74,13 @@ function AdminDashboard() {
       path: '/admin/temoignages',
       color: '#1abc9c',
       icon: MessageSquare
+    },
+    {
+      title: 'Mes Événements',
+      description: 'Agenda, planning et organisation',
+      path: '/admin/evenements',
+      color: '#d4af37',
+      icon: BarChart3
     }
   ];
 

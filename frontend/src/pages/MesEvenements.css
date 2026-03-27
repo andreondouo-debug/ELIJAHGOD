@@ -1,0 +1,1199 @@
+/* ====================================
+   📅 MES ÉVÉNEMENTS - PAGE AGENDA
+   Design moderne, sombre, doré
+   ==================================== */
+
+/* ── Variables ── */
+:root {
+  --evt-bg: #0a0a1a;
+  --evt-card: #13132b;
+  --evt-card-hover: #1a1a3e;
+  --evt-border: rgba(212, 175, 55, 0.15);
+  --evt-gold: #d4af37;
+  --evt-gold-light: #f0d060;
+  --evt-blue: #667eea;
+  --evt-green: #48bb78;
+  --evt-red: #fc5c65;
+  --evt-orange: #f7b731;
+  --evt-purple: #a55eea;
+  --evt-text: #e8e6f0;
+  --evt-text-dim: #8b8ba0;
+  --evt-radius: 16px;
+  --evt-radius-sm: 10px;
+  --evt-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+.mes-evenements-page {
+  min-height: 100vh;
+  background: var(--evt-bg);
+  color: var(--evt-text);
+  padding: 0;
+}
+
+/* ── Header / Topbar ── */
+.evt-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 2rem;
+  background: linear-gradient(135deg, #13132b 0%, #1a1a3e 100%);
+  border-bottom: 1px solid var(--evt-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+}
+
+.evt-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.evt-topbar-left h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--evt-gold), var(--evt-gold-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.evt-topbar-icon {
+  font-size: 1.8rem;
+}
+
+.evt-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* ── Onglets / Tabs ── */
+.evt-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--evt-border);
+  padding: 0 2rem;
+  background: rgba(19, 19, 43, 0.5);
+  overflow-x: auto;
+}
+
+.evt-tab {
+  padding: 0.9rem 1.5rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--evt-text-dim);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  transition: all 0.25s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.evt-tab:hover {
+  color: var(--evt-text);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.evt-tab.active {
+  color: var(--evt-gold);
+  border-bottom-color: var(--evt-gold);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.evt-tab-badge {
+  background: var(--evt-gold);
+  color: #0a0a1a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* ── Contenu principal ── */
+.evt-content {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Bouton Créer ── */
+.evt-btn-primary {
+  background: linear-gradient(135deg, var(--evt-gold), var(--evt-gold-light));
+  color: #0a0a1a;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--evt-radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s;
+  box-shadow: 0 2px 12px rgba(212, 175, 55, 0.3);
+}
+
+.evt-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.5);
+}
+
+.evt-btn-secondary {
+  background: rgba(102, 126, 234, 0.15);
+  color: var(--evt-blue);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--evt-radius-sm);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.25s;
+}
+
+.evt-btn-secondary:hover {
+  background: rgba(102, 126, 234, 0.25);
+}
+
+.evt-btn-danger {
+  background: rgba(252, 92, 101, 0.15);
+  color: var(--evt-red);
+  border: 1px solid rgba(252, 92, 101, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: var(--evt-radius-sm);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.evt-btn-danger:hover {
+  background: rgba(252, 92, 101, 0.3);
+}
+
+.evt-btn-icon {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--evt-border);
+  color: var(--evt-text-dim);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.evt-btn-icon:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--evt-gold);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* =========================================
+   CALENDRIER
+   ========================================= */
+.evt-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.evt-calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.evt-calendar-nav h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  min-width: 200px;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.evt-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  background: var(--evt-border);
+  border-radius: var(--evt-radius);
+  overflow: hidden;
+  border: 1px solid var(--evt-border);
+}
+
+.evt-calendar-day-header {
+  padding: 0.7rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--evt-gold);
+  background: rgba(212, 175, 55, 0.08);
+  letter-spacing: 0.5px;
+}
+
+.evt-calendar-day {
+  min-height: 100px;
+  padding: 0.5rem;
+  background: var(--evt-card);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.evt-calendar-day:hover {
+  background: var(--evt-card-hover);
+}
+
+.evt-calendar-day.other-month {
+  opacity: 0.3;
+}
+
+.evt-calendar-day.today {
+  background: rgba(212, 175, 55, 0.1);
+  box-shadow: inset 0 0 0 2px var(--evt-gold);
+}
+
+.evt-calendar-day-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--evt-text-dim);
+}
+
+.evt-calendar-day.today .evt-calendar-day-number {
+  color: var(--evt-gold);
+}
+
+.evt-calendar-day-event {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.evt-calendar-day-more {
+  font-size: 0.65rem;
+  color: var(--evt-gold);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Légende calendrier */
+.evt-calendar-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  padding: 1rem 0 0.5rem;
+  flex-wrap: wrap;
+}
+.evt-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--evt-text-dim);
+}
+.evt-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* =========================================
+   LISTE DES ÉVÉNEMENTS
+   ========================================= */
+.evt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.evt-list-card {
+  display: flex;
+  gap: 1.2rem;
+  padding: 1.2rem;
+  background: var(--evt-card);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.evt-list-card:hover {
+  background: var(--evt-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--evt-shadow);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.evt-list-card-color {
+  width: 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.evt-list-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.evt-list-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.evt-list-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--evt-text-dim);
+}
+
+.evt-list-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.evt-list-card-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* ── Badges statut ── */
+.evt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.evt-badge.brouillon { background: rgba(139,139,160,.2); color: var(--evt-text-dim); }
+.evt-badge.proposition { background: rgba(247,183,49,.2); color: #f7b731; }
+.evt-badge.prevision { background: rgba(102,126,234,.2); color: var(--evt-blue); }
+.evt-badge.confirme { background: rgba(72,187,120,.2); color: var(--evt-green); }
+.evt-badge.planifie { background: rgba(102,126,234,.2); color: var(--evt-blue); }
+.evt-badge.en_preparation { background: rgba(247,183,49,.2); color: var(--evt-orange); }
+.evt-badge.en_cours { background: rgba(72,187,120,.2); color: var(--evt-green); }
+.evt-badge.termine { background: rgba(212,175,55,.2); color: var(--evt-gold); }
+.evt-badge.annule { background: rgba(252,92,101,.2); color: var(--evt-red); }
+
+.evt-badge-type {
+  background: rgba(165, 94, 234, 0.15);
+  color: var(--evt-purple);
+}
+
+/* =========================================
+   FORMULAIRE MODAL
+   ========================================= */
+.evt-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.evt-modal {
+  background: var(--evt-card);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.evt-modal-large {
+  max-width: 1000px;
+}
+
+.evt-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--evt-border);
+  position: sticky;
+  top: 0;
+  background: var(--evt-card);
+  z-index: 2;
+}
+
+.evt-modal-header h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.evt-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--evt-text-dim);
+  cursor: pointer;
+  padding: 0.3rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.evt-modal-close:hover {
+  color: var(--evt-red);
+}
+
+.evt-modal-body {
+  padding: 1.5rem;
+}
+
+.evt-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--evt-border);
+}
+
+/* ── Form fields ── */
+.evt-form-group {
+  margin-bottom: 1.2rem;
+}
+
+.evt-form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--evt-text-dim);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.evt-form-input,
+.evt-form-select,
+.evt-form-textarea {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius-sm);
+  color: var(--evt-text);
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.evt-form-input:focus,
+.evt-form-select:focus,
+.evt-form-textarea:focus {
+  border-color: var(--evt-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.evt-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.evt-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.evt-form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.evt-form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.evt-form-checkbox input {
+  accent-color: var(--evt-gold);
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Color picker ── */
+.evt-color-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.evt-color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.evt-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.evt-color-swatch.selected {
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--evt-gold);
+}
+
+/* =========================================
+   DÉTAIL ÉVÉNEMENT
+   ========================================= */
+.evt-detail {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.evt-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.evt-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.evt-detail-hero {
+  background: var(--evt-card);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.evt-detail-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.evt-detail-hero h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0.5rem 0;
+}
+
+.evt-detail-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  color: var(--evt-text-dim);
+}
+
+.evt-detail-hero-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.evt-detail-hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+/* ── Section/Card générique ── */
+.evt-section {
+  background: var(--evt-card);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius);
+  overflow: hidden;
+}
+
+.evt-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--evt-border);
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.evt-section-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.evt-section-body {
+  padding: 1rem 1.2rem;
+}
+
+.evt-section-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--evt-text-dim);
+  font-size: 0.9rem;
+}
+
+/* =========================================
+   PROGRAMME / TIMELINE
+   ========================================= */
+.evt-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.evt-timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--evt-gold), var(--evt-blue), var(--evt-green));
+  border-radius: 2px;
+}
+
+.evt-timeline-item {
+  position: relative;
+  margin-bottom: 1.2rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius-sm);
+  transition: all 0.2s;
+}
+
+.evt-timeline-item:hover {
+  background: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.evt-timeline-dot {
+  position: absolute;
+  left: -2rem;
+  top: 1rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: var(--evt-bg);
+  transform: translateX(-3px);
+}
+
+.evt-timeline-dot.transport { border-color: var(--evt-blue); }
+.evt-timeline-dot.installation { border-color: var(--evt-orange); }
+.evt-timeline-dot.mise_en_place { border-color: var(--evt-green); }
+.evt-timeline-dot.prestation { border-color: var(--evt-gold); }
+.evt-timeline-dot.rangement { border-color: var(--evt-purple); }
+.evt-timeline-dot.autre { border-color: var(--evt-text-dim); }
+
+.evt-timeline-dot.termine {
+  background: currentColor;
+}
+
+.evt-timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+}
+
+.evt-timeline-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.evt-timeline-time {
+  font-size: 0.8rem;
+  color: var(--evt-gold);
+  font-weight: 500;
+}
+
+.evt-timeline-desc {
+  font-size: 0.82rem;
+  color: var(--evt-text-dim);
+  margin-top: 0.2rem;
+}
+
+.evt-timeline-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.evt-timeline-type-badge.transport { background: rgba(102,126,234,.15); color: var(--evt-blue); }
+.evt-timeline-type-badge.installation { background: rgba(247,183,49,.15); color: var(--evt-orange); }
+.evt-timeline-type-badge.mise_en_place { background: rgba(72,187,120,.15); color: var(--evt-green); }
+.evt-timeline-type-badge.prestation { background: rgba(212,175,55,.15); color: var(--evt-gold); }
+.evt-timeline-type-badge.rangement { background: rgba(165,94,234,.15); color: var(--evt-purple); }
+.evt-timeline-type-badge.autre { background: rgba(139,139,160,.15); color: var(--evt-text-dim); }
+
+.evt-timeline-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+/* ── Statut étape ── */
+.evt-step-status {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.evt-step-status.a_faire { background: rgba(139,139,160,.15); color: var(--evt-text-dim); }
+.evt-step-status.en_cours { background: rgba(102,126,234,.15); color: var(--evt-blue); }
+.evt-step-status.termine { background: rgba(72,187,120,.15); color: var(--evt-green); }
+
+/* =========================================
+   BOÎTE À OUTILS
+   ========================================= */
+.evt-toolbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.8rem;
+}
+
+.evt-toolbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius-sm);
+  transition: all 0.2s;
+}
+
+.evt-toolbox-item:hover {
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.evt-toolbox-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--evt-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
+
+.evt-toolbox-check.checked {
+  background: var(--evt-green);
+  border-color: var(--evt-green);
+  color: white;
+}
+
+.evt-toolbox-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.evt-toolbox-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.evt-toolbox-qty {
+  font-size: 0.75rem;
+  color: var(--evt-text-dim);
+}
+
+/* =========================================
+   TODO LIST / WORKFLOW
+   ========================================= */
+.evt-todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.evt-todo-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.2s;
+}
+
+.evt-todo-item:last-child {
+  border-bottom: none;
+}
+
+.evt-todo-item:hover {
+  background: rgba(212, 175, 55, 0.03);
+  margin: 0 -1.2rem;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+}
+
+.evt-todo-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--evt-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 0.65rem;
+}
+
+.evt-todo-checkbox.done {
+  background: var(--evt-green);
+  border-color: var(--evt-green);
+  color: white;
+}
+
+.evt-todo-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.evt-todo-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.evt-todo-text.done {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.evt-todo-meta {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--evt-text-dim);
+}
+
+.evt-todo-priority {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.evt-todo-priority.basse { background: rgba(139,139,160,.15); color: var(--evt-text-dim); }
+.evt-todo-priority.normale { background: rgba(102,126,234,.15); color: var(--evt-blue); }
+.evt-todo-priority.haute { background: rgba(247,183,49,.15); color: var(--evt-orange); }
+.evt-todo-priority.urgente { background: rgba(252,92,101,.15); color: var(--evt-red); }
+
+.evt-todo-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--evt-border);
+  margin-bottom: 0.5rem;
+}
+
+.evt-todo-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.evt-todo-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--evt-gold), var(--evt-green));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.evt-todo-progress-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--evt-gold);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ── Todo ajout rapide ── */
+.evt-todo-add {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.evt-todo-add input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius-sm);
+  color: var(--evt-text);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.evt-todo-add input:focus {
+  border-color: var(--evt-gold);
+}
+
+/* =========================================
+   COMMANDES LIÉES
+   ========================================= */
+.evt-commandes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.evt-commande-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius-sm);
+}
+
+.evt-commande-client {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.evt-commande-montant {
+  color: var(--evt-gold);
+  font-weight: 700;
+}
+
+/* =========================================
+   PARAMÉTRAGE
+   ========================================= */
+.evt-settings {
+  max-width: 800px;
+}
+
+.evt-settings-group {
+  background: var(--evt-card);
+  border: 1px solid var(--evt-border);
+  border-radius: var(--evt-radius);
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+}
+
+.evt-settings-group-title {
+  padding: 1rem 1.2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 1px solid var(--evt-border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.evt-settings-group-body {
+  padding: 1.2rem;
+}
+
+.evt-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.evt-settings-row:last-child {
+  border-bottom: none;
+}
+
+.evt-settings-row-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.evt-settings-row-desc {
+  font-size: 0.78rem;
+  color: var(--evt-text-dim);
+  margin-top: 0.2rem;
+}
+
+/* ── Toggle switch ── */
+.evt-toggle {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.3s;
+  border: none;
+  flex-shrink: 0;
+}
+
+.evt-toggle.active {
+  background: var(--evt-gold);
+}
+
+.evt-toggle::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.3s;
+}
+
+.evt-toggle.active::after {
+  transform: translateX(22px);
+}
+
+/* =========================================
+   CHARGEMENT & VIDE
+   ========================================= */
+.evt-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: var(--evt-text-dim);
+}
+
+.evt-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--evt-border);
+  border-top-color: var(--evt-gold);
+  border-radius: 50%;
+  animation: evtSpin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes evtSpin {
+  to { transform: rotate(360deg); }
+}
+
+.evt-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--evt-text-dim);
+}
+
+.evt-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.evt-empty h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--evt-text);
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .evt-detail {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .evt-topbar { padding: 1rem; }
+  .evt-content { padding: 1rem; }
+  .evt-detail { padding: 1rem; }
+  .evt-tabs { padding: 0 1rem; }
+  .evt-calendar-day { min-height: 60px; }
+  .evt-calendar-day-event { display: none; }
+  .evt-form-row { grid-template-columns: 1fr; }
+  .evt-form-row-3 { grid-template-columns: 1fr; }
+  .evt-toolbox-grid { grid-template-columns: 1fr; }
+  .evt-topbar-left h1 { font-size: 1.1rem; }
+}
+
+@media (max-width: 480px) {
+  .evt-tab { padding: 0.7rem 0.8rem; font-size: 0.8rem; }
+  .evt-calendar-grid { font-size: 0.75rem; }
+  .evt-calendar-day { min-height: 44px; padding: 0.3rem; }
+  .evt-list-card { flex-direction: column; }
+}

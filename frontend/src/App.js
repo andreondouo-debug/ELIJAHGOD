@@ -4,6 +4,7 @@ import { SettingsProvider } from './context/SettingsContext';
 import { ClientProvider } from './context/ClientContext';
 import { PrestataireProvider } from './context/PrestataireContext';
 import { AdminProvider } from './context/AdminContext';
+import { EvenementProvider } from './context/EvenementContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import './styles/App.css';
@@ -50,6 +51,7 @@ const GestionPrestationsAdmin = lazy(() => import('./pages/GestionPrestationsAdm
 const CGVPage = lazy(() => import('./pages/CGVPage'));
 const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage'));
 const PolitiqueConfidentialitePage = lazy(() => import('./pages/PolitiqueConfidentialitePage'));
+const MesEvenementsPage = lazy(() => import('./pages/MesEvenementsPage'));
 
 // Scroll en haut à chaque changement de page
 function ScrollToTop() {
@@ -79,6 +81,7 @@ function App() {
         <ClientProvider>
           <PrestataireProvider>
             <AdminProvider>
+              <EvenementProvider>
               <ScrollToTop />
               <div className="App">
                 <Header />
@@ -118,6 +121,7 @@ function App() {
                       <Route path="/prestataire/missions" element={<PrestataireMissionsPage />} />
                       <Route path="/prestataire/stats" element={<PrestataireStatsPage />} />
                       <Route path="/prestataire/avis" element={<PrestataireAvisPage />} />
+                      <Route path="/prestataire/evenements" element={<MesEvenementsPage />} />
                       
                       {/* Routes admin */}
                       <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -130,6 +134,7 @@ function App() {
                       <Route path="/admin/stats" element={<StatistiquesAdmin />} />
                       <Route path="/admin/temoignages" element={<GestionTemoignages />} />
                       <Route path="/admin/parametres" element={<ParametresPage />} />
+                      <Route path="/admin/evenements" element={<MesEvenementsPage />} />
                       
                       {/* Pages légales */}
                       <Route path="/cgv" element={<CGVPage />} />
@@ -143,6 +148,7 @@ function App() {
                 </main>
                 <Footer />
               </div>
+              </EvenementProvider>
             </AdminProvider>
           </PrestataireProvider>
         </ClientProvider>

@@ -3,6 +3,7 @@ const Client = require('../models/Client');
 const Prestation = require('../models/Prestation');
 const Materiel = require('../models/Materiel');
 const Settings = require('../models/Settings');
+const Evenement = require('../models/Evenement');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 const { calculerFraisKilometriques } = require('../utils/distanceService');
@@ -521,6 +522,47 @@ exports.soumettre = async (req, res) => {
       }
     }
 
+    // 📅 AUTO-CRÉATION ÉVÉNEMENT depuis le devis soumis
+    try {
+      const existingEvt = await Evenement.findOne({ devisSource: devis._id });
+      if (!existingEvt && devis.evenement?.date) {
+        const evtDate = new Date(devis.evenement.date);
+        const clientInfo = await Client.findById(req.clientId);
+        await Evenement.create({
+          titre: devis.evenement.titre || `${devis.evenement.type || 'Événement'} — ${devis.numeroDevis}`,
+          description: `Événement créé automatiquement depuis le devis ${devis.numeroDevis}`,
+          type: (['mariage', 'anniversaire', 'corporate', 'concert', 'soiree', 'conference'].includes(devis.evenement.type)) ? devis.evenement.type : 'autre',
+          couleur: '#f7b731',
+          dateDebut: evtDate,
+          dateFin: evtDate,
+          heureDebut: devis.evenement.heureDebut || '18:00',
+          heureFin: devis.evenement.heureFin || '23:00',
+          lieu: {
+            nom: devis.evenement.lieu?.nom || '',
+            adresse: devis.evenement.lieu?.adresse || '',
+            ville: devis.evenement.lieu?.ville || '',
+            codePostal: devis.evenement.lieu?.codePostal || ''
+          },
+          nbInvites: devis.evenement.nbInvites,
+          creePar: { type: 'admin', id: req.clientId, nom: 'Auto' },
+          commandesLiees: [{
+            devisId: devis._id,
+            clientNom: `${devis.client?.prenom || ''} ${devis.client?.nom || ''}`.trim(),
+            clientEmail: clientInfo?.email || devis.client?.email || '',
+            montant: devis.montants?.totalTTC || 0,
+            statut: 'soumis'
+          }],
+          statut: 'proposition',
+          autoCreated: true,
+          devisSource: devis._id,
+          notes: `Devis n°${devis.numeroDevis} soumis le ${new Date().toLocaleDateString('fr-FR')}`
+        });
+        console.log(`📅 Événement auto-créé (proposition) pour devis ${devis.numeroDevis}`);
+      }
+    } catch (evtError) {
+      console.error('⚠️ Erreur auto-création événement:', evtError.message);
+    }
+
     res.json({
       success: true,
       message: '✅ Devis soumis avec succès!',
@@ -908,6 +950,34 @@ exports.changerStatut = async (req, res) => {
       }
     }
 
+    // 📅 MISE À JOUR AUTO de l'événement lié
+    try {
+      const statutEvtMap = {
+        en_etude: 'prevision',
+        accepte: 'confirme',
+        contrat_signe: 'confirme',
+        valide_final: 'confirme',
+        refuse: 'annule',
+        annule: 'annule'
+      };
+      const couleurEvtMap = {
+        proposition: '#f7b731',
+        prevision: '#667eea',
+        confirme: '#48bb78',
+        annule: '#fc5c65'
+      };
+      const newEvtStatut = statutEvtMap[statut];
+      if (newEvtStatut) {
+        await Evenement.updateMany(
+          { devisSource: devis._id },
+          { $set: { statut: newEvtStatut, couleur: couleurEvtMap[newEvtStatut] || '#667eea' } }
+        );
+        console.log(`📅 Événement lié mis à jour → ${newEvtStatut}`);
+      }
+    } catch (evtError) {
+      console.error('⚠️ Erreur MAJ événement lié:', evtError.message);
+    }
+
     console.log(`✅ Statut changé: ${ancienStatut} → ${statut}`);
 
     res.json({
@@ -1001,6 +1071,22 @@ exports.validerModifier = async (req, res) => {
     devis.ajouterHistorique('reponse_admin', 'admin', req.adminId, `Admin: ${action} - ${message}`);
 
     await devis.save();
+
+    // 📅 MISE À JOUR AUTO événement lié lors de validation admin
+    try {
+      const evtStatutMap = { validation: 'confirme', proposition: 'prevision', refus: 'annule' };
+      const evtCouleurMap = { confirme: '#48bb78', prevision: '#667eea', annule: '#fc5c65' };
+      const newEvtStatut = evtStatutMap[action];
+      if (newEvtStatut) {
+        await Evenement.updateMany(
+          { devisSource: devis._id },
+          { $set: { statut: newEvtStatut, couleur: evtCouleurMap[newEvtStatut] } }
+        );
+        console.log(`📅 Événement auto-MAJ → ${newEvtStatut} (action admin: ${action})`);
+      }
+    } catch (evtError) {
+      console.error('⚠️ Erreur MAJ événement:', evtError.message);
+    }
 
     // Envoyer email au client
     try {

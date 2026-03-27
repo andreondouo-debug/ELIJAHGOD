@@ -82,6 +82,13 @@ function PrestataireDashboard() {
       desc: 'Gérez votre profil visible par les clients',
       path: '/prestataire/profil',
     },
+    {
+      icon: '📅',
+      color: 'gold',
+      title: 'Mes Événements',
+      desc: 'Agenda, planning et organisation de vos événements',
+      path: '/prestataire/evenements',
+    },
   ];
 
   const statItems = [

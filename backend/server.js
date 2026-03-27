@@ -154,6 +154,7 @@ const routes = [
   { path: '/api/users',       file: './src/routes/userRoutes' },
   { path: '/api/temoignages', file: './src/routes/temoignageRoutes' },
   { path: '/api/stats',       file: './src/routes/statsRoutes' },
+  { path: '/api/evenements', file: './src/routes/evenementRoutes' },
 ];
 
 routes.forEach(({ path: routePath, file }) => {
