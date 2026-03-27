@@ -134,7 +134,19 @@ const evenementSchema = new mongoose.Schema({
   },
 
   // Nombre d'invités prévu
-  nbInvites: Number
+  nbInvites: Number,
+
+  // Rappels email
+  rappels: {
+    actif: { type: Boolean, default: true },
+    delaiJours: { type: Number, default: 1 },
+    nombreRappels: { type: Number, default: 1 },
+    emailsEnvoyes: [{
+      date: Date,
+      delaiJours: Number,
+      destinataire: String
+    }]
+  }
 
 }, {
   timestamps: true

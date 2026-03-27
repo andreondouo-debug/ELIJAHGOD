@@ -71,4 +71,7 @@ router.post('/:id/outils', authAdminOuPrestataire, evenementController.ajouterOu
 router.put('/:id/outils/:outilId', authAdminOuPrestataire, evenementController.majOutil);
 router.delete('/:id/outils/:outilId', authAdminOuPrestataire, evenementController.supprimerOutil);
 
+// Rappels email
+router.put('/rappels/config', authAdminOuPrestataire, evenementController.majRappelsConfig);
+
 module.exports = router;

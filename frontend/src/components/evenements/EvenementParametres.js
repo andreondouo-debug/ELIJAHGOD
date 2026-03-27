@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import '../../pages/MesEvenements.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
 /**
  * ⚙️ Paramétrage de l'onglet Événements
  * Configuration locale (stockée en localStorage)
@@ -39,8 +41,28 @@ function EvenementParametres() {
     setSaved(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     localStorage.setItem('evenement_settings', JSON.stringify(settings));
+
+    // Synchroniser les rappels avec le serveur
+    try {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
+      await fetch(`${API_URL}/api/evenements/rappels/config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          actif: settings.notificationsRappel,
+          delaiJours: settings.rappelAutoJours,
+          nombreRappels: settings.nombreRappels
+        })
+      });
+    } catch (e) {
+      console.error('Erreur sync rappels:', e);
+    }
+
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

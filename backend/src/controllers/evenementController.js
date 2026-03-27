@@ -613,3 +613,43 @@ exports.feedIcal = async (req, res) => {
     res.status(403).send('Token expiré ou invalide');
   }
 };
+
+// ===========================================
+// 🔔 RAPPELS EMAIL - Configuration globale
+// ===========================================
+
+// @desc    Mettre à jour la config rappels pour tous les événements futurs
+// @route   PUT /api/evenements/rappels/config
+exports.majRappelsConfig = async (req, res) => {
+  try {
+    const { actif, delaiJours, nombreRappels } = req.body;
+
+    let filtre = {
+      dateDebut: { $gte: new Date() },
+      statut: { $nin: ['annule', 'termine'] }
+    };
+
+    // Prestataire ne modifie que ses propres événements
+    if (req.prestataireId && !req.adminId) {
+      filtre['creePar.type'] = 'prestataire';
+      filtre['creePar.id'] = req.prestataireId;
+    }
+
+    const update = {
+      'rappels.actif': actif !== undefined ? actif : true,
+      'rappels.delaiJours': parseInt(delaiJours) || 1,
+      'rappels.nombreRappels': Math.min(parseInt(nombreRappels) || 1, 5)
+    };
+
+    const result = await Evenement.updateMany(filtre, { $set: update });
+
+    res.json({
+      success: true,
+      message: `Rappels mis à jour pour ${result.modifiedCount} événement(s)`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('❌ Erreur majRappelsConfig:', error);
+    res.status(500).json({ success: false, message: 'Erreur mise à jour rappels' });
+  }
+};

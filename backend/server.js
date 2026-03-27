@@ -65,6 +65,14 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ MongoDB connecté avec succès');
 
+    // Démarrer le cron des rappels email
+    try {
+      const { demarrerCronRappels } = require('./src/services/rappelCron');
+      demarrerCronRappels();
+    } catch (cronErr) {
+      console.warn('⚠️ Cron rappels non démarré:', cronErr.message);
+    }
+
     // Migration : s'assurer que la bannière pointe vers une vraie image
     try {
       const Settings = require('./src/models/Settings');
