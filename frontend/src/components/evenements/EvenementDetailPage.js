@@ -892,24 +892,31 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                   </select>
                 </div>
                 {searchingCollab && <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem' }}>Recherche...</p>}
+                {searchCollab.length >= 2 && !searchingCollab && collabResults.length === 0 && (
+                  <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem', padding: '0.5rem 0' }}>Aucun prestataire trouvé pour "{searchCollab}"</p>
+                )}
                 {collabResults.length > 0 && (
                   <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
                     {collabResults
-                      .filter(p => {
+                      .map(p => {
                         const dejaCollab = evt.collaborateurs?.some(c => c.prestataireId === p._id);
                         const estProprio = evt.creePar?.id === p._id;
-                        return !dejaCollab && !estProprio;
-                      })
-                      .map(p => (
-                        <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.3rem', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.84rem' }}>
-                          <div>
-                            <span style={{ fontWeight: 600 }}>{p.nomEntreprise || 'Prestataire'}</span>
-                            {p.email && <span style={{ marginLeft: '0.5rem', color: 'var(--evt-text-dim)', fontSize: '0.75rem' }}>{p.email}</span>}
+                        const disabled = dejaCollab || estProprio;
+                        const raison = estProprio ? '(propriétaire)' : dejaCollab ? '(déjà ajouté)' : '';
+                        return (
+                          <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.3rem', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.84rem', opacity: disabled ? 0.5 : 1 }}>
+                            <div>
+                              <span style={{ fontWeight: 600 }}>{p.nomEntreprise || 'Prestataire'}</span>
+                              {p.email && <span style={{ marginLeft: '0.5rem', color: 'var(--evt-text-dim)', fontSize: '0.75rem' }}>{p.email}</span>}
+                              {raison && <span style={{ marginLeft: '0.4rem', color: 'var(--evt-gold)', fontSize: '0.72rem' }}>{raison}</span>}
+                            </div>
+                            {!disabled && (
+                              <button className="evt-btn-primary" onClick={() => handleAddCollab(p)}
+                                style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>➕</button>
+                            )}
                           </div>
-                          <button className="evt-btn-primary" onClick={() => handleAddCollab(p)}
-                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>➕</button>
-                        </div>
-                      ))
+                        );
+                      })
                     }
                   </div>
                 )}
