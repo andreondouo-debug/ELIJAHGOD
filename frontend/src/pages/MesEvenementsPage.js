@@ -32,6 +32,9 @@ function MesEvenementsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editEvent, setEditEvent] = useState(null);
   const [filtreStatut, setFiltreStatut] = useState('');
+  const [feedUrl, setFeedUrl] = useState('');
+  const [showFeedUrl, setShowFeedUrl] = useState(false);
+  const [feedCopied, setFeedCopied] = useState(false);
 
   const isAuth = isAdmin || isPrestataire;
   const loadingAuth = loadingAdmin || loadingPrestataire;
@@ -182,6 +185,23 @@ function MesEvenementsPage() {
         </div>
         <div className="evt-topbar-right">
           <button className="evt-sync-btn ical" onClick={async () => {
+            if (showFeedUrl) { setShowFeedUrl(false); return; }
+            try {
+              const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
+              const res = await fetch(`${API_URL}/api/evenements/ical-token`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const data = await res.json();
+              if (data.success) {
+                setFeedUrl(data.feedUrl);
+                setShowFeedUrl(true);
+              }
+            } catch (e) { console.error(e); }
+          }} title="Obtenir le lien d'abonnement ICS">
+            🔗 Lien ICS
+          </button>
+          <button className="evt-sync-btn ical" onClick={async () => {
             try {
               const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
               const res = await fetch(`${API_URL}/api/evenements/export/ical-all`, {
@@ -195,14 +215,43 @@ function MesEvenementsPage() {
               a.click();
               window.URL.revokeObjectURL(url);
             } catch (e) { console.error(e); }
-          }} title="Exporter tout l'agenda en .ics">
-            📲 Exporter agenda
+          }} title="Télécharger le fichier .ics">
+            📅 Télécharger .ics
           </button>
           <button className="evt-btn-primary" onClick={ouvrirCreation}>
             ➕ Nouvel événement
           </button>
         </div>
       </div>
+
+      {/* Barre URL d'abonnement ICS */}
+      {showFeedUrl && (
+        <div className="evt-feed-bar">
+          <div className="evt-feed-info">
+            <strong>🔗 Lien d'abonnement ICS</strong>
+            <span>Collez ce lien dans votre application calendrier pour synchroniser automatiquement</span>
+          </div>
+          <div className="evt-feed-url-row">
+            <input
+              className="evt-feed-url-input"
+              value={feedUrl}
+              readOnly
+              onClick={e => e.target.select()}
+            />
+            <button
+              className="evt-btn-primary"
+              onClick={() => {
+                navigator.clipboard.writeText(feedUrl);
+                setFeedCopied(true);
+                setTimeout(() => setFeedCopied(false), 2500);
+              }}
+            >
+              {feedCopied ? '✅ Copié !' : '📋 Copier'}
+            </button>
+            <button className="evt-btn-secondary" onClick={() => setShowFeedUrl(false)}>Fermer</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Onglets ── */}
       <div className="evt-tabs">

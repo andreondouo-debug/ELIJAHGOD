@@ -52,6 +52,10 @@ router.patch('/:id/statut', authAdminOuPrestataire, evenementController.changerS
 router.get('/export/ical-all', authAdminOuPrestataire, evenementController.exportIcalAll);
 router.get('/:id/ical', authAdminOuPrestataire, evenementController.exportIcal);
 
+// Abonnement ICS (URL publique pour apps externes)
+router.post('/ical-token', authAdminOuPrestataire, evenementController.genererIcalToken);
+router.get('/feed/:token', evenementController.feedIcal); // ← pas d'auth, le token est dans l'URL
+
 // Programme (étapes)
 router.post('/:id/programme', authAdminOuPrestataire, evenementController.ajouterEtape);
 router.put('/:id/programme/:etapeId', authAdminOuPrestataire, evenementController.majEtape);

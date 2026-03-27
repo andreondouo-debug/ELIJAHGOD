@@ -1,4 +1,5 @@
 const Evenement = require('../models/Evenement');
+const jwt = require('jsonwebtoken');
 
 /**
  * 📅 CONTROLLER ÉVÉNEMENTS / AGENDA
@@ -481,5 +482,102 @@ exports.exportIcalAll = async (req, res) => {
   } catch (error) {
     console.error('❌ Erreur exportIcalAll:', error);
     res.status(500).json({ success: false, message: 'Erreur export' });
+  }
+};
+
+// ===========================================
+// 🔗 ABONNEMENT ICS (URL publique pour apps externes)
+// ===========================================
+
+// @desc    Générer un token d'abonnement ICS (longue durée, usage URL)
+// @route   POST /api/evenements/ical-token
+exports.genererIcalToken = async (req, res) => {
+  try {
+    const payload = {};
+    if (req.adminId) {
+      payload.type = 'admin';
+      payload.adminId = req.adminId;
+    } else if (req.prestataireId) {
+      payload.type = 'prestataire';
+      payload.prestataireId = req.prestataireId;
+    }
+    payload.usage = 'ical-feed';
+
+    // Token valable 2 ans
+    const feedToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '730d' });
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const feedUrl = `${baseUrl}/api/evenements/feed/${feedToken}`;
+
+    res.json({ success: true, feedUrl, token: feedToken });
+  } catch (error) {
+    console.error('❌ Erreur genererIcalToken:', error);
+    res.status(500).json({ success: false, message: 'Erreur génération token' });
+  }
+};
+
+// @desc    Flux ICS public (pas de header auth — le token est dans l'URL)
+// @route   GET /api/evenements/feed/:token
+exports.feedIcal = async (req, res) => {
+  try {
+    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    if (decoded.usage !== 'ical-feed') {
+      return res.status(403).send('Token invalide');
+    }
+
+    let filtre = {};
+    if (decoded.type === 'prestataire' && decoded.prestataireId) {
+      filtre['creePar.id'] = decoded.prestataireId;
+    }
+
+    const evenements = await Evenement.find(filtre).sort({ dateDebut: 1 });
+
+    const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const vevents = evenements.map(evt => {
+      const uid = `evt-${evt._id}@elijahgod`;
+      const dtstart = formatICalDate(evt.dateDebut, evt.heureDebut);
+      const dtend = evt.dateFin
+        ? formatICalDate(evt.dateFin, evt.heureFin || evt.heureDebut)
+        : formatICalDate(evt.dateDebut, evt.heureFin);
+
+      let location = '';
+      if (evt.lieu) {
+        const parts = [evt.lieu.nom, evt.lieu.adresse, evt.lieu.codePostal, evt.lieu.ville].filter(Boolean);
+        location = parts.join(', ');
+      }
+
+      const lines = [
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${dtstart}`,
+        `DTEND:${dtend}`,
+        `SUMMARY:${escapeICalText(evt.titre)}`,
+      ];
+      if (location) lines.push(`LOCATION:${escapeICalText(location)}`);
+      if (evt.description) lines.push(`DESCRIPTION:${escapeICalText(evt.description)}`);
+      lines.push('END:VEVENT');
+      return lines.join('\r\n');
+    });
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//ELIJAHGOD//Agenda//FR',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      "X-WR-CALNAME:ELIJAH'GOD Agenda",
+      'X-WR-TIMEZONE:Europe/Paris',
+      'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
+      ...vevents,
+      'END:VCALENDAR',
+    ].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(ics);
+  } catch (error) {
+    console.error('❌ Erreur feedIcal:', error);
+    res.status(403).send('Token expiré ou invalide');
   }
 };
