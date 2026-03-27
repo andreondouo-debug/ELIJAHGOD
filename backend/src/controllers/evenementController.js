@@ -461,10 +461,10 @@ exports.rechercherPrestataires = async (req, res) => {
     const prestataires = await Prestataire.find({
       $or: [
         { nomEntreprise: regex },
-        { 'contact.email': regex },
-        { 'contact.nom': regex }
+        { email: regex },
+        { telephone: regex }
       ]
-    }).select('_id nomEntreprise contact.email contact.nom logo').limit(10);
+    }).select('_id nomEntreprise email telephone logo').limit(10);
 
     res.json({ success: true, data: prestataires });
   } catch (error) {
@@ -493,7 +493,7 @@ exports.ajouterCollaborateur = async (req, res) => {
     }
 
     // Vérifier que le prestataire existe
-    const prestataire = await Prestataire.findById(prestataireId).select('nomEntreprise contact.nom');
+    const prestataire = await Prestataire.findById(prestataireId).select('nomEntreprise email');
     if (!prestataire) {
       return res.status(404).json({ success: false, message: 'Prestataire non trouvé' });
     }
@@ -509,7 +509,7 @@ exports.ajouterCollaborateur = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Ce prestataire est déjà collaborateur' });
     }
 
-    const nom = prestataire.nomEntreprise || prestataire.contact?.nom || 'Prestataire';
+    const nom = prestataire.nomEntreprise || 'Prestataire';
     evenement.collaborateurs.push({
       prestataireId,
       nom,

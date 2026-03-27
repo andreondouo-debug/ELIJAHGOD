@@ -903,8 +903,8 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                       .map(p => (
                         <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.3rem', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.84rem' }}>
                           <div>
-                            <span style={{ fontWeight: 600 }}>{p.nomEntreprise || p.contact?.nom || 'Prestataire'}</span>
-                            {p.contact?.email && <span style={{ marginLeft: '0.5rem', color: 'var(--evt-text-dim)', fontSize: '0.75rem' }}>{p.contact.email}</span>}
+                            <span style={{ fontWeight: 600 }}>{p.nomEntreprise || 'Prestataire'}</span>
+                            {p.email && <span style={{ marginLeft: '0.5rem', color: 'var(--evt-text-dim)', fontSize: '0.75rem' }}>{p.email}</span>}
                           </div>
                           <button className="evt-btn-primary" onClick={() => handleAddCollab(p)}
                             style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>➕</button>
