@@ -329,6 +329,7 @@ class PDFService {
     });
     doc.moveTo(LEFT, y + rowH).lineTo(RIGHT, y + rowH)
        .strokeColor('#e0ddd0').lineWidth(0.3).stroke();
+    this._lastRowH = rowH;
     doc.y = y + rowH;
   }
 
@@ -699,9 +700,14 @@ class PDFService {
       return (a.ordre || 0) - (b.ordre || 0);
     });
 
-    const TYPES_ICONS = {
-      transport: '🚛', installation: '🔧', mise_en_place: '📐',
-      prestation: '🎵', rangement: '📦', autre: '📌'
+    // Couleurs par type (pastilles colorées au lieu d'emojis)
+    const TYPES_COLORS = {
+      transport: '#3498db', installation: '#e67e22', mise_en_place: '#9b59b6',
+      prestation: '#c9a227', rangement: '#27ae60', autre: '#95a5a6'
+    };
+    const TYPES_LABELS = {
+      transport: 'Transport', installation: 'Installation', mise_en_place: 'Mise en place',
+      prestation: 'Prestation', rangement: 'Rangement', autre: 'Autre'
     };
 
     const cols = [
@@ -724,19 +730,31 @@ class PDFService {
         const horaire = etape.heureDebut
           ? `${etape.heureDebut}${etape.heureFin ? ' – ' + etape.heureFin : ''}`
           : '—';
-        const typeLabel = `${TYPES_ICONS[etape.type] || '📌'} ${(etape.type || 'autre').replace('_', ' ')}`;
-        const statutLabel = etape.statut === 'termine' ? 'Terminé'
-          : etape.statut === 'en_cours' ? 'En cours'
-          : 'À faire';
+        const typeKey = etape.type || 'autre';
+        const typeLabel = TYPES_LABELS[typeKey] || typeKey.replace('_', ' ');
+        const statutLabel = etape.statut === 'termine' ? '     Terminé'
+          : etape.statut === 'en_cours' ? '     En cours'
+          : '     À faire';
 
+        // Utiliser _tableauLigneAvecCase puis dessiner la pastille type par-dessus
         this._tableauLigneAvecCase(doc, cols, {
           check: '',
           horaire,
-          type: typeLabel,
+          type: '     ' + typeLabel,
           titre: etape.titre,
           responsable: etape.responsable || '—',
           statut: statutLabel,
         }, i % 2 === 1, etape.statut === 'termine');
+
+        // Pastille colorée devant le type
+        const dotY = doc.y - (this._lastRowH || 22) + 8;
+        const dotColor = TYPES_COLORS[typeKey] || '#95a5a6';
+        doc.save();
+        doc.circle(LEFT + 100 + 6, dotY + 2, 4).fill(dotColor);
+        // Pastille statut
+        const statutColor = etape.statut === 'termine' ? '#27ae60' : etape.statut === 'en_cours' ? '#3498db' : '#bdc3c7';
+        doc.circle(LEFT + 433 + 6, dotY + 2, 4).fill(statutColor);
+        doc.restore();
 
         // Description sous la ligne
         if (etape.description) {
@@ -744,7 +762,7 @@ class PDFService {
           const descY = doc.y;
           doc.rect(LEFT, descY, WIDTH, 16).fill('#f5f4f0');
           doc.fontSize(7.5).fillColor(C.textMid).font('Helvetica')
-             .text(`→ ${etape.description}`, LEFT + 25, descY + 4, { width: WIDTH - 35 });
+             .text('> ' + etape.description, LEFT + 25, descY + 4, { width: WIDTH - 35 });
           doc.y = descY + 16;
         }
       });
@@ -792,13 +810,22 @@ class PDFService {
     const totalTodos = todosTries.length;
     const todosFaits = todosTries.filter(t => t.fait).length;
 
+    const PRIO_COLORS = { urgente: '#e74c3c', haute: '#e67e22', normale: '#3498db', basse: '#95a5a6' };
+
     todosTries.forEach((todo, i) => {
+      const prio = todo.priorite || 'normale';
       this._tableauLigneAvecCase(doc, cols, {
         check: '',
         texte: todo.texte,
-        priorite: (todo.priorite || 'normale').toUpperCase(),
+        priorite: '     ' + prio.toUpperCase(),
         statut: todo.fait ? 'Fait' : 'À faire',
       }, i % 2 === 1, todo.fait);
+
+      // Pastille priorité
+      const dotY = doc.y - (this._lastRowH || 22) + 8;
+      doc.save();
+      doc.circle(LEFT + 298 + 6, dotY + 2, 4).fill(PRIO_COLORS[prio] || '#3498db');
+      doc.restore();
     });
 
     // Barre progression
