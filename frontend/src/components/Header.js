@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   LockKeyhole, LayoutDashboard, LogOut,
   User, Building2, ShieldCheck,
-  Phone, Sparkles
+  Phone, Sparkles, CalendarDays
 } from 'lucide-react';
 import { SettingsContext } from '../context/SettingsContext';
 import useAuth from '../hooks/useAuth';
@@ -11,7 +11,7 @@ import './Header.css';
 
 function Header() {
   const { settings } = useContext(SettingsContext);
-  const { isAuthenticated, getUserTypeIcon, logout, getDisplayName, userType } = useAuth();
+  const { isAuthenticated, getUserTypeIcon, logout, getDisplayName, userType, isAdmin, isPrestataire } = useAuth();
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);        // ref mobile
@@ -113,6 +113,12 @@ function Header() {
             <Link to="/prestations" className="nav-link" onClick={fermerMenu}>Prestations</Link>
             <Link to="/prestataires" className="nav-link" onClick={fermerMenu}>Prestataires</Link>
             <Link to="/a-propos" className="nav-link" onClick={fermerMenu}>À propos</Link>
+            {(isAdmin || isPrestataire) && (
+              <Link to={`/${userType}/evenements`} className="nav-link nav-link-evenements" onClick={fermerMenu}>
+                <CalendarDays size={15} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                Mes Événements
+              </Link>
+            )}
             <Link to="/temoignages" className="nav-link" onClick={fermerMenu}>Témoignages</Link>
             <Link to="/devis" className="nav-link btn-devis" onClick={fermerMenu}>
               <Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />

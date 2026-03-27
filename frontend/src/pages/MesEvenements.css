@@ -16,8 +16,8 @@
   --evt-red: #fc5c65;
   --evt-orange: #f7b731;
   --evt-purple: #a55eea;
-  --evt-text: #e8e6f0;
-  --evt-text-dim: #8b8ba0;
+  --evt-text: #f5f4fa;
+  --evt-text-dim: #b0b0c8;
   --evt-radius: 16px;
   --evt-radius-sm: 10px;
   --evt-shadow: 0 4px 24px rgba(0,0,0,0.3);
@@ -220,10 +220,11 @@
 
 .evt-calendar-nav h2 {
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   min-width: 200px;
   text-align: center;
   text-transform: capitalize;
+  color: #ffffff;
 }
 
 .evt-calendar-grid {
@@ -271,9 +272,9 @@
 
 .evt-calendar-day-number {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.3rem;
-  color: var(--evt-text-dim);
+  color: #d0d0e0;
 }
 
 .evt-calendar-day.today .evt-calendar-day-number {
@@ -311,8 +312,9 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.8rem;
-  color: var(--evt-text-dim);
+  font-size: 0.82rem;
+  color: #c8c8e0;
+  font-weight: 500;
 }
 .evt-legend-dot {
   width: 10px;
@@ -363,6 +365,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 0.3rem;
+  color: #ffffff;
 }
 
 .evt-list-card-meta {
@@ -370,8 +373,8 @@
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--evt-text-dim);
+  font-size: 0.82rem;
+  color: #c0c0d8;
 }
 
 .evt-list-card-meta span {
@@ -501,8 +504,8 @@
 .evt-form-label {
   display: block;
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--evt-text-dim);
+  font-weight: 700;
+  color: #d0d0e8;
   margin-bottom: 0.4rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -513,10 +516,10 @@
 .evt-form-textarea {
   width: 100%;
   padding: 0.7rem 1rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--evt-border);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: var(--evt-radius-sm);
-  color: var(--evt-text);
+  color: #ffffff;
   font-size: 0.9rem;
   transition: border-color 0.2s;
   outline: none;
@@ -631,6 +634,7 @@
   font-size: 1.6rem;
   font-weight: 800;
   margin: 0.5rem 0;
+  color: #ffffff;
 }
 
 .evt-detail-hero-meta {
@@ -638,8 +642,8 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-top: 0.8rem;
-  font-size: 0.85rem;
-  color: var(--evt-text-dim);
+  font-size: 0.87rem;
+  color: #c0c0d8;
 }
 
 .evt-detail-hero-meta span {
@@ -678,6 +682,7 @@
   align-items: center;
   gap: 0.5rem;
   margin: 0;
+  color: #ffffff;
 }
 
 .evt-section-body {
@@ -687,7 +692,7 @@
 .evt-section-empty {
   text-align: center;
   padding: 2rem;
-  color: var(--evt-text-dim);
+  color: #c0c0d8;
   font-size: 0.9rem;
 }
 
@@ -758,6 +763,7 @@
 .evt-timeline-title {
   font-weight: 700;
   font-size: 0.95rem;
+  color: #f0eef8;
 }
 
 .evt-timeline-time {
@@ -767,8 +773,8 @@
 }
 
 .evt-timeline-desc {
-  font-size: 0.82rem;
-  color: var(--evt-text-dim);
+  font-size: 0.84rem;
+  color: #c0c0d8;
   margin-top: 0.2rem;
 }
 
@@ -863,6 +869,7 @@
 .evt-toolbox-name {
   font-size: 0.9rem;
   font-weight: 600;
+  color: #f0eef8;
 }
 
 .evt-toolbox-qty {
@@ -927,7 +934,8 @@
 
 .evt-todo-text {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #f0eef8;
 }
 
 .evt-todo-text.done {
@@ -939,8 +947,8 @@
   display: flex;
   gap: 0.6rem;
   margin-top: 0.3rem;
-  font-size: 0.75rem;
-  color: var(--evt-text-dim);
+  font-size: 0.78rem;
+  color: #c0c0d8;
 }
 
 .evt-todo-priority {
@@ -1032,6 +1040,7 @@
 .evt-commande-client {
   font-weight: 600;
   font-size: 0.9rem;
+  color: #f0eef8;
 }
 
 .evt-commande-montant {
@@ -1083,12 +1092,13 @@
 
 .evt-settings-row-label {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #f0eef8;
 }
 
 .evt-settings-row-desc {
-  font-size: 0.78rem;
-  color: var(--evt-text-dim);
+  font-size: 0.8rem;
+  color: #c0c0d8;
   margin-top: 0.2rem;
 }
 
@@ -1166,7 +1176,7 @@
 .evt-empty h3 {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
-  color: var(--evt-text);
+  color: #ffffff;
 }
 
 /* =========================================
