@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { EvenementContext } from '../../context/EvenementContext';
 import { API_URL } from '../../config';
 import '../../pages/MesEvenements.css';
@@ -57,6 +57,7 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const [collabResults, setCollabResults] = useState([]);
   const [collabRole, setCollabRole] = useState('consultation');
   const [searchingCollab, setSearchingCollab] = useState(false);
+  const searchTimerRef = useRef(null);
 
   // Todo assignation
   const [newTodoAssigne, setNewTodoAssigne] = useState('');
@@ -97,14 +98,25 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
     await delierPrestation(evt._id, prestationId);
   };
 
-  // Recherche collaborateurs
-  const handleSearchCollab = async (q) => {
+  // Recherche collaborateurs (dynamique avec debounce)
+  const handleSearchCollab = (q) => {
     setSearchCollab(q);
-    if (q.length < 2) { setCollabResults([]); return; }
-    setSearchingCollab(true);
-    const results = await rechercherPrestataires(q);
-    setCollabResults(results);
-    setSearchingCollab(false);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(async () => {
+      setSearchingCollab(true);
+      const results = await rechercherPrestataires(q || '');
+      setCollabResults(results);
+      setSearchingCollab(false);
+    }, 300);
+  };
+
+  const handleFocusCollab = async () => {
+    if (collabResults.length === 0) {
+      setSearchingCollab(true);
+      const results = await rechercherPrestataires('');
+      setCollabResults(results);
+      setSearchingCollab(false);
+    }
   };
 
   const handleAddCollab = async (prestataire) => {
@@ -880,8 +892,10 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                   className="evt-form-input"
                   value={searchCollab}
                   onChange={e => handleSearchCollab(e.target.value)}
+                  onFocus={handleFocusCollab}
                   placeholder="🔍 Rechercher un prestataire..."
                   style={{ marginBottom: '0.5rem' }}
+                  autoComplete="off"
                 />
                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                   <label style={{ fontSize: '0.78rem', color: 'var(--evt-text-dim)' }}>Rôle :</label>
@@ -892,8 +906,8 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                   </select>
                 </div>
                 {searchingCollab && <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem' }}>Recherche...</p>}
-                {searchCollab.length >= 2 && !searchingCollab && collabResults.length === 0 && (
-                  <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem', padding: '0.5rem 0' }}>Aucun prestataire trouvé pour "{searchCollab}"</p>
+                {!searchingCollab && collabResults.length === 0 && (
+                  <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem', padding: '0.5rem 0' }}>Aucun prestataire trouvé{searchCollab ? ` pour "${searchCollab}"` : ''}</p>
                 )}
                 {collabResults.length > 0 && (
                   <div style={{ maxHeight: '180px', overflowY: 'auto' }}>

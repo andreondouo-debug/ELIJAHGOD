@@ -453,18 +453,21 @@ exports.delierPrestation = async (req, res) => {
 exports.rechercherPrestataires = async (req, res) => {
   try {
     const { q } = req.query;
-    if (!q || q.length < 2) {
-      return res.json({ success: true, data: [] });
+
+    let filtre = {};
+    if (q && q.trim().length >= 1) {
+      const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filtre = {
+        $or: [
+          { nomEntreprise: regex },
+          { email: regex },
+          { telephone: regex }
+        ]
+      };
     }
 
-    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    const prestataires = await Prestataire.find({
-      $or: [
-        { nomEntreprise: regex },
-        { email: regex },
-        { telephone: regex }
-      ]
-    }).select('_id nomEntreprise email telephone logo').limit(10);
+    const prestataires = await Prestataire.find(filtre)
+      .select('_id nomEntreprise email telephone logo').limit(20);
 
     res.json({ success: true, data: prestataires });
   } catch (error) {
