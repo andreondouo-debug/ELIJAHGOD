@@ -326,6 +326,19 @@
 /* =========================================
    LISTE DES ÉVÉNEMENTS
    ========================================= */
+.evt-filter-bar {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.evt-filter-select {
+  width: auto;
+  min-width: 160px;
+}
+
 .evt-list {
   display: flex;
   flex-direction: column;
@@ -1350,21 +1363,402 @@
 }
 
 @media (max-width: 768px) {
-  .evt-topbar { padding: 1rem; }
-  .evt-content { padding: 1rem; }
-  .evt-detail { padding: 1rem; }
-  .evt-tabs { padding: 0 1rem; }
-  .evt-calendar-day { min-height: 60px; }
-  .evt-calendar-day-event { display: none; }
-  .evt-form-row { grid-template-columns: 1fr; }
-  .evt-form-row-3 { grid-template-columns: 1fr; }
-  .evt-toolbox-grid { grid-template-columns: 1fr; }
-  .evt-topbar-left h1 { font-size: 1.1rem; }
+  /* ── Page globale ── */
+  .mes-evenements-page {
+    overflow-x: hidden;
+  }
+
+  /* ── Topbar ── */
+  .evt-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    padding: 0.8rem 1rem;
+  }
+  .evt-topbar-left {
+    justify-content: center;
+  }
+  .evt-topbar-left h1 {
+    font-size: 1.1rem;
+  }
+  .evt-topbar-icon {
+    font-size: 1.3rem;
+  }
+  .evt-topbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .evt-topbar-right .evt-sync-btn,
+  .evt-topbar-right .evt-btn-primary {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    font-size: 0.72rem;
+    padding: 0.5rem 0.6rem;
+    white-space: nowrap;
+  }
+
+  /* ── Feed URL bar ── */
+  .evt-feed-bar {
+    padding: 0.8rem 1rem;
+  }
+  .evt-feed-url-row {
+    flex-direction: column;
+  }
+  .evt-feed-url-input {
+    width: 100%;
+    font-size: 0.68rem;
+    padding: 0.5rem 0.6rem;
+  }
+  .evt-feed-url-row .evt-btn-primary,
+  .evt-feed-url-row .evt-btn-secondary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* ── Onglets ── */
+  .evt-tabs {
+    padding: 0 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .evt-tab {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem;
+    gap: 0.3rem;
+  }
+
+  /* ── Contenu ── */
+  .evt-content {
+    padding: 1rem;
+  }
+
+  /* ── Calendrier ── */
+  .evt-calendar-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .evt-calendar-nav {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .evt-calendar-nav h2 {
+    font-size: 1rem;
+    min-width: 140px;
+  }
+  .evt-calendar-day-header {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.65rem;
+    letter-spacing: 0;
+  }
+  .evt-calendar-day {
+    min-height: 52px;
+    padding: 0.3rem;
+  }
+  .evt-calendar-day-number {
+    font-size: 0.75rem;
+  }
+  .evt-calendar-day-event {
+    display: none;
+  }
+  .evt-calendar-day-more {
+    display: none;
+  }
+  .evt-calendar-day.today {
+    box-shadow: inset 0 0 0 1.5px var(--evt-gold);
+  }
+  .evt-calendar-legend {
+    gap: 0.8rem;
+    font-size: 0.72rem;
+  }
+  .evt-legend-item {
+    font-size: 0.72rem;
+  }
+  .evt-legend-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* ── Filtre liste ── */
+  .evt-filter-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .evt-filter-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* ── Liste events ── */
+  .evt-list-card {
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.9rem;
+  }
+  .evt-list-card-color {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+  }
+  .evt-list-card-title {
+    font-size: 0.95rem;
+  }
+  .evt-list-card-meta {
+    gap: 0.4rem;
+    font-size: 0.75rem;
+  }
+  .evt-list-card-badges {
+    gap: 0.3rem;
+  }
+  .evt-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* ── Détail ── */
+  .evt-detail {
+    padding: 0.8rem;
+    gap: 1rem;
+  }
+  .evt-detail-hero {
+    padding: 1rem;
+  }
+  .evt-detail-hero h1 {
+    font-size: 1.15rem;
+    word-break: break-word;
+  }
+  .evt-detail-hero-meta {
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+  }
+  .evt-lieu-gps {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  .evt-gps-links {
+    margin-left: 0;
+  }
+  .evt-detail-hero-actions {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .evt-detail-hero-actions .evt-btn-primary,
+  .evt-detail-hero-actions .evt-btn-danger {
+    font-size: 0.78rem;
+    padding: 0.5rem 0.8rem;
+  }
+  .evt-detail-hero-actions .evt-form-select {
+    min-width: 0 !important;
+    width: 100%;
+    font-size: 0.78rem !important;
+  }
+
+  /* ── Sync bar ── */
+  .evt-sync-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+  .evt-sync-bar .evt-sync-btn,
+  .evt-sync-bar a.evt-sync-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  /* ── Sections ── */
+  .evt-section-header {
+    padding: 0.8rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .evt-section-header h3 {
+    font-size: 0.9rem;
+  }
+  .evt-section-body {
+    padding: 0.8rem;
+  }
+
+  /* ── Timeline programme ── */
+  .evt-timeline {
+    padding-left: 1.5rem;
+  }
+  .evt-timeline::before {
+    left: 8px;
+  }
+  .evt-timeline-dot {
+    left: -1.5rem;
+    width: 10px;
+    height: 10px;
+  }
+  .evt-timeline-item {
+    padding: 0.6rem 0.8rem;
+  }
+  .evt-timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  .evt-timeline-title {
+    font-size: 0.85rem;
+  }
+  .evt-timeline-time {
+    font-size: 0.72rem;
+  }
+  .evt-timeline-desc {
+    font-size: 0.78rem;
+  }
+  .evt-timeline-actions {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .evt-timeline-type-badge {
+    font-size: 0.6rem;
+  }
+
+  /* ── Todos ── */
+  .evt-todo-item {
+    gap: 0.5rem;
+    padding: 0.6rem 0;
+  }
+  .evt-todo-text {
+    font-size: 0.82rem;
+  }
+  .evt-todo-meta {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+  }
+  .evt-todo-add {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .evt-todo-add input {
+    font-size: 0.82rem;
+  }
+  .evt-todo-add .evt-form-select {
+    width: 100%;
+  }
+
+  /* ── Toolbox ── */
+  .evt-toolbox-grid {
+    grid-template-columns: 1fr;
+  }
+  .evt-toolbox-item {
+    padding: 0.5rem 0.7rem;
+  }
+  .evt-toolbox-name {
+    font-size: 0.82rem;
+  }
+
+  /* ── Formulaires ── */
+  .evt-form-row {
+    grid-template-columns: 1fr;
+  }
+  .evt-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Modal ── */
+  .evt-modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+  .evt-modal {
+    max-height: 95vh;
+    border-radius: var(--evt-radius) var(--evt-radius) 0 0;
+  }
+  .evt-modal-header {
+    padding: 0.8rem 1rem;
+  }
+  .evt-modal-header h2 {
+    font-size: 1rem;
+  }
+  .evt-modal-body {
+    padding: 1rem;
+  }
+  .evt-modal-footer {
+    padding: 0.8rem 1rem;
+    flex-wrap: wrap;
+  }
+  .evt-modal-footer .evt-btn-primary,
+  .evt-modal-footer .evt-btn-secondary {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* ── Settings ── */
+  .evt-settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .evt-settings-group-title {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+  .evt-settings-group-body {
+    padding: 0.8rem;
+  }
+
+  /* ── Commandes liées ── */
+  .evt-commande-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  /* ── Loading / Empty ── */
+  .evt-loading {
+    padding: 2rem;
+  }
+  .evt-empty {
+    padding: 2rem 1rem;
+  }
 }
 
 @media (max-width: 480px) {
-  .evt-tab { padding: 0.7rem 0.8rem; font-size: 0.8rem; }
-  .evt-calendar-grid { font-size: 0.75rem; }
-  .evt-calendar-day { min-height: 44px; padding: 0.3rem; }
-  .evt-list-card { flex-direction: column; }
+  .evt-tab {
+    padding: 0.6rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .evt-calendar-grid {
+    font-size: 0.7rem;
+  }
+  .evt-calendar-day {
+    min-height: 40px;
+    padding: 0.2rem;
+  }
+  .evt-calendar-day-number {
+    font-size: 0.68rem;
+  }
+  .evt-calendar-nav h2 {
+    font-size: 0.88rem;
+    min-width: 110px;
+  }
+  .evt-topbar-left h1 {
+    font-size: 0.95rem;
+  }
+  .evt-detail-hero h1 {
+    font-size: 1rem;
+  }
+  .evt-detail-hero-meta {
+    font-size: 0.72rem;
+  }
+  .evt-gps-btn {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
+  }
+  .evt-sync-btn {
+    font-size: 0.68rem;
+  }
 }

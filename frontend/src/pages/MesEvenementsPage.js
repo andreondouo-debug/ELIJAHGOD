@@ -338,8 +338,8 @@ function MesEvenementsPage() {
       {onglet === 'liste' && (
         <div className="evt-content">
           {/* Filtres */}
-          <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <select className="evt-form-select" style={{ width: 'auto', minWidth: '160px' }} value={filtreStatut} onChange={e => setFiltreStatut(e.target.value)}>
+          <div className="evt-filter-bar">
+            <select className="evt-form-select evt-filter-select" value={filtreStatut} onChange={e => setFiltreStatut(e.target.value)}>
               <option value="">Tous les statuts</option>
               <option value="proposition">🟡 Proposition</option>
               <option value="prevision">🔵 Prévision</option>
