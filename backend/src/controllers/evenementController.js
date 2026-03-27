@@ -343,3 +343,143 @@ exports.changerStatut = async (req, res) => {
     res.status(500).json({ success: false, message: 'Erreur' });
   }
 };
+
+// ===========================================
+// 📤 EXPORT iCAL (.ics)
+// ===========================================
+
+function formatICalDate(dateStr, heureStr) {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  if (heureStr) {
+    const [h, m] = heureStr.split(':');
+    return `${year}${month}${day}T${h.padStart(2, '0')}${(m || '00').padStart(2, '0')}00`;
+  }
+  return `${year}${month}${day}`;
+}
+
+function escapeICalText(text) {
+  if (!text) return '';
+  return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+function genererICS(evt) {
+  const uid = `evt-${evt._id}@elijahgod`;
+  const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const dtstart = formatICalDate(evt.dateDebut, evt.heureDebut);
+  const dtend = evt.dateFin
+    ? formatICalDate(evt.dateFin, evt.heureFin || evt.heureDebut)
+    : formatICalDate(evt.dateDebut, evt.heureFin);
+
+  let location = '';
+  if (evt.lieu) {
+    const parts = [evt.lieu.nom, evt.lieu.adresse, evt.lieu.codePostal, evt.lieu.ville].filter(Boolean);
+    location = parts.join(', ');
+  }
+
+  const description = [
+    evt.description || '',
+    evt.type ? `Type: ${evt.type}` : '',
+    evt.nbInvites ? `Invités: ${evt.nbInvites}` : '',
+    evt.statut ? `Statut: ${evt.statut}` : '',
+  ].filter(Boolean).join('\\n');
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//ELIJAHGOD//Agenda//FR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${dtstart}`,
+    `DTEND:${dtend}`,
+    `SUMMARY:${escapeICalText(evt.titre)}`,
+  ];
+
+  if (description) lines.push(`DESCRIPTION:${escapeICalText(description)}`);
+  if (location) lines.push(`LOCATION:${escapeICalText(location)}`);
+
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+// @desc    Exporter un événement en .ics
+// @route   GET /api/evenements/:id/ical
+exports.exportIcal = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const ics = genererICS(evenement);
+    const filename = `evenement-${evenement.titre.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(ics);
+  } catch (error) {
+    console.error('❌ Erreur exportIcal:', error);
+    res.status(500).json({ success: false, message: 'Erreur export' });
+  }
+};
+
+// @desc    Exporter tous les événements en .ics
+// @route   GET /api/evenements/export/ical-all
+exports.exportIcalAll = async (req, res) => {
+  try {
+    let filtre = {};
+    if (req.prestataireId) {
+      filtre['creePar.id'] = req.prestataireId;
+    }
+
+    const evenements = await Evenement.find(filtre).sort({ dateDebut: 1 });
+
+    const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const vevents = evenements.map(evt => {
+      const uid = `evt-${evt._id}@elijahgod`;
+      const dtstart = formatICalDate(evt.dateDebut, evt.heureDebut);
+      const dtend = evt.dateFin
+        ? formatICalDate(evt.dateFin, evt.heureFin || evt.heureDebut)
+        : formatICalDate(evt.dateDebut, evt.heureFin);
+
+      let location = '';
+      if (evt.lieu) {
+        const parts = [evt.lieu.nom, evt.lieu.adresse, evt.lieu.codePostal, evt.lieu.ville].filter(Boolean);
+        location = parts.join(', ');
+      }
+
+      const lines = [
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${dtstart}`,
+        `DTEND:${dtend}`,
+        `SUMMARY:${escapeICalText(evt.titre)}`,
+      ];
+      if (location) lines.push(`LOCATION:${escapeICalText(location)}`);
+      if (evt.description) lines.push(`DESCRIPTION:${escapeICalText(evt.description)}`);
+      lines.push('END:VEVENT');
+      return lines.join('\r\n');
+    });
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//ELIJAHGOD//Agenda//FR',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      ...vevents,
+      'END:VCALENDAR',
+    ].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="elijahgod-agenda.ics"');
+    res.send(ics);
+  } catch (error) {
+    console.error('❌ Erreur exportIcalAll:', error);
+    res.status(500).json({ success: false, message: 'Erreur export' });
+  }
+};

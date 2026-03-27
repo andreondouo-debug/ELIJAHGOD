@@ -48,6 +48,10 @@ router.delete('/:id', authAdminOuPrestataire, evenementController.supprimerEvene
 // Statut
 router.patch('/:id/statut', authAdminOuPrestataire, evenementController.changerStatut);
 
+// Export iCal
+router.get('/export/ical-all', authAdminOuPrestataire, evenementController.exportIcalAll);
+router.get('/:id/ical', authAdminOuPrestataire, evenementController.exportIcal);
+
 // Programme (étapes)
 router.post('/:id/programme', authAdminOuPrestataire, evenementController.ajouterEtape);
 router.put('/:id/programme/:etapeId', authAdminOuPrestataire, evenementController.majEtape);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminContext } from '../context/AdminContext';
 import { PrestataireContext } from '../context/PrestataireContext';
 import { EvenementContext } from '../context/EvenementContext';
+import { API_URL } from '../config';
 import EvenementFormModal from '../components/evenements/EvenementFormModal';
 import EvenementDetailPage from '../components/evenements/EvenementDetailPage';
 import EvenementParametres from '../components/evenements/EvenementParametres';
@@ -180,6 +181,23 @@ function MesEvenementsPage() {
           <h1>Mes Événements</h1>
         </div>
         <div className="evt-topbar-right">
+          <button className="evt-sync-btn ical" onClick={async () => {
+            try {
+              const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
+              const res = await fetch(`${API_URL}/api/evenements/export/ical-all`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const blob = await res.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'elijahgod-agenda.ics';
+              a.click();
+              window.URL.revokeObjectURL(url);
+            } catch (e) { console.error(e); }
+          }} title="Exporter tout l'agenda en .ics">
+            📲 Exporter agenda
+          </button>
           <button className="evt-btn-primary" onClick={ouvrirCreation}>
             ➕ Nouvel événement
           </button>

@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react';
 import { EvenementContext } from '../../context/EvenementContext';
+import { API_URL } from '../../config';
 import '../../pages/MesEvenements.css';
 
 const ETAPES_TYPES = [
@@ -110,6 +111,56 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const outilsVerifies = evt.boiteAOutils?.filter(o => o.verifie).length || 0;
   const totalOutils = evt.boiteAOutils?.length || 0;
 
+  // ── Adresse complète pour GPS ──
+  const adresseComplete = evt.lieu
+    ? [evt.lieu.adresse, evt.lieu.codePostal, evt.lieu.ville, evt.lieu.nom].filter(Boolean).join(', ')
+    : '';
+  const adresseEncoded = encodeURIComponent(adresseComplete);
+
+  // ── URL Google Calendar ──
+  const genererGoogleCalendarUrl = () => {
+    const fmt = (d, h) => {
+      const date = new Date(d);
+      const y = date.getFullYear();
+      const mo = String(date.getMonth() + 1).padStart(2, '0');
+      const da = String(date.getDate()).padStart(2, '0');
+      if (h) {
+        const [hh, mm] = h.split(':');
+        return `${y}${mo}${da}T${hh.padStart(2, '0')}${(mm || '00').padStart(2, '0')}00`;
+      }
+      return `${y}${mo}${da}`;
+    };
+    const start = fmt(evt.dateDebut, evt.heureDebut);
+    const end = evt.dateFin ? fmt(evt.dateFin, evt.heureFin) : fmt(evt.dateDebut, evt.heureFin);
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: evt.titre,
+      dates: `${start}/${end}`,
+      details: evt.description || '',
+      location: adresseComplete,
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
+  // ── Télécharger .ics ──
+  const telechargerICS = async () => {
+    try {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('prestataireToken');
+      const res = await fetch(`${API_URL}/api/evenements/${evt._id}/ical`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${evt.titre.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Erreur export iCal:', e);
+    }
+  };
+
   return (
     <div className="evt-detail">
       {/* ── Colonne principale ── */}
@@ -126,7 +177,27 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
           <div className="evt-detail-hero-meta">
             <span>📅 {new Date(evt.dateDebut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
             <span>🕐 {evt.heureDebut} – {evt.heureFin}</span>
-            {evt.lieu?.nom && <span>📍 {evt.lieu.nom}{evt.lieu.ville ? `, ${evt.lieu.ville}` : ''}</span>}
+            {evt.lieu?.nom && (
+              <span className="evt-lieu-gps">
+                📍 {evt.lieu.nom}{evt.lieu.ville ? `, ${evt.lieu.ville}` : ''}
+                {adresseComplete && (
+                  <span className="evt-gps-links">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${adresseEncoded}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="evt-gps-btn gmaps"
+                      title="Ouvrir dans Google Maps"
+                    >Maps</a>
+                    <a
+                      href={`https://waze.com/ul?q=${adresseEncoded}&navigate=yes`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="evt-gps-btn waze"
+                      title="Ouvrir dans Waze"
+                    >Waze</a>
+                  </span>
+                )}
+              </span>
+            )}
             {evt.nbInvites && <span>👥 {evt.nbInvites} invités</span>}
           </div>
           {evt.description && <p style={{ marginTop: '0.8rem', color: 'var(--evt-text-dim)', fontSize: '0.88rem' }}>{evt.description}</p>}
@@ -144,6 +215,17 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
             <button className="evt-btn-danger" onClick={handleDelete}>
               {confirmDelete ? '⚠️ Confirmer ?' : '🗑️ Supprimer'}
             </button>
+          </div>
+
+          {/* ── Synchronisation calendrier ── */}
+          <div className="evt-sync-bar">
+            <span className="evt-sync-label">📲 Synchroniser :</span>
+            <button className="evt-sync-btn ical" onClick={telechargerICS} title="Télécharger .ics (Apple Calendar, Outlook)">
+              📅 iCal / Outlook
+            </button>
+            <a className="evt-sync-btn gcal" href={genererGoogleCalendarUrl()} target="_blank" rel="noopener noreferrer" title="Ajouter à Google Calendar">
+              🗓️ Google Calendar
+            </a>
           </div>
         </div>
 
