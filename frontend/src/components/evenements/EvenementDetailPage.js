@@ -38,7 +38,7 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const [newTodo, setNewTodo] = useState('');
   const [newTodoPriorite, setNewTodoPriorite] = useState('normale');
   const [newOutil, setNewOutil] = useState({ nom: '', categorie: '', quantite: 1 });
-  const [newEtape, setNewEtape] = useState({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '' });
+  const [newEtape, setNewEtape] = useState({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '', responsable: '' });
   const [showAddEtape, setShowAddEtape] = useState(false);
   const [showAddOutil, setShowAddOutil] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -116,7 +116,7 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const handleAddEtape = async () => {
     if (!newEtape.titre.trim()) return;
     await ajouterEtape(evt._id, { ...newEtape, ordre: (evt.programme?.length || 0) });
-    setNewEtape({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '' });
+    setNewEtape({ titre: '', type: 'autre', heureDebut: '', heureFin: '', description: '', responsable: '' });
     setShowAddEtape(false);
   };
 
@@ -324,8 +324,15 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
                     <input className="evt-form-input" type="time" value={newEtape.heureFin} onChange={e => setNewEtape(p => ({ ...p, heureFin: e.target.value }))} />
                   </div>
                 </div>
-                <div className="evt-form-group">
-                  <input className="evt-form-input" value={newEtape.description} onChange={e => setNewEtape(p => ({ ...p, description: e.target.value }))} placeholder="Description (optionnel)" />
+                <div className="evt-form-row">
+                  <div className="evt-form-group">
+                    <label className="evt-form-label">Responsable</label>
+                    <input className="evt-form-input" value={newEtape.responsable} onChange={e => setNewEtape(p => ({ ...p, responsable: e.target.value }))} placeholder="Nom du responsable" />
+                  </div>
+                  <div className="evt-form-group">
+                    <label className="evt-form-label">Description</label>
+                    <input className="evt-form-input" value={newEtape.description} onChange={e => setNewEtape(p => ({ ...p, description: e.target.value }))} placeholder="Description (optionnel)" />
+                  </div>
                 </div>
                 <button className="evt-btn-primary" onClick={handleAddEtape}>✅ Ajouter l'étape</button>
               </div>
