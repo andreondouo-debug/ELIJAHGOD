@@ -71,6 +71,10 @@ router.post('/:id/outils', authAdminOuPrestataire, evenementController.ajouterOu
 router.put('/:id/outils/:outilId', authAdminOuPrestataire, evenementController.majOutil);
 router.delete('/:id/outils/:outilId', authAdminOuPrestataire, evenementController.supprimerOutil);
 
+// Prestations liées
+router.post('/:id/prestations', authAdminOuPrestataire, evenementController.lierPrestation);
+router.delete('/:id/prestations/:prestationId', authAdminOuPrestataire, evenementController.delierPrestation);
+
 // Rappels email
 router.put('/rappels/config', authAdminOuPrestataire, evenementController.majRappelsConfig);
 

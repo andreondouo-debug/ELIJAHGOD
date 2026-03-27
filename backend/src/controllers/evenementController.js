@@ -328,6 +328,53 @@ exports.supprimerOutil = async (req, res) => {
   }
 };
 
+// @desc    Lier une prestation à un événement
+// @route   POST /api/evenements/:id/prestations
+exports.lierPrestation = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    const { prestationId, nom, prestataire, prestataireId } = req.body;
+    if (!prestationId || !nom) {
+      return res.status(400).json({ success: false, message: 'prestationId et nom sont requis' });
+    }
+
+    // Éviter les doublons
+    const dejaLiee = evenement.prestationsLiees.some(p => p.prestationId?.toString() === prestationId);
+    if (dejaLiee) {
+      return res.status(400).json({ success: false, message: 'Prestation déjà liée' });
+    }
+
+    evenement.prestationsLiees.push({ prestationId, nom, prestataire, prestataireId });
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur lierPrestation:', error);
+    res.status(500).json({ success: false, message: 'Erreur' });
+  }
+};
+
+// @desc    Délier une prestation d'un événement
+// @route   DELETE /api/evenements/:id/prestations/:prestationId
+exports.delierPrestation = async (req, res) => {
+  try {
+    const evenement = await Evenement.findById(req.params.id);
+    if (!evenement) return res.status(404).json({ success: false, message: 'Événement non trouvé' });
+
+    evenement.prestationsLiees = evenement.prestationsLiees.filter(
+      p => p.prestationId?.toString() !== req.params.prestationId
+    );
+    await evenement.save();
+
+    res.json({ success: true, data: evenement });
+  } catch (error) {
+    console.error('❌ Erreur delierPrestation:', error);
+    res.status(500).json({ success: false, message: 'Erreur' });
+  }
+};
+
 // @desc    Changer le statut d'un événement
 // @route   PATCH /api/evenements/:id/statut
 exports.changerStatut = async (req, res) => {

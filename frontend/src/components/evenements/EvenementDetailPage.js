@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { EvenementContext } from '../../context/EvenementContext';
 import { API_URL } from '../../config';
 import '../../pages/MesEvenements.css';
@@ -31,7 +31,8 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
     evenementActif: evt,
     changerStatut, ajouterEtape, majEtape, supprimerEtape,
     ajouterTodo, majTodo, supprimerTodo,
-    ajouterOutil, majOutil, supprimerOutil, supprimerEvenement
+    ajouterOutil, majOutil, supprimerOutil, supprimerEvenement,
+    lierPrestation, delierPrestation
   } = useContext(EvenementContext);
 
   const [newTodo, setNewTodo] = useState('');
@@ -41,6 +42,39 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
   const [showAddEtape, setShowAddEtape] = useState(false);
   const [showAddOutil, setShowAddOutil] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Prestations
+  const [showAddPrestation, setShowAddPrestation] = useState(false);
+  const [prestationsDisponibles, setPrestationsDisponibles] = useState([]);
+  const [searchPrestation, setSearchPrestation] = useState('');
+  const [loadingPrestations, setLoadingPrestations] = useState(false);
+
+  // Charger les prestations disponibles
+  useEffect(() => {
+    if (showAddPrestation && prestationsDisponibles.length === 0) {
+      setLoadingPrestations(true);
+      fetch(`${API_URL}/api/prestations`)
+        .then(r => r.json())
+        .then(data => {
+          setPrestationsDisponibles(data.data || data || []);
+        })
+        .catch(() => {})
+        .finally(() => setLoadingPrestations(false));
+    }
+  }, [showAddPrestation]);
+
+  const handleLierPrestation = async (prestation) => {
+    await lierPrestation(evt._id, {
+      prestationId: prestation._id,
+      nom: prestation.nom,
+      prestataire: prestation.prestatairesAssocies?.[0]?.nom || '',
+      prestataireId: prestation.prestatairesAssocies?.[0]?.prestataireId || undefined,
+    });
+  };
+
+  const handleDelierPrestation = async (prestationId) => {
+    await delierPrestation(evt._id, prestationId);
+  };
 
   if (!evt) return <div className="evt-empty"><p>Aucun événement sélectionné</p></div>;
 
@@ -178,7 +212,13 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
           </div>
           <h1>{evt.titre}</h1>
           <div className="evt-detail-hero-meta">
-            <span>📅 {new Date(evt.dateDebut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span>📅 {(() => {
+              const d1 = new Date(evt.dateDebut);
+              const d2 = evt.dateFin ? new Date(evt.dateFin) : null;
+              const fmt = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+              if (!d2 || d1.toDateString() === d2.toDateString()) return fmt(d1);
+              return `${fmt(d1)} → ${fmt(d2)}`;
+            })()}</span>
             <span>🕐 {evt.heureDebut} – {evt.heureFin}</span>
             {evt.lieu?.nom && (
               <span className="evt-lieu-gps">
@@ -475,21 +515,72 @@ function EvenementDetailPage({ onRetour, onEditer, recharger }) {
         </div>
 
         {/* 🎵 Prestations liées */}
-        {evt.prestationsLiees?.length > 0 && (
-          <div className="evt-section">
-            <div className="evt-section-header">
-              <h3>🎵 Prestations</h3>
-            </div>
-            <div className="evt-section-body">
-              {evt.prestationsLiees.map((p, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{p.nom}</span>
-                  {p.prestataire && <span style={{ fontSize: '0.78rem', color: 'var(--evt-text-dim)' }}>{p.prestataire}</span>}
-                </div>
-              ))}
-            </div>
+        <div className="evt-section">
+          <div className="evt-section-header">
+            <h3>🎵 Prestations</h3>
+            <button className="evt-btn-secondary" onClick={() => setShowAddPrestation(!showAddPrestation)} style={{ fontSize: '0.8rem' }}>
+              {showAddPrestation ? '✕ Fermer' : '➕ Lier'}
+            </button>
           </div>
-        )}
+          <div className="evt-section-body">
+            {showAddPrestation && (
+              <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid var(--evt-border)', borderRadius: 'var(--evt-radius-sm)', padding: '0.8rem', marginBottom: '0.8rem' }}>
+                <input
+                  className="evt-form-input"
+                  value={searchPrestation}
+                  onChange={e => setSearchPrestation(e.target.value)}
+                  placeholder="🔍 Rechercher une prestation..."
+                  style={{ marginBottom: '0.5rem' }}
+                />
+                {loadingPrestations ? (
+                  <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem' }}>Chargement...</p>
+                ) : (
+                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {prestationsDisponibles
+                      .filter(p => {
+                        const dejaLiee = evt.prestationsLiees?.some(pl => pl.prestationId === p._id);
+                        const matchSearch = !searchPrestation || p.nom.toLowerCase().includes(searchPrestation.toLowerCase()) ||
+                          (p.categorie || '').toLowerCase().includes(searchPrestation.toLowerCase());
+                        return !dejaLiee && matchSearch;
+                      })
+                      .map(p => (
+                        <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.3rem', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.84rem' }}>
+                          <div>
+                            <span style={{ fontWeight: 600 }}>{p.nom}</span>
+                            {p.categorie && <span style={{ marginLeft: '0.5rem', color: 'var(--evt-text-dim)', fontSize: '0.75rem' }}>({p.categorie})</span>}
+                          </div>
+                          <button className="evt-btn-primary" onClick={() => handleLierPrestation(p)}
+                            style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>➕</button>
+                        </div>
+                      ))
+                    }
+                    {prestationsDisponibles.filter(p => !evt.prestationsLiees?.some(pl => pl.prestationId === p._id)).length === 0 && (
+                      <p style={{ color: 'var(--evt-text-dim)', fontSize: '0.82rem', padding: '0.5rem 0' }}>Toutes les prestations sont déjà liées.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(!evt.prestationsLiees || evt.prestationsLiees.length === 0) ? (
+              <div className="evt-section-empty" style={{ padding: '1.5rem' }}>
+                <p>🎵 Aucune prestation liée</p>
+                <p style={{ fontSize: '0.78rem', marginTop: '0.3rem' }}>Liez des prestations pour les associer à cet événement.</p>
+              </div>
+            ) : (
+              evt.prestationsLiees.map((p, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{p.nom}</span>
+                    {p.prestataire && <span style={{ marginLeft: '0.5rem', fontSize: '0.78rem', color: 'var(--evt-text-dim)' }}>· {p.prestataire}</span>}
+                  </div>
+                  <button className="evt-btn-icon" onClick={() => handleDelierPrestation(p.prestationId)}
+                    style={{ width: '24px', height: '24px', fontSize: '0.65rem' }}>✕</button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
         {/* 📝 Notes */}
         {evt.notes && (

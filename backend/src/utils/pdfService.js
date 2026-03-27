@@ -27,10 +27,14 @@ const WIDTH  = RIGHT - LEFT;
 const FOOTER = 55;        // hauteur réservée pied de page
 const PAGE_H = 842;       // A4
 
-// Logo — priorité : assets backend > frontend public
-const LOGO_PATH = fs.existsSync(path.join(__dirname, '../assets/logo.png'))
-  ? path.join(__dirname, '../assets/logo.png')
-  : path.join(__dirname, '../../../frontend/public/images/logo.png');
+// Logo — résolu dynamiquement au runtime
+function getLogoPath() {
+  const backendLogo = path.join(__dirname, '../assets/logo.png');
+  const frontendLogo = path.join(__dirname, '../../../frontend/public/images/logo.png');
+  if (fs.existsSync(backendLogo)) return backendLogo;
+  if (fs.existsSync(frontendLogo)) return frontendLogo;
+  return null;
+}
 
 class PDFService {
 
@@ -128,11 +132,12 @@ class PDFService {
     // Logo
     let logoX = LEFT;
     let nomX  = LEFT;
-    if (fs.existsSync(LOGO_PATH)) {
+    const logoDevis = getLogoPath();
+    if (logoDevis) {
       try {
-        doc.image(LOGO_PATH, LEFT, 24, { height: 62 });
+        doc.image(logoDevis, LEFT, 24, { height: 62 });
         nomX = LEFT + 75;
-      } catch (e) { /* logo introuvable */ }
+      } catch (e) { console.error('⚠️ Logo introuvable pour devis:', e.message); }
     }
 
     // Nom & sous-titre
@@ -256,7 +261,19 @@ class PDFService {
   }
 
   _tableauLigne(doc, cols, data, isOdd) {
-    const rowH = 22;
+    // Calculer la hauteur nécessaire 
+    const minH = 22;
+    let maxH = minH;
+    cols.forEach(col => {
+      const val = data[col.key] !== undefined ? String(data[col.key]) : '';
+      if (val) {
+        const h = doc.fontSize(8.5).font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
+                     .heightOfString(val, { width: col.w }) + 10;
+        if (h > maxH) maxH = h;
+      }
+    });
+    const rowH = Math.min(maxH, 60); // plafonner
+
     this._check(doc, rowH + 4);
     const y = doc.y;
     doc.rect(LEFT, y, WIDTH, rowH).fill(isOdd ? C.bgAlt : C.white);
@@ -264,7 +281,7 @@ class PDFService {
       const val = data[col.key] !== undefined ? String(data[col.key]) : '';
       doc.fontSize(8.5).fillColor(col.color || C.text)
          .font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
-         .text(val, LEFT + col.x, y + 5, { width: col.w, align: col.align || 'left' });
+         .text(val, LEFT + col.x, y + 5, { width: col.w, align: col.align || 'left', lineBreak: true, ellipsis: true });
     });
     doc.moveTo(LEFT, y + rowH).lineTo(RIGHT, y + rowH)
        .strokeColor('#e0ddd0').lineWidth(0.3).stroke();
@@ -273,7 +290,20 @@ class PDFService {
 
   // Ligne avec case à cocher imprimable
   _tableauLigneAvecCase(doc, cols, data, isOdd, isChecked) {
-    const rowH = 22;
+    // Calculer la hauteur nécessaire
+    const minH = 22;
+    let maxH = minH;
+    cols.forEach(col => {
+      if (col.key === 'check') return;
+      const val = data[col.key] !== undefined ? String(data[col.key]) : '';
+      if (val) {
+        const h = doc.fontSize(8.5).font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
+                     .heightOfString(val, { width: col.w }) + 10;
+        if (h > maxH) maxH = h;
+      }
+    });
+    const rowH = Math.min(maxH, 60);
+
     this._check(doc, rowH + 4);
     const y = doc.y;
     doc.rect(LEFT, y, WIDTH, rowH).fill(isOdd ? C.bgAlt : C.white);
@@ -294,7 +324,7 @@ class PDFService {
         const val = data[col.key] !== undefined ? String(data[col.key]) : '';
         doc.fontSize(8.5).fillColor(col.color || C.text)
            .font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
-           .text(val, LEFT + col.x, y + 5, { width: col.w, align: col.align || 'left' });
+           .text(val, LEFT + col.x, y + 5, { width: col.w, align: col.align || 'left', lineBreak: true, ellipsis: true });
       }
     });
     doc.moveTo(LEFT, y + rowH).lineTo(RIGHT, y + rowH)
@@ -524,6 +554,11 @@ class PDFService {
         // ── INFOS ÉVÉNEMENT ──
         this._progInfosEvenement(doc, evt);
 
+        // ── PRESTATIONS LIÉES ──
+        if (evt.prestationsLiees?.length > 0) {
+          this._progPrestations(doc, evt);
+        }
+
         // ── PROGRAMME / TIMELINE ──
         this._progTableauEtapes(doc, evt);
 
@@ -564,11 +599,12 @@ class PDFService {
 
     // Logo
     let nomX = LEFT;
-    if (fs.existsSync(LOGO_PATH)) {
+    const logoProg = getLogoPath();
+    if (logoProg) {
       try {
-        doc.image(LOGO_PATH, LEFT, 24, { height: 62 });
+        doc.image(logoProg, LEFT, 24, { height: 62 });
         nomX = LEFT + 75;
-      } catch (e) { /* logo introuvable */ }
+      } catch (e) { console.error('⚠️ Logo introuvable pour programme:', e.message); }
     }
 
     // Nom & sous-titre
@@ -592,7 +628,7 @@ class PDFService {
        .text('PROGRAMME', LEFT, 117, { lineBreak: false });
     doc.fontSize(8.5).fillColor(C.white).font('Helvetica')
        .text(evt.titre, LEFT, 118, { width: WIDTH - 5, align: 'right', lineBreak: false });
-    const dateStr = `Date : ${this._formaterDate(evt.dateDebut)}`;
+    const dateStr = `Date : ${this._formaterIntervalleDate(evt.dateDebut, evt.dateFin)}`;
     doc.fontSize(7.5).fillColor(C.gold)
        .text(dateStr, LEFT, 130, { width: WIDTH, align: 'right', lineBreak: false });
 
@@ -621,8 +657,8 @@ class PDFService {
          .font('Helvetica').fillColor(C.textMid).text(`  ${evt.type}`);
     }
 
-    // Date
-    const dateEvt = this._formaterDate(evt.dateDebut);
+    // Date (intervalle)
+    const dateEvt = this._formaterIntervalleDate(evt.dateDebut, evt.dateFin);
     doc.fillColor(C.text).font('Helvetica-Bold')
        .text('Date :', col2, y + 24, { lineBreak: false, continued: true })
        .font('Helvetica').fillColor(C.textMid).text(`  ${dateEvt}`);
@@ -774,6 +810,22 @@ class PDFService {
     doc.y = barY + 22;
   }
 
+  // ── Prestations liées ──
+  _progPrestations(doc, evt) {
+    const cols = [
+      { label: 'Prestation',   key: 'nom',         x: 5,   w: 280 },
+      { label: 'Prestataire',  key: 'prestataire',  x: 290, w: 210 },
+    ];
+    this._tableauEntetes(doc, 'Prestations liées', cols);
+
+    evt.prestationsLiees.forEach((p, i) => {
+      this._tableauLigne(doc, cols, {
+        nom: p.nom || '—',
+        prestataire: p.prestataire || '—',
+      }, i % 2 === 1);
+    });
+  }
+
   // ── Notes ──
   _progNotes(doc, evt) {
     this._check(doc, 60);
@@ -798,6 +850,23 @@ class PDFService {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency', currency: 'EUR',
     }).format(prix || 0);
+  }
+
+  _formaterIntervalleDate(dateDebut, dateFin) {
+    if (!dateDebut) return '';
+    const d1 = new Date(dateDebut);
+    const d2 = dateFin ? new Date(dateFin) : null;
+    const fmt = (d) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const fmtCourt = (d) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' });
+
+    if (!d2 || d1.toDateString() === d2.toDateString()) {
+      return fmt(d1);
+    }
+    // Même mois/année → "Du 15 au 17 mars 2026"
+    if (d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear()) {
+      return `Du ${d1.getDate()} au ${fmt(d2)}`;
+    }
+    return `Du ${fmtCourt(d1)} au ${fmt(d2)}`;
   }
 }
 

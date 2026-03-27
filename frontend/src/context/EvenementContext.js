@@ -204,6 +204,30 @@ export function EvenementProvider({ children }) {
     }
   };
 
+  // ==============================
+  // PRESTATIONS LIÉES
+  // ==============================
+
+  const lierPrestation = async (evenementId, data) => {
+    try {
+      const res = await axios.post(`${API_URL}/api/evenements/${evenementId}/prestations`, data, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true, data: res.data.data };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
+  const delierPrestation = async (evenementId, prestationId) => {
+    try {
+      const res = await axios.delete(`${API_URL}/api/evenements/${evenementId}/prestations/${prestationId}`, headers());
+      if (evenementActif?._id === evenementId) setEvenementActif(res.data.data);
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Erreur' };
+    }
+  };
+
   const value = useMemo(() => ({
     evenements, evenementActif, loading, error,
     chargerEvenements, chargerEvenement, creerEvenement,
@@ -211,6 +235,7 @@ export function EvenementProvider({ children }) {
     ajouterEtape, majEtape, supprimerEtape,
     ajouterTodo, majTodo, supprimerTodo,
     ajouterOutil, majOutil, supprimerOutil,
+    lierPrestation, delierPrestation,
     setEvenementActif
   }), [evenements, evenementActif, loading, error, chargerEvenements, chargerEvenement]);
 
